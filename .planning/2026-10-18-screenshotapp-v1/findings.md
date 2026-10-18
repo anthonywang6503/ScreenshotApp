@@ -48,3 +48,23 @@
 - 規格文件：`ScreenshotApp — Windows 原生截圖與圖片標註工具.md`（專案根目錄）
 - Win32 API：RegisterHotKey、BitBlt、GetDpiForMonitor、EnumDisplayMonitors、GetCursorPos（Microsoft Learn）
 - 參考專案（僅研究行為，不複製程式碼）：Snapboard（MIT）、ShareX（GPL）、Greenshot（GPL）
+
+## Phase 1 技術發現（2026-10-18）
+- .NET 10 SDK 的 `dotnet new sln` 預設產生 `.slnx`；以 `--format sln` 產生傳統格式。
+- `dotnet new xunit`（.NET 10）範本版本：Microsoft.NET.Test.Sdk 17.14.1、xunit 2.9.3、xunit.runner.visualstudio 3.1.4，本機快取皆有。
+- WPF 專案（`UseWPF`）的隱含 using **不含** `System.IO`（避免與 `System.Windows.Shapes.Path` 衝突）；使用檔案 API 的檔案需明確 `using System.IO;`。
+- `UseWindowsForms` 會加入 `System.Drawing` 與 `System.Windows.Forms` 隱含 using，與 WPF 的 `Color`、`Point`、`Brush` 等衝突；兩者都以 `<Using Remove>` 移除。
+- 啟用 `UseWindowsForms` 後，WinForms 分析器對 manifest 的 DPI 宣告發出 WFO0003；WPF 程式必須以 manifest 宣告，於 csproj 抑制。
+- `Dispatcher.InvokeAsync` 會把例外存進回傳的工作，不會觸發 `Dispatcher.UnhandledException`；需要全域例外處理的 fire-and-forget UI 工作改用 `BeginInvoke(Delegate)`。
+- `RegisterHotKey` 對同一組合在不同視窗（即使同一執行緒）重複註冊會失敗並回傳 1409（`ERROR_HOTKEY_ALREADY_REGISTERED`），可用來在外部驗證「組合已被占用」。
+- WPF `ModifierKeys` 的數值（Alt=1、Control=2、Shift=4、Windows=8）與 `RegisterHotKey` 的 `MOD_*` 旗標相同。
+- WPF `Key` 列舉有別名（`PageUp`＝`Prior`、`Snapshot`＝`PrintScreen`），`Enum.ToString` 不可靠，按鍵名稱需明確對照。
+- JSON 內有重複屬性名稱時，`JsonNode` 解析或存取會拋出例外（測試已涵蓋）；讀取設定時連同 `ArgumentException`、`InvalidOperationException` 一併視為損毀。
+- 本機顯示器（2026-10-18）：單一顯示器 3456×2160、縮放 175%（168 DPI）。混合 DPI 與多螢幕無法在本機驗證。
+- WinForms `NotifyIcon` 的回呼訊息為 `WM_USER + 1024`（0x800），lParam 為滑鼠訊息；第一個 `NotifyIcon` 的識別碼為 1。對其隱藏視窗 `PostMessage` `WM_RBUTTONUP`／`WM_LBUTTONDBLCLK` 可在自動化中開啟右鍵選單或觸發雙擊。`Shell_NotifyIconGetRect` 可確認圖示存在。
+- 右鍵選單由背景程序觸發時仍會穩定顯示（診斷 3/3）；UI Automation 從桌面根節點 `FindAll(Descendants)` 很慢，應先以 Win32 找到視窗再對子樹搜尋。
+- WPF 視窗變為可見與內容可由 UI Automation 讀取之間有延遲；截圖遇到 DWM 開窗動畫會得到半透明畫面。
+- `PrintWindow(PW_RENDERFULLCONTENT)` 能擷取被遮擋的 WPF 視窗；WinForms `ToolStripDropDown` 不支援，結果全黑。
+- WPF `Label` 的 UI Automation 樹同時出現去除存取鍵與含底線的兩個文字元素（例如「快捷鍵(H)：」「快捷鍵(_H)：」），列入操作性總檢。
+- `System.Threading.AccessControl`（`MutexAcl`）位於 WindowsDesktop 共享框架，測試可直接建立拒絕存取的具名 Mutex。
+- `System.Drawing.Icon(stream, 256, 256)` 在 ICO 同時有 64 與 256 項目時回傳 64（以目錄中的 0 計算尺寸差）；需要 256 時改用 `Icon.ExtractIcon` 或 WPF 解碼。

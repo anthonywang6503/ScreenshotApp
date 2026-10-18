@@ -1,0 +1,41 @@
+
+Status Check                         Detail
+------ -----                         ------
+INFO   顯示器                        \\.\DISPLAY1 3456x2160 @(0,0) 175% 主螢幕
+INFO   執行檔                        E:\public\project\screenshoot.v1\ScreenshotApp\bin\Release\net10.0-windows\ScreenshotApp.exe
+PASS   啟動後常駐                    PID 31532
+PASS   系統匣圖示存在                Shell_NotifyIconGetRect 找到圖示
+PASS   啟動後無可見視窗              可見視窗 0 個 
+PASS   首次啟動建立 settings.json    Hotkey=Ctrl+Shift+2
+PASS   DPI 感知為 Per-Monitor V2     context=0x22
+PASS   執行中占用 Ctrl+Shift+2       外部 RegisterHotKey 錯誤碼 1409
+PASS   第二個執行個體自動結束        ExitCode=0
+PASS   只有一個處理程序              處理程序數 1
+PASS   再次啟動顯示設定視窗          ScreenshotApp 設定
+INFO   設定視窗位於前景              False（由背景腳本啟動時 Windows 可能不給予前景權限，需以實機雙擊執行檔確認）
+PASS   設定視窗顯示快捷鍵已啟用      截圖快捷鍵 | 快捷鍵(H)： | 快捷鍵(_H)：
+INFO   設定視窗截圖                  C:\Users\wangh\AppData\Local\Temp\claude\E--public-project-screenshoot-v1\c324eb03-cc40-4516-a44b-23631a8859aa\scratchpad\smoke-p1-final4\phase1-settings.png
+PASS   關閉設定視窗後仍常駐          設定視窗已關閉，處理程序仍在
+PASS   雙擊系統匣圖示開啟設定        ScreenshotApp 設定
+INFO   系統匣選單項目                設定(S)、結束(X)；截圖 C:\Users\wangh\AppData\Local\Temp\claude\E--public-project-screenshoot-v1\c324eb03-cc40-4516-a44b-23631a8859aa\scratchpad\smoke-p1-final4\p…
+PASS   系統匣「結束」後處理程序結束  ExitCode=0
+PASS   結束後快捷鍵已釋放            外部 RegisterHotKey 錯誤碼 0
+PASS   重新啟動後快捷鍵再次註冊      系統匣就緒 True；外部 RegisterHotKey 錯誤碼 1409
+PASS   重新啟動後可正常結束          ExitCode=0
+PASS   測試腳本預先占用 Ctrl+Shift+2 RegisterHotKey 傳回 True
+PASS   快捷鍵被占用時仍常駐          PID 28932
+PASS   設定視窗顯示占用原因          目前未啟用：Ctrl+Shift+2（此組合已被其他程式或 Windows 使用）
+INFO   占用情境設定視窗截圖          C:\Users\wangh\AppData\Local\Temp\claude\E--public-project-screenshoot-v1\c324eb03-cc40-4516-a44b-23631a8859aa\scratchpad\smoke-p1-final4\phase1-settings-hotkey-i…
+INFO   系統匣通知                    占用時會顯示系統通知；通知可能被專注模式抑制，需由使用者目視確認
+PASS   占用情境下可正常結束          
+PASS   拒絕缺少修飾鍵的組合          欄位 Ctrl+Shift+2；無法使用 Shift+A：須包含 Ctrl、Alt 或 Win 其中至少一個
+PASS   變更快捷鍵立即生效            欄位 Ctrl+Alt+Shift+F12；新組合錯誤碼 1409；舊組合錯誤碼 0；settings.json Ctrl+Alt+Shift+F12；已啟用新快捷鍵 Ctrl+Alt+Shift+F12。…
+PASS   新組合衝突時保留原設定並提示  原組合錯誤碼 1409；無法使用 Ctrl+Alt+Shift+F11（此組合已被其他程式或 Windows 使用），仍保留原設定 Ctrl+Alt+Shift+F12。
+INFO   衝突提示截圖                  C:\Users\wangh\AppData\Local\Temp\claude\E--public-project-screenshoot-v1\c324eb03-cc40-4516-a44b-23631a8859aa\scratchpad\smoke-p1-final4\phase1-settings-rebind-c…
+PASS   啟用登入時啟動寫入 Run 登錄值 "E:\public\project\screenshoot.v1\ScreenshotApp\bin\Release\net10.0-windows\ScreenshotApp.exe"
+PASS   停用登入時啟動移除 Run 登錄值 已移除
+PASS   改回預設快捷鍵並以確定關閉    欄位 Ctrl+Shift+2；Ctrl+Shift+2 錯誤碼 1409
+PASS   設定操作後可正常結束          
+PASS   過程中沒有新的錯誤記錄        error.log 長度 0 → 0
+
+

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <!-- 測試以 LibraryImport 宣告少量輔助用的 Win32 API。 -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <!-- WPF 專案的隱含 using 不含 System.IO；測試不使用 WPF 圖形 Path，不會產生名稱衝突。 -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ScreenshotApp\ScreenshotApp.csproj" />
+  </ItemGroup>
+
+</Project>

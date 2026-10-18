@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="App_Name" xml:space="preserve">
+    <value>ScreenshotApp</value>
+  </data>
+  <data name="List_Separator" xml:space="preserve">
+    <value>、</value>
+  </data>
+
+  <data name="Tray_Settings" xml:space="preserve">
+    <value>設定(&amp;S)</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>結束(&amp;X)</value>
+  </data>
+  <data name="Tray_ToolTipHotkeyActive" xml:space="preserve">
+    <value>{0}（快捷鍵：{1}）</value>
+  </data>
+  <data name="Tray_ToolTipHotkeyInactive" xml:space="preserve">
+    <value>{0}（快捷鍵未啟用）</value>
+  </data>
+
+  <data name="Notify_HotkeyFailed" xml:space="preserve">
+    <value>無法註冊快捷鍵 {0}：{1}。請從系統匣開啟「設定」改用其他組合。</value>
+  </data>
+  <data name="Notify_SettingsCorrupt" xml:space="preserve">
+    <value>設定檔內容損毀，已改用預設值；原檔已另存為 {0}。</value>
+  </data>
+  <data name="Notify_SettingsInvalidFields" xml:space="preserve">
+    <value>下列設定無效，已改用預設值：{0}。</value>
+  </data>
+  <data name="Notify_SettingsReadFailed" xml:space="preserve">
+    <value>無法讀取設定檔，本次使用預設值：{0}</value>
+  </data>
+  <data name="Notify_SettingsSaveFailed" xml:space="preserve">
+    <value>無法寫入設定檔，變更只在本次執行有效：{0}</value>
+  </data>
+  <data name="Notify_StartupSyncFailed" xml:space="preserve">
+    <value>無法更新「登入 Windows 時啟動」設定：{0}</value>
+  </data>
+
+  <data name="SettingsField_Hotkey" xml:space="preserve">
+    <value>截圖快捷鍵</value>
+  </data>
+  <data name="SettingsField_StartWithWindows" xml:space="preserve">
+    <value>登入 Windows 時啟動</value>
+  </data>
+  <data name="SettingsField_LastSaveDirectory" xml:space="preserve">
+    <value>上次儲存位置</value>
+  </data>
+  <data name="SettingsField_DefaultColor" xml:space="preserve">
+    <value>預設顏色</value>
+  </data>
+  <data name="SettingsField_DefaultStrokeWidth" xml:space="preserve">
+    <value>預設線寬</value>
+  </data>
+  <data name="SettingsField_DefaultFontSize" xml:space="preserve">
+    <value>預設字級</value>
+  </data>
+
+  <data name="Hotkey_ErrorInUse" xml:space="preserve">
+    <value>此組合已被其他程式或 Windows 使用</value>
+  </data>
+  <data name="Hotkey_ErrorCode" xml:space="preserve">
+    <value>Windows 回報錯誤碼 {0}</value>
+  </data>
+  <data name="Hotkey_MissingModifier" xml:space="preserve">
+    <value>須包含 Ctrl、Alt 或 Win 其中至少一個</value>
+  </data>
+  <data name="Hotkey_UnsupportedKey" xml:space="preserve">
+    <value>不支援此按鍵</value>
+  </data>
+  <data name="Hotkey_ReservedBySystem" xml:space="preserve">
+    <value>此組合為 Windows 保留的截圖快捷鍵</value>
+  </data>
+
+  <data name="Settings_Title" xml:space="preserve">
+    <value>ScreenshotApp 設定</value>
+  </data>
+  <data name="Settings_HotkeyGroup" xml:space="preserve">
+    <value>截圖快捷鍵</value>
+  </data>
+  <data name="Settings_HotkeyLabel" xml:space="preserve">
+    <value>快捷鍵(_H)：</value>
+  </data>
+  <data name="Settings_HotkeyToolTip" xml:space="preserve">
+    <value>點選此欄位後，按下新的按鍵組合</value>
+  </data>
+  <data name="Settings_HotkeyHint" xml:space="preserve">
+    <value>點選欄位後按下新的組合，須包含 Ctrl、Alt 或 Win；按「套用」或「確定」後才會生效。</value>
+  </data>
+  <data name="Settings_HotkeyPartial" xml:space="preserve">
+    <value>{0}+…</value>
+  </data>
+  <data name="Settings_HotkeyActive" xml:space="preserve">
+    <value>目前已啟用：{0}</value>
+  </data>
+  <data name="Settings_HotkeyInactive" xml:space="preserve">
+    <value>目前未啟用：{0}（{1}）</value>
+  </data>
+  <data name="Settings_HotkeyInvalid" xml:space="preserve">
+    <value>無法使用 {0}：{1}</value>
+  </data>
+  <data name="Settings_GeneralGroup" xml:space="preserve">
+    <value>一般</value>
+  </data>
+  <data name="Settings_StartWithWindows" xml:space="preserve">
+    <value>登入 Windows 時啟動(_W)</value>
+  </data>
+  <data name="Settings_StartWithWindowsToolTip" xml:space="preserve">
+    <value>目前使用者登入 Windows 時自動常駐於系統匣，不需要系統管理員權限</value>
+  </data>
+  <data name="Settings_LastSaveDirectoryLabel" xml:space="preserve">
+    <value>上次儲存位置(_P)：</value>
+  </data>
+  <data name="Settings_LastSaveDirectoryNone" xml:space="preserve">
+    <value>（尚未儲存過圖片）</value>
+  </data>
+  <data name="Settings_StyleGroup" xml:space="preserve">
+    <value>預設標註樣式</value>
+  </data>
+  <data name="Settings_ColorLabel" xml:space="preserve">
+    <value>預設顏色(_C)：</value>
+  </data>
+  <data name="Settings_CustomColor" xml:space="preserve">
+    <value>自訂顏色(_U)…</value>
+  </data>
+  <data name="Settings_CustomColorToolTip" xml:space="preserve">
+    <value>開啟色彩對話框選擇其他顏色</value>
+  </data>
+  <data name="Settings_StrokeWidthLabel" xml:space="preserve">
+    <value>預設線寬(_L)：</value>
+  </data>
+  <data name="Settings_FontSizeLabel" xml:space="preserve">
+    <value>預設字級(_F)：</value>
+  </data>
+  <data name="Settings_PixelFormat" xml:space="preserve">
+    <value>{0} px</value>
+  </data>
+  <data name="Settings_SizeHint" xml:space="preserve">
+    <value>線寬與字級以最終圖片像素為準，不受畫布縮放影響。</value>
+  </data>
+  <data name="Settings_Ok" xml:space="preserve">
+    <value>確定</value>
+  </data>
+  <data name="Settings_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="Settings_Apply" xml:space="preserve">
+    <value>套用(_A)</value>
+  </data>
+  <data name="Settings_Applied" xml:space="preserve">
+    <value>設定已套用並儲存。</value>
+  </data>
+  <data name="Settings_HotkeyApplied" xml:space="preserve">
+    <value>已啟用新快捷鍵 {0}。</value>
+  </data>
+  <data name="Settings_HotkeyRejected" xml:space="preserve">
+    <value>無法使用 {0}（{1}），仍保留原設定 {2}。</value>
+  </data>
+  <data name="Settings_StartupFailed" xml:space="preserve">
+    <value>無法變更「登入 Windows 時啟動」：{0}</value>
+  </data>
+  <data name="Settings_SaveFailed" xml:space="preserve">
+    <value>設定已套用，但無法寫入設定檔：{0}</value>
+  </data>
+
+  <data name="Color_Red" xml:space="preserve">
+    <value>紅色</value>
+  </data>
+  <data name="Color_Orange" xml:space="preserve">
+    <value>橙色</value>
+  </data>
+  <data name="Color_Yellow" xml:space="preserve">
+    <value>黃色</value>
+  </data>
+  <data name="Color_Green" xml:space="preserve">
+    <value>綠色</value>
+  </data>
+  <data name="Color_Blue" xml:space="preserve">
+    <value>藍色</value>
+  </data>
+  <data name="Color_Purple" xml:space="preserve">
+    <value>紫色</value>
+  </data>
+  <data name="Color_Black" xml:space="preserve">
+    <value>黑色</value>
+  </data>
+  <data name="Color_White" xml:space="preserve">
+    <value>白色</value>
+  </data>
+  <data name="Color_Custom" xml:space="preserve">
+    <value>自訂 {0}</value>
+  </data>
+
+  <data name="Error_Title" xml:space="preserve">
+    <value>ScreenshotApp 發生錯誤</value>
+  </data>
+  <data name="Error_Unexpected" xml:space="preserve">
+    <value>發生未預期的錯誤，程式會繼續執行。
+
+{0}
+
+錯誤細節已記錄於：
+{1}</value>
+  </data>
+  <data name="Error_StartupFailed" xml:space="preserve">
+    <value>ScreenshotApp 無法啟動。
+
+{0}
+
+錯誤細節已記錄於：
+{1}</value>
+  </data>
+</root>

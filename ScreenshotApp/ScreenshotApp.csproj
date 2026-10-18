@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Windows Forms 只用於系統匣與色彩對話框，主要介面一律為 WPF。 -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- LibraryImport 原始碼產生器需要 unsafe 程式碼。 -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <NeutralLanguage>zh-TW</NeutralLanguage>
+    <!--
+      WFO0003 建議改用 Windows Forms 的 SetHighDpiMode，但那只在 Windows Forms 的啟動流程中生效；
+      本程式由 WPF 啟動，DPI 感知必須在任何視窗建立前由 manifest 宣告。
+    -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 移除 Windows Forms 的隱含 using，避免與 WPF 的 Application、Color、Point 等型別名稱衝突。 -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ScreenshotApp.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 系統匣圖示從多尺寸圖示中依小圖示系統尺寸載入；執行檔圖示由 ApplicationIcon 提供。 -->
+    <EmbeddedResource Include="Resources\app.ico" LogicalName="ScreenshotApp.app.ico" />
+  </ItemGroup>
+
+</Project>

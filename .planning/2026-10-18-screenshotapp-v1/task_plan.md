@@ -15,11 +15,11 @@
 
 ## Next Step
 
-等待使用者授權開始 Phase 1（Windows 平台基礎）。授權後：建立 `feature/phase-01-platform-foundation` 分支，將 Phase 1 標記 `in_progress`，先撰寫 ADR-0001～0006，再建立 Solution 骨架。
+Phase 1 已完成（人工控制點）。等待使用者回報 MT-01、MT-02（占用提示）並授權 Phase 2；授權後建立 `feature/phase-02-capture-selection`，將 Phase 2 標記 `in_progress`，先撰寫 ADR-0007～0009。
 
 ## Current Phase
 
-Phase 0 已完成（規劃與環境確認）。Phase 1 等待授權，尚未開始。
+Phase 1（Windows 平台基礎）已完成（2026-10-18，handoff：`handoffs/phase-01-platform-foundation.md`）。Phase 2 等待授權，尚未開始。
 
 ## 執行規範（本任務專用）
 
@@ -47,9 +47,9 @@ Phase 0 已完成（規劃與環境確認）。Phase 1 等待授權，尚未開�
 ### 收尾儀式（每個 Phase 的最後一個 Checklist 項目）
 1. 該 Phase 所有 Item 完成，`dotnet build -c Release` 與 `dotnet test` 通過（0 error）。
 2. 建立 `handoffs/phase-<NN>-<slug>.md`（完成內容、設計原因、驗證結果與證據、風險、後續工作、未驗證項目）。
-3. 更新 `task_plan.md`（含 handoff 註記）、`progress.md`、`findings.md`、`CHANGELOG.md`，重新 attest。
-4. `git commit`，並將 feature branch fast-forward 合併回 `main`。
-5. 將 Phase 標記 `complete`，下一 Phase 維持 `pending`，暫停等待使用者指令。
+3. 更新 `task_plan.md`（含 handoff 註記）、`progress.md`、`findings.md`、`CHANGELOG.md`。
+4. 將 Phase 標記 `complete`（下一 Phase 維持 `pending`）並重新 attest，使 commit 內容、磁碟與 attestation 一致。
+5. `git commit`，將 feature branch fast-forward 合併回 `main`，暫停等待使用者指令。
 
 ### Git 策略（假設，使用者可覆寫）
 - `main` 永遠反映最後一個通過控制點的狀態。
@@ -101,32 +101,32 @@ screenshoot.v1/
 **分支**：`feature/phase-01-platform-foundation`。
 
 Checklist（格式：ID｜項目｜依賴｜Effort｜委派｜驗收）
-- [ ] P1-00 ADR-0001～0006 撰寫於 `docs/adr/`（技術堆疊與專案配置、座標系統、單一執行個體、設定持久化、文字資源、Tray/WinForms 邊界）｜無｜medium｜否｜六份 ADR 存在且狀態 Accepted
-- [ ] P1-01 Solution 與專案骨架：`ScreenshotApp.sln`、`ScreenshotApp.csproj`（`net10.0-windows`、UseWPF、UseWindowsForms、`<Using Remove="System.Windows.Forms"/>`、Nullable、`ApplicationIcon`、`app.manifest`）、`ScreenshotApp.Tests.csproj`（xunit、`UseWPF`）、`README.md` 初版｜P1-00｜medium｜否｜`dotnet build -c Release` 0 error；`dotnet test` 通過 1 個 smoke 測試
-- [ ] P1-02 Per-Monitor V2 DPI 宣告：`app.manifest` `dpiAwareness=PerMonitorV2`；啟動時以 `GetThreadDpiAwarenessContext` 驗證並寫入錯誤日誌（僅記錄模式）｜P1-01｜medium｜否｜實機啟動日誌顯示 PerMonitorV2
-- [ ] P1-03 Win32 Interop：`Platform/NativeMethods.cs`（user32/gdi32/shcore 宣告）、`SafeHdc`、`SafeHBitmap`、`SafeGdiObject`；所有非受控資源具 SafeHandle 或 try/finally 釋放｜P1-01｜high｜否｜編譯通過；SafeHandle 釋放單元測試通過
-- [ ] P1-04 應用程式生命週期：`App.xaml` `ShutdownMode=OnExplicitShutdown`、`AppController`（狀態 Resident/Capturing/Selecting/Editing 的骨架與轉換守衛）、`DispatcherUnhandledException`/`UnobservedTaskException` 統一處理（繁中訊息 + 日誌，不結束程式）｜P1-01｜high｜否｜狀態轉換單元測試；人工觸發例外時程式續存
-- [ ] P1-05 文字資源：`Resources/Strings.resx`（zh-TW 為預設文化）、`Strings` 靜態存取類別、XAML 標記延伸 `{res:Str Key}`｜P1-01｜medium｜可｜缺鍵時回傳 `!Key!` 且測試覆蓋；XAML/程式碼無硬編碼 UI 文字
-- [ ] P1-06 系統匣：`Platform/TrayService`（WinForms `NotifyIcon` + `ContextMenuStrip`：開始截圖／開啟圖片／設定／結束；雙擊=設定；Balloon 提示 API）｜P1-04、P1-05、P1-14｜medium｜否｜實機：啟動後無主視窗、匣圖示存在、四個選單項目可用
-- [ ] P1-07 全域快捷鍵：`Platform/HotkeyService`（message-only `HwndSource`、`RegisterHotKey` + `MOD_NOREPEAT`、`WM_HOTKEY` 事件、`Win32Exception` 失敗原因、`Rebind(new)` 先註冊新再解除舊、失敗保留舊設定）、`Settings/HotkeyGesture`（解析／格式化／驗證）｜P1-03、P1-04｜high｜否｜`HotkeyGesture` 單元測試；實機：預設 `Ctrl+Shift+2` 觸發事件並記錄；被占用時 Tray 提示失敗原因且程式可用
-- [ ] P1-08 單一執行個體：`Platform/SingleInstanceGuard`（`Mutex` + `EventWaitHandle`；第二個執行個體發訊後退出；第一個收到後顯示設定視窗或編輯視窗）｜P1-04｜medium｜否｜實機：啟動兩次僅一個處理程序、一個匣圖示；第二次啟動使設定視窗顯示
-- [ ] P1-09 開機啟動：`Platform/StartupService`（`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`，值為帶引號 exe 路徑；可注入根鍵供測試）｜P1-01｜low｜可｜單元測試以測試用子鍵驗證寫入／移除／查詢；預設關閉
-- [ ] P1-10 設定模型與持久化：`Settings/AppSettings`（Hotkey、StartWithWindows、LastSaveDirectory、DefaultColor、DefaultStrokeWidth、DefaultFontSize）、`SettingsStore`（`%LocalAppData%\ScreenshotApp\settings.json`、System.Text.Json、temp→move 原子寫入、損毀／無效欄位→預設值並回傳警告、權限不足不拋出致命例外）｜P1-01｜medium｜可｜AT-08：正常載入、快捷鍵變更、JSON 損壞復原、無效欄位、唯讀目錄、無效路徑
-- [ ] P1-11 設定視窗：`Settings/SettingsWindow.xaml`（快捷鍵擷取欄位、開機啟動、預設顏色、線寬、字級、上次儲存位置唯讀、套用時立即 `Rebind` 並顯示結果、鍵盤導覽與 ToolTip）｜P1-05、P1-07、P1-09、P1-10｜high｜否｜實機：修改快捷鍵成功即生效；衝突時保留舊鍵並提示；關閉視窗不結束程式
-- [ ] P1-12 錯誤日誌：`Platform/ErrorLog`（`%LocalAppData%\ScreenshotApp\logs\error.log`，僅訊息與堆疊，單檔 256 KB 輪替保留 2 份，絕不寫入圖像或標註文字）｜P1-01｜low｜可｜單元測試：輪替與內容限制
-- [ ] P1-13 正常結束：Tray「結束」→ 解除快捷鍵、Dispose NotifyIcon、關閉所有視窗、`Shutdown()`；關閉設定視窗只回常駐｜P1-06、P1-07｜low｜否｜實機：結束後處理程序消失、匣圖示移除、重新啟動後快捷鍵可再註冊
-- [ ] P1-14 應用程式圖示：以腳本產生 `Resources/app.ico`（16/32/48/256），exe 與匣共用｜無｜low｜可｜exe 顯示圖示；匣圖示非預設
-- [ ] P1-15 Agent 端煙霧驗證：啟動 Release 建置 → 處理程序存在、無主視窗、`settings.json` 產生、日誌無錯誤、第二次啟動自動退出、以 `keybd_event` 送出快捷鍵並於日誌觀察事件、結束後處理程序消失｜P1-06～P1-13｜medium｜否｜以上各項有輸出證據記錄於 `progress.md`
-- [ ] P1-16 自動化測試整理：`HotkeyGestureTests`、`SettingsStoreTests`（AT-08）、`StartupServiceTests`、`ErrorLogTests`、`AppStateMachineTests`、`SafeHandleTests`｜各實作｜medium｜可（部分）｜`dotnet test` 全數通過
-- [ ] P1-17 Phase 收尾儀式（handoff `handoffs/phase-01-platform-foundation.md`、planning files、CHANGELOG、commit、合併、暫停）｜全部｜low｜否｜handoff 存在並於本檔註記
+- [x] P1-00 ADR-0001～0006 撰寫於 `docs/adr/`（技術堆疊與專案配置、座標系統、單一執行個體、設定持久化、文字資源、Tray/WinForms 邊界）｜無｜medium｜否｜六份 ADR 存在且狀態 Accepted
+- [x] P1-01 Solution 與專案骨架：`ScreenshotApp.sln`（`dotnet new sln --format sln`；.NET 10 預設為 `.slnx`）、`ScreenshotApp.csproj`（`net10.0-windows`、UseWPF、UseWindowsForms、`<Using Remove="System.Windows.Forms"/>`、Nullable、`ApplicationIcon`、`app.manifest`）、`ScreenshotApp.Tests.csproj`（xunit、`UseWPF`）、`README.md` 初版｜P1-00｜medium｜否｜`dotnet build -c Release` 0 error；`dotnet test` 通過 1 個 smoke 測試
+- [x] P1-02 Per-Monitor V2 DPI 宣告：`app.manifest` `dpiAwareness=PerMonitorV2`；啟動時以 `GetThreadDpiAwarenessContext` 驗證，僅在「不是」PerMonitorV2 時寫入錯誤日誌（日誌只記錄錯誤）｜P1-01｜medium｜否｜Agent 以外部 `GetDpiAwarenessContextForProcess` + `AreDpiAwarenessContextsEqual(ctx, -4)` 驗證執行中處理程序為 PerMonitorV2
+- [x] P1-03 Win32 Interop：`Platform/NativeMethods.cs`（`LibraryImport`；僅宣告 Phase 1 實際使用的 user32 API：熱鍵、DPI 感知查詢、前景授權）。GDI SafeHandle 移至 P2-04 與其唯一使用者一起實作｜P1-01｜medium｜否｜編譯通過；由使用端測試（熱鍵、DPI）覆蓋
+- [x] P1-04 應用程式生命週期：`App.xaml` `ShutdownMode=OnExplicitShutdown`、`AppController`（常駐服務的建立、接線與釋放）、`DispatcherUnhandledException`/`UnobservedTaskException`/`AppDomain.UnhandledException` 統一處理（繁中訊息 + 日誌，UI 執行緒例外不結束程式）。狀態機移至 P2-08（Phase 1 只有常駐狀態）｜P1-01｜high｜否｜`GlobalExceptionHandlerTests`：Dispatcher 例外被記錄並標記已處理，後續工作持續執行
+- [x] P1-05 文字資源：`Resources/Strings.resx`（zh-TW 為預設文化）、`Strings` 靜態存取類別、XAML 標記延伸 `{res:Str Key}`｜P1-01｜medium｜可｜缺鍵時回傳 `!Key!` 且測試覆蓋；XAML/程式碼無硬編碼 UI 文字
+- [x] P1-06 系統匣：`Platform/TrayService`（WinForms `NotifyIcon` + `ContextMenuStrip`：Phase 1 提供「設定」「結束」；「開始截圖」於 P2-08、「開啟圖片」於 P4-04 隨功能加入，不放占位項目；雙擊=設定；Balloon 提示；工具提示文字顯示快捷鍵狀態）｜P1-04、P1-05、P1-14｜medium｜否｜實機：啟動後無主視窗、匣圖示存在、選單項目可用、選單在目前 DPI 下比例正確
+- [x] P1-07 全域快捷鍵：`Platform/HotkeyService`（message-only `HwndSource`、`RegisterHotKey` + `MOD_NOREPEAT`、`WM_HOTKEY` 事件、失敗原因（錯誤碼對應繁中訊息）、`Rebind(new)` 先註冊新再解除舊、失敗保留舊設定）、`Settings/HotkeyGesture`（解析／格式化／驗證；須含 Ctrl／Alt／Win；拒絕 PrintScreen 組合與 Win+Shift+S 等 Windows 保留截圖快捷鍵）。Phase 1 按下快捷鍵尚無動作，截圖於 P2-08 接上｜P1-03、P1-04｜high｜否｜`HotkeyGestureTests`、`HotkeyServiceTests`（以 F13～F24 組合實際註冊、衝突、Rebind）；實機：外部程序註冊同一組合於執行中失敗（錯誤 1409）、結束後成功；被占用時 Balloon + 工具提示 + 設定視窗顯示失敗原因且程式可用
+- [x] P1-08 單一執行個體：`Platform/SingleInstanceGuard`（`Mutex` + `EventWaitHandle`；第二個執行個體先以 `AllowSetForegroundWindow` 授權前景、發訊後退出；第一個收到後顯示設定視窗或編輯視窗）｜P1-04｜medium｜否｜實機：啟動兩次僅一個處理程序、一個匣圖示；第二次啟動使設定視窗顯示於前景
+- [x] P1-09 開機啟動：`Platform/StartupService`（`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`，值為帶引號 exe 路徑；可注入根鍵供測試）｜P1-01｜low｜可｜單元測試以測試用子鍵驗證寫入／移除／查詢；預設關閉
+- [x] P1-10 設定模型與持久化：`Settings/AppSettings`（Hotkey、StartWithWindows、LastSaveDirectory、DefaultColor、DefaultStrokeWidth、DefaultFontSize）、`SettingsStore`（`%LocalAppData%\ScreenshotApp\settings.json`、System.Text.Json、temp→move 原子寫入、損毀／無效欄位→預設值並回傳警告、權限不足不拋出致命例外）｜P1-01｜medium｜可｜AT-08：正常載入、快捷鍵變更、JSON 損壞復原、無效欄位、唯讀目錄、無效路徑
+- [x] P1-11 設定視窗：`Settings/SettingsWindow.xaml`（快捷鍵擷取欄位、開機啟動、預設顏色、線寬、字級、上次儲存位置唯讀、套用時立即 `Rebind` 並顯示結果、鍵盤導覽與 ToolTip）｜P1-05、P1-07、P1-09、P1-10｜high｜否｜實機：修改快捷鍵成功即生效；衝突時保留舊鍵並提示；關閉視窗不結束程式
+- [x] P1-12 錯誤日誌：`Platform/ErrorLog`（`%LocalAppData%\ScreenshotApp\logs\error.log`，僅訊息與堆疊，單檔 256 KB 輪替保留 2 份，超過 30 天未更新的日誌檔於啟動時刪除，絕不寫入圖像或標註文字，寫入失敗不拋出）｜P1-01｜low｜可｜單元測試：輪替、保留期間、內容限制、目錄無效時不拋出
+- [x] P1-13 正常結束：Tray「結束」→ 解除快捷鍵、Dispose NotifyIcon、關閉所有視窗、`Shutdown()`；關閉設定視窗只回常駐｜P1-06、P1-07｜low｜否｜實機：結束後處理程序消失、匣圖示移除、重新啟動後快捷鍵可再註冊
+- [x] P1-14 應用程式圖示：以腳本產生 `Resources/app.ico`（16/32/48/256），exe 與匣共用｜無｜low｜可｜exe 顯示圖示；匣圖示非預設
+- [x] P1-15 Agent 端煙霧驗證：啟動 Release 建置 → 處理程序存在、無可見主視窗、`settings.json` 產生、日誌無錯誤、DPI 感知外部查詢為 PerMonitorV2、外部 `RegisterHotKey` 衝突檢查（執行中 1409）、第二次啟動自動退出且設定視窗出現、預先占用 `Ctrl+Shift+2` 後啟動仍常駐並提示、以 UI Automation 觸發「結束」後處理程序消失且快捷鍵釋放（不可行時標示「尚未驗證」並交由 MT-01）｜P1-06～P1-13｜medium｜否｜以上各項有輸出證據記錄於 `progress.md`
+- [x] P1-16 自動化測試整理：`HotkeyGestureTests`、`HotkeyServiceTests`、`SettingsStoreTests`（AT-08）、`StartupServiceTests`、`ErrorLogTests`、`GlobalExceptionHandlerTests`、`StringsResourceTests`（資源鍵存在、XAML 無硬編碼 UI 文字）；測試不得觸碰真實 `%LocalAppData%\ScreenshotApp` 與 `HKCU\...\Run`｜各實作｜medium｜否｜`dotnet test` 全數通過
+- [x] P1-17 Phase 收尾儀式（handoff `handoffs/phase-01-platform-foundation.md`、planning files、CHANGELOG、commit、合併、暫停）｜全部｜low｜否｜handoff 存在並於本檔註記
 
 **Acceptance Criteria（Phase 門檻）**
-1. FR-01～FR-06、FR-33、FR-34 在實機可操作並有證據；AT-08 通過。
+1. FR-01（選單「開始截圖」「開啟圖片」分別於 Phase 2、Phase 4 隨功能補齊）、FR-02～FR-06、FR-33、FR-34 在實機可操作並有證據；AT-08 通過。
 2. 建置 0 error、測試全綠；無占位功能。
-3. 使用者需驗證：MT-01（首次啟動只進匣、重複啟動、退出重啟）、MT-02（桌面／瀏覽器／PowerPoint 中快捷鍵可觸發；被占用提示）。
+3. 使用者需驗證：MT-01（首次啟動只進匣、重複啟動、退出重啟）、MT-02 的「被占用提示」部分；MT-02「在桌面／瀏覽器／PowerPoint 中觸發截圖」於 Phase 2 控制點驗證。
 
-**Handoff**：尚未建立。
-- **Status:** pending
+**Handoff**：`handoffs/phase-01-platform-foundation.md`（2026-10-18；114 個自動化測試通過、煙霧驗證 28 項全數通過）。
+- **Status:** complete
 
 ### Phase 2: 截圖與區域選取（FR-07～FR-13）
 
@@ -139,13 +139,13 @@ Checklist
 - [ ] P2-01 `Editor/Model/PixelRect`（int、左上含右下不含、`FromPoints`、`Normalize`、`Intersect`、`Clamp`、`Contains`、`IsEmpty`、`Offset`）｜P1-01｜high｜可｜AT-02 單元測試
 - [ ] P2-02 `Platform/MonitorService`（`EnumDisplayMonitors`、`GetMonitorInfo`、`GetDpiForMonitor` → `MonitorInfo{Index, Handle, PhysicalBounds, WorkArea, DpiScale, IsPrimary, DeviceName}`；負座標與非主螢幕）｜P1-03｜high｜否｜實機列舉結果與 Windows 顯示設定一致（記錄於 progress）
 - [ ] P2-03 `Capture/CoordinateMapper`（DesktopPhysical ↔ MonitorLocal ↔ Image ↔ ViewDIP；純函式、唯一換算點）｜P2-01、P2-02｜xhigh｜可（含測試）｜AT-01：正負起點、混合 DPI、非主螢幕、縮放平移往返誤差 ≤ 1px
-- [ ] P2-04 `Platform/CaptureService`（每顯示器 `GetDC(NULL)` + `CreateCompatibleDC/Bitmap` + `BitBlt(SRCCOPY|CAPTUREBLT)` + `GetDIBits` → 凍結 `BitmapSource` Bgra32；失敗丟 `CaptureException` 含 Win32 碼；SafeHandle 全程釋放）｜P1-03、P2-02｜xhigh｜否｜Agent 實機：各顯示器 PNG 輸出至 scratchpad 檢視；30 次循環 GDI 物件數不成長
+- [ ] P2-04 `Platform/CaptureService`（每顯示器 `GetDC(NULL)` + `CreateCompatibleDC/Bitmap` + `BitBlt(SRCCOPY|CAPTUREBLT)` + `GetDIBits` → 凍結 `BitmapSource` Bgra32；失敗丟 `CaptureException` 含 Win32 碼；`SafeHdc`／`SafeHBitmap`／`SafeGdiObject`（自 P1-03 移入）全程釋放）｜P1-03、P2-02｜xhigh｜否｜`SafeHandleTests`（以 `GetGuiResources` 比對 GDI 物件數）；Agent 實機：各顯示器 PNG 輸出至 scratchpad 檢視；30 次循環 GDI 物件數不成長
 - [ ] P2-05 `Capture/DesktopSnapshot`（monitors + 每顯示器 bitmap + 擷取時間）｜P2-02、P2-04｜low｜否｜編譯通過
 - [ ] P2-06 `Capture/SelectionOverlayWindow`（每顯示器一個：無邊框、Topmost、`SourceInitialized` 後 `SetWindowPos` 實體像素定位；背景為該顯示器快照 `Stretch=Fill`；暗化遮罩、選取框、實體 px 尺寸標籤、十字游標；Esc／右鍵取消）｜P2-03、P2-05｜xhigh｜否｜Agent 實機：覆蓋層精確貼合各顯示器（截圖檢視）；混合 DPI 不偏移
 - [ ] P2-07 `Capture/SelectionController`（協調全部覆蓋層；滑鼠座標取 `GetCursorPos` 實體像素；拖曳夾取於起始顯示器；零尺寸→取消；完成→`SelectionResult{MonitorIndex, MonitorLocalRect}`；`SystemEvents.DisplaySettingsChanged`→取消）｜P2-06｜xhigh｜否｜AT-02 行為測試（控制器邏輯可測部分）；實機拖曳各方向正確
-- [ ] P2-08 `AppController` 截圖流程：Resident→Capturing（隱藏自家視窗、等待合成器、快照）→Selecting→完成：裁切出 `BitmapSource` → 暫以 `Export/ClipboardService`（基礎版）複製並 Balloon 提示 → Resident；取消→恢復先前視窗；Capturing/Selecting 期間忽略快捷鍵｜P2-04～P2-07｜high｜否｜實機：快捷鍵→選取→剪貼簿影像尺寸 = 選取尺寸（PowerShell 讀取比對）；連按快捷鍵不重入
+- [ ] P2-08 `AppStateMachine`（自 P1-04 移入：Resident/Capturing/Selecting/Editing、轉換守衛、取消時返回先前狀態）與 `AppController` 截圖流程（快捷鍵與系統匣新增的「開始截圖」共用入口）：Resident→Capturing（隱藏自家視窗、等待合成器、快照）→Selecting→完成：裁切出 `BitmapSource` → 暫以 `Export/ClipboardService`（基礎版）複製並 Balloon 提示 → Resident；取消→恢復先前視窗；Capturing/Selecting 期間忽略快捷鍵｜P2-04～P2-07｜high｜否｜實機：快捷鍵→選取→剪貼簿影像尺寸 = 選取尺寸（PowerShell 讀取比對）；連按快捷鍵不重入
 - [ ] P2-09 擷取失敗處理：例外→關閉全部覆蓋層→繁中提示→Resident；顯示設定變更→安全取消｜P2-08｜medium｜否｜以注入失敗的 CaptureService 測試狀態回復；實機模擬（變更解析度）盡力驗證
-- [ ] P2-10 自動化測試：`PixelRectTests`（AT-02）、`CoordinateMapperTests`（AT-01）、`SelectionLogicTests`（AT-02 夾取／零尺寸／半開區間）、`CaptureFlowTests`（狀態回復）｜P2-01～P2-09｜high｜可（P2-01/03 同一 Subagent）｜全數通過
+- [ ] P2-10 自動化測試：`PixelRectTests`（AT-02）、`CoordinateMapperTests`（AT-01）、`SelectionLogicTests`（AT-02 夾取／零尺寸／半開區間）、`CaptureFlowTests`（狀態回復）、`AppStateMachineTests`、`SafeHandleTests`｜P2-01～P2-09｜high｜可（P2-01/03 同一 Subagent）｜全數通過
 - [ ] P2-11 Agent 端實機驗證：查詢使用者顯示器配置；啟動 app → `keybd_event` 送快捷鍵 → 全螢幕截圖檢視覆蓋層 → `mouse_event` 模擬拖曳 → 剪貼簿尺寸比對；Esc 取消不留遮罩；30 次循環 handle／記憶體量測｜P2-08｜high｜否｜證據與量測條件記錄於 `progress.md`
 - [ ] P2-12 已知限制文件初稿：游標不擷取、DRM／UAC 安全桌面、跨螢幕選取限制｜無｜low｜可｜`docs/KNOWN_LIMITATIONS.md` 初版
 - [ ] P2-13 使用者實機驗證請求：MT-03、MT-04（100/125/150/200%）、MT-05（雙螢幕混合 DPI、負 X、上下排列）｜P2-11｜low｜否｜於控制點提出清單
@@ -202,7 +202,7 @@ Checklist
 - [ ] P4-01 `ImageRenderer` 完整化：像素精確（寬高嚴格 = CropRect）、裁切外標註不出現、顯示縮放不影響、執行緒親和（UI 執行緒渲染後 Freeze）｜P3-12｜high｜可（含 AT-07 測試）｜AT-07：不同畫布縮放輸出尺寸與像素雜湊一致；裁切外圖形不出現
 - [ ] P4-02 `ClipboardService` 強化：`DataObject` 同時放 Bitmap(DIB) 與 PNG 串流；`CLIPBRD_E_CANT_OPEN` 重試 5 次 × 100ms；失敗回傳錯誤並保留文件；成功後狀態列輕量提示並更新 `ExportedVersion`｜P4-01｜high｜否｜AT-09（注入失敗）；實機：PowerShell 讀取剪貼簿尺寸與 PNG 一致
 - [ ] P4-03 `PngFileService`：預設檔名 `Screenshot_yyyyMMdd_HHmmss_fff.png`、初始目錄 = 上次成功位置或圖片資料夾、覆寫確認、背景執行緒 `PngBitmapEncoder`、temp→`File.Move(overwrite)`、失敗提示保留文件、成功更新 `LastSaveDirectory` 與 `ExportedVersion`｜P4-01、P1-10｜high｜否｜AT-09（唯讀目錄）；實機另存尺寸 = CropRect
-- [ ] P4-04 開啟既有圖片：`Export/ImageFileLoader`（PNG/JPEG/BMP → Bgra32 凍結；尺寸上限 1 億像素；格式錯誤／損壞友善提示）、Tray「開啟圖片」與編輯器「開啟」按鈕、另存預設不同名避免覆寫來源｜P3-13｜medium｜可（含 AT-10 測試）｜AT-10：有效 PNG/JPEG/BMP、格式錯誤、損壞、超大尺寸
+- [ ] P4-04 開啟既有圖片：`Export/ImageFileLoader`（PNG/JPEG/BMP → Bgra32 凍結；尺寸上限 1 億像素；格式錯誤／損壞友善提示）、Tray 選單新增「開啟圖片」與編輯器「開啟」按鈕、另存預設不同名避免覆寫來源｜P3-13｜medium｜可（含 AT-10 測試）｜AT-10：有效 PNG/JPEG/BMP、格式錯誤、損壞、超大尺寸
 - [ ] P4-05 未匯出變更保護：`IsDirty = HistoryVersion != ExportedVersion`；`UnsavedChangesDialog`（複製／儲存／捨棄／取消）；套用於新截圖、開啟圖片、關閉編輯器、Tray 結束｜P4-02、P4-03｜high｜否｜實機四種路徑皆提示；取消時文件不變
 - [ ] P4-06 文件切換與視窗行為：單一文件；複製／儲存後留在編輯；取消新截圖恢復原文件；關閉編輯器回常駐｜P4-05｜medium｜否｜實機流程驗證
 - [ ] P4-07 自動化測試：`ImageRendererTests`（AT-07）、`ClipboardFailureTests`／`PngSaveFailureTests`（AT-09）、`ImageFileLoaderTests`（AT-10）、`DirtyTrackingTests`｜P4-01～P4-05｜medium｜可｜全數通過
@@ -247,12 +247,12 @@ Checklist
 
 | FR | 模組／檔案 | 自動化測試 | 驗收證據 | Phase |
 |----|-----------|-----------|---------|-------|
-| FR-01 | Platform/TrayService | — | Agent 煙霧 + MT-01 | 1 |
-| FR-02 | Platform/HotkeyService、Settings/HotkeyGesture | HotkeyGestureTests | Agent 煙霧 + MT-02 | 1 |
-| FR-03 | HotkeyService.Rebind、SettingsWindow | HotkeyGestureTests | MT-02（占用情境） | 1 |
+| FR-01 | Platform/TrayService | — | Agent 煙霧 + MT-01 | 1/2/4 |
+| FR-02 | Platform/HotkeyService、Settings/HotkeyGesture | HotkeyGestureTests、HotkeyServiceTests | Agent 煙霧 + MT-02 | 1/2 |
+| FR-03 | HotkeyService.Rebind、SettingsWindow | HotkeyServiceTests | Agent 煙霧 + MT-02（占用情境） | 1 |
 | FR-04 | Platform/SingleInstanceGuard | — | Agent 煙霧（處理程序數） + MT-01 | 1 |
 | FR-05 | Platform/StartupService | StartupServiceTests | Agent 煙霧（登錄值） | 1 |
-| FR-06 | AppController.Exit、TrayService | AppStateMachineTests | Agent 煙霧 + MT-01 | 1/4 |
+| FR-06 | AppController.Exit、TrayService | AppStateMachineTests（Phase 2） | Agent 煙霧 + MT-01 | 1/2/4 |
 | FR-07 | AppController 截圖流程、CaptureService | CaptureFlowTests | Agent 截圖證據 + MT-03 | 2 |
 | FR-08 | SelectionOverlayWindow、SelectionController | SelectionLogicTests | Agent 截圖 + MT-03/04 | 2 |
 | FR-09 | MonitorService、CoordinateMapper | CoordinateMapperTests（AT-01） | MT-04/05 | 2 |
@@ -281,14 +281,14 @@ Checklist
 | FR-32 | ClipboardService + ImageRenderer | ImageRendererTests | MT-08 | 4 |
 | FR-33 | Settings/AppSettings、SettingsStore | SettingsStoreTests（AT-08） | Agent 煙霧 | 1 |
 | FR-34 | SettingsStore 復原 | SettingsStoreTests（AT-08） | Agent 煙霧 | 1 |
-| FR-35 | Strings.resx、所有 XAML | 資源掃描 | 實機鍵盤導覽 | 1/5 |
+| FR-35 | Strings.resx、所有 XAML | StringsResourceTests（資源鍵、XAML 硬編碼掃描） | 實機鍵盤導覽 | 1/5 |
 
 ## 需使用者實機驗證的項目（MT）與提出時機
 
 | MT | 內容 | 提出控制點 | 原因 |
 |----|------|-----------|------|
 | MT-01 | 首次啟動只進匣、重複啟動、退出重啟 | Phase 1 完成後 | Agent 可部分驗證，匣圖示視覺需真人確認 |
-| MT-02 | 快捷鍵在桌面／瀏覽器／PowerPoint 可觸發；被占用提示 | Phase 1 完成後 | 需前景應用程式切換 |
+| MT-02 | 快捷鍵被占用提示；快捷鍵在桌面／瀏覽器／PowerPoint 可觸發截圖 | 占用提示：Phase 1 完成後；觸發截圖：Phase 2 完成後 | Phase 1 尚無截圖動作；觸發需前景應用程式切換 |
 | MT-03 | 選取後自動開編輯器；取消不留遮罩 | Phase 3 完成後 | 編輯器於 Phase 3 才存在 |
 | MT-04 | 單螢幕 100/125/150/200% 尺寸正確 | Phase 2 完成後 | 需變更系統縮放 |
 | MT-05 | 雙螢幕混合 DPI、負 X、上下排列、非主螢幕 | Phase 2 完成後 | 需實體多螢幕配置 |
@@ -323,9 +323,9 @@ Checklist
 
 ## Key Questions
 
-1. 使用者實機顯示器配置（數量、解析度、縮放）為何？→ Phase 2 由 Agent 以腳本查詢並記錄，混合 DPI 若不可得則 MT-05 標示「尚未驗證」。
+1. 使用者實機顯示器配置（數量、解析度、縮放）為何？→ 2026-10-18 查詢：單一顯示器 3456×2160、縮放 175%。混合 DPI 與多螢幕本機無法驗證，需使用者以 MT-04／MT-05 回報，否則標示「尚未驗證」。
 2. 使用者是否安裝 PowerPoint／Word／Teams？→ Phase 4 控制點詢問；未安裝則 MT-08 標示「尚未驗證」。
-3. Git 策略假設（feature branch + ff merge）是否接受？→ Phase 1 授權時確認，未回覆即採用。
+3. Git 策略假設（feature branch + ff merge）是否接受？→ 使用者授權 Phase 1 時未覆寫，依計畫採用（2026-10-18）。
 
 ## Decisions Made
 
@@ -343,6 +343,16 @@ Checklist
 | ADR 存於 `docs/adr/`，於各 Phase 開頭撰寫 | 架構決策在實作前定案並可追蹤 |
 | 自訂顏色使用 WinForms `ColorDialog` | WPF 無內建色彩對話框；WinForms 已因 NotifyIcon 引用，避免額外套件 |
 | 不複製 ShareX／Greenshot 程式碼 | GPL 授權；僅研究行為 |
+| GDI SafeHandle 由 P1-03 移至 P2-04 | 唯一使用者為 CaptureService；與使用端一起實作與測試，避免 Phase 1 出現未使用程式碼 |
+| 應用程式狀態機由 P1-04 移至 P2-08（與 ADR-0009 同步） | Phase 1 只有常駐狀態，狀態機在截圖流程出現時才有使用者 |
+| Phase 1 系統匣選單只放「設定」「結束」 | 規格禁止占位按鈕；「開始截圖」「開啟圖片」隨功能於 Phase 2、4 加入 |
+| DPI 感知僅在非 PerMonitorV2 時記錄，驗證改用外部查詢 | NFR-09 日誌只保留錯誤；`GetDpiAwarenessContextForProcess` 可區分 PMv1／PMv2 |
+| 快捷鍵註冊以外部 `RegisterHotKey` 衝突檢查驗證；MT-02 觸發部分移至 Phase 2 | Phase 1 尚無截圖動作，不以日誌或假提示冒充 |
+| 收尾儀式改為先標記 complete 並 attest，再 commit | 確保 commit 內容、磁碟與 attestation 一致 |
+| Phase 1 不委派 Subagent | 單一專案並行 `dotnet build/test` 會造成 obj/bin 衝突；可委派項目規模小 |
+| 系統匣圖示在快捷鍵註冊之後才顯示 | 圖示出現即代表常駐服務已就緒，消除外部檢查與註冊之間的時間窗 |
+| 無法開啟既有具名 Mutex 時視為已有執行個體 | 以系統管理員身分執行的既有執行個體會讓一般權限開啟失敗；避免啟動當機與重複圖示 |
+| 煙霧驗證腳本納入 `tools/smoke/`，證據存於 `docs/evidence/phase-NN/` | Phase 5 需以發佈版重跑各階段腳本；scratchpad 會隨工作階段消失 |
 
 ## Errors Encountered
 
@@ -351,6 +361,11 @@ Checklist
 | CS0104 `Application` 名稱衝突（WPF + WinForms + ImplicitUsings） | 1 | csproj 加入 `<Using Remove="System.Windows.Forms" />` |
 | NU1102 `coverlet.collector` 6.0.4 找不到（僅離線來源） | 1 | 測試專案不引用 coverlet；加入專案層級 `nuget.config` 指向 nuget.org |
 | Bash heredoc 寫入長篇 `task_plan.md` 失敗（unexpected EOF） | 1 | 改用 Write 工具寫入大型檔案 |
+| Phase 1 再次以 Bash heredoc 寫入長 Python 腳本失敗（同一錯誤） | 2 | 任何超過數行的檔案內容一律用 Write 工具，不再嘗試 heredoc |
+| 煙霧驗證：系統匣圖示先於快捷鍵註冊出現，外部檢查誤判且可能干擾註冊 | 1 | 圖示改在註冊之後才顯示 |
+| 煙霧驗證：從桌面根節點搜尋 UI Automation 太慢、設定視窗內容未就緒、`SetFocus` 偶爾未生效 | 2 | 先以 Win32 找視窗再搜尋子樹、等待內容就緒、焦點重試且未取得焦點時不送出按鍵 |
+| 煙霧驗證：截圖遇開窗動畫或視窗被遮擋；WinForms 下拉選單不支援 `PrintWindow` | 2 | 延遲後以 `PrintWindow` 擷取視窗；選單改由螢幕擷取 |
+| 既有具名 Mutex 無法開啟時拋出 `UnauthorizedAccessException`（自我審查發現） | 1 | 以 `MutexAcl` 測試重現後捕捉，視為已有執行個體 |
 
 ## Notes
 

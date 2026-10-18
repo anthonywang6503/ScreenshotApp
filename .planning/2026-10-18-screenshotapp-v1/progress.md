@@ -33,3 +33,63 @@
 
 ### Next
 - 等待使用者授權 Phase 1。授權後：建立 `feature/phase-01-platform-foundation`、Phase 1 → `in_progress`、撰寫 ADR-0001～0006、建立 Solution 骨架。
+
+
+## Session: 2026-10-18（Phase 1 平台基礎）
+
+### Current Status
+- **Phase:** 1 - Windows 平台基礎 → in_progress
+- **Branch:** `feature/phase-01-platform-foundation`
+
+### Actions Taken
+- 使用者以「開始開發」授權 Phase 1；Key Question 3（Git 策略）未覆寫，依計畫採用。
+- 徵詢 advisor 後調整計畫（GDI SafeHandle 移至 P2-04、狀態機移至 P2-08、系統匣不放占位項目、DPI 只記錄異常、快捷鍵以外部 RegisterHotKey 衝突檢查驗證、收尾先 attest 再 commit），重新 attest。
+- P1-00：`docs/adr/0001`～`0006` 六份 ADR（Accepted）。
+- P1-01：`ScreenshotApp.sln`（`--format sln`）、`ScreenshotApp.csproj`、`ScreenshotApp.Tests.csproj`、`app.manifest`（PerMonitorV2 + Common Controls v6）。
+- P1-03／P1-05／P1-07／P1-08／P1-09／P1-10／P1-12：NativeMethods（LibraryImport）、Strings／StrExtension／Strings.resx、HotkeyGesture／HotkeyService、SingleInstanceGuard、StartupService、AppSettings／SettingsStore／ColorText／CommonColors、ErrorLog。
+- P1-04／P1-06／P1-11：GlobalExceptionHandler、AppController、TrayService、ColorPicker、SettingsWindow、App 啟動流程。
+- P1-14：委派背景 subagent 產生 `tools/New-AppIcon.ps1` 與 `Resources/app.ico`（不涉及建置，無衝突）。
+
+### Test Results
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build -c Release`（骨架） | 0 error | 0 error、1 warning（WFO0003） | PASS（警告已處理） |
+| `dotnet test`（骨架 smoke） | 1 passed | 1 passed | PASS |
+| `dotnet build -c Release`（核心程式碼） | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test`（Phase 1 測試套件） | 全數通過 | 113 passed（第一次 112/113，資源鍵掃描抓到間接引用，修正後全過） | PASS |
+
+### Errors
+| Error | Resolution |
+|-------|------------|
+| Bash heredoc 寫入長 Python 腳本失敗（unexpected EOF，Phase 0 已記錄的同一問題） | 改用 Write 工具；之後超過數行的內容一律用 Write |
+| WFO0003：WinForms 分析器要求移除 manifest 的 DPI 設定 | WPF 啟動流程必須用 manifest；於 csproj 以 NoWarn 抑制並註明原因 |
+| CS0103 `Path`／`File` 不存在 | WPF 隱含 using 不含 `System.IO`；程式檔明確加入，測試專案以 `<Using Include="System.IO" />` |
+| `EveryResourceKey_IsReferenced` 失敗（`Error_Unexpected`、`Error_StartupFailed`） | 鍵以參數間接傳遞；改為呼叫端以字面鍵取字串 |
+
+### Actions Taken（續）
+- P1-14 圖示由背景 subagent 完成：`tools/New-AppIcon.ps1` 可重現產生 8 個尺寸；16～64 以 `System.Drawing.Icon` 載入與檔案像素逐點一致。256 以該建構子會回傳 64，原因是 System.Drawing 的選圖邏輯（ICO 規格以 0 表示 256），檔案本身正確，系統匣只用小尺寸不受影響。
+- P1-01 補完 `README.md`；`ApplicationIcon` 與內嵌 `app.ico` 接入 csproj。
+- P1-15 撰寫 `tools/smoke/Invoke-Phase1Smoke.ps1`（Win32 + UI Automation），以 NotifyIcon 回呼訊息模擬雙擊與右鍵選單，透過「結束」選單項目走真實結束流程；涵蓋設定視窗變更快捷鍵、衝突保留原設定、開機啟動登錄值。
+- 自我審查：既有執行個體以系統管理員身分執行時 `new Mutex` 會拋出 `UnauthorizedAccessException`（發生在全域例外處理掛上之前）；先以 `MutexAcl` 測試重現，再修正為視為已有執行個體。
+- 建立 `docs/ACCEPTANCE.md` 初版與 `docs/evidence/phase-01/`；ADR-0003 補充管理員執行個體情境。
+- 刪除煙霧驗證產生的 `%LocalAppData%\ScreenshotApp`（只含預設值），還原為從未執行狀態；腳本已改為自動還原。
+- 撰寫 `handoffs/phase-01-platform-foundation.md`。
+
+### Smoke Verification（P1-15）
+| 執行 | 結果 | 備註 |
+|------|------|------|
+| 第 1 輪（21 項） | 15 PASS／4 FAIL | 系統匣圖示先於快捷鍵註冊出現（競態）→ 圖示改在註冊後顯示 |
+| 第 2 輪（21 項） | 21 PASS | 之後擴充設定視窗操作與開機啟動登錄值，共 28 項 |
+| 擴充後前 6 輪 | 不穩定：2 輪中途例外、2 輪各 1 FAIL | UIA 全樹搜尋慢、視窗內容未就緒、`SetFocus` 未生效；皆為測試工具問題，已修正 |
+| 最後 7 輪（28 項） | 28 PASS，連續無失敗 | 環境：Windows 11 Pro 10.0.26200，單一顯示器 3456×2160 @175% |
+
+### Test Results（最終）
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build ScreenshotApp.sln -c Release` | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test ScreenshotApp.sln -c Release` | 全數通過 | 114 passed（11 個測試類別） | PASS |
+| `tools/smoke/Invoke-Phase1Smoke.ps1` | 全數通過 | 28 PASS、0 FAIL | PASS |
+| 程式碼註解掃描（編號、文件路徑） | 無違規 | 無違規 | PASS |
+
+### Next
+- Phase 1 已完成並合併回 `main`。等待使用者回報 MT-01、MT-02（占用提示）並授權 Phase 2。
