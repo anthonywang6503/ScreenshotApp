@@ -346,3 +346,11 @@
 | `pwsh -File tools/Publish-Release.ps1` | 兩種版本與 ZIP | 資料夾版 275 檔／155.9 MB（ZIP 67.3 MB）、單檔版 149.3 MB（ZIP 63.5 MB） | PASS |
 | 發佈版煙霧（資料夾版 Phase 1／2／3／4） | 全數通過 | 31／38／38／25 | PASS |
 | 發佈版煙霧（單檔版 Phase 1／2） | 全數通過 | 31／38 | PASS |
+
+## Session: 2026-10-18（Phase 6 AGENTS.md）
+
+### Actions Taken
+- 使用者回覆「都依照預設，並產生 AGENTS.md，並提交」：未修改的截圖維持不詢問、MT-11 標示「尚未驗證」、不推送 upstream（Key Question 10）。新增 Phase 6，分支 `feature/phase-06-agents-md`（改動超過 3 個檔案）。
+- 依 writing-for-agents 的原則撰寫 `AGENTS.md`（60 行）：只收錄看不出來的慣例、原因與陷阱（介面文字與註解規則、座標與文件模型、單一繪製碼與整張合成、執行緒與 GDI、ErrorText、LF；測試隔離；煙霧腳本的閒置與前景規則、以與原圖不同的像素判定、剪貼簿序號；發佈在 commit 之後、Release 建置被鎖、單一執行個體；Git 分支、commit 格式、不主動推送、attest），其餘以指向規格、ADR、ARCHITECTURE 與 findings 處理。
+- 逐條對照：`IEditCommand`、`GdiObjectCountCollection`（`DisableParallelization = true`）、`StaRunner`、`StringsResourceTests` 的三項檢查、各煙霧腳本的保護（Phase 1 以 SendKeys 送鍵且不等待閒置、Phase 2 只在開始前等待閒置、Phase 3、4 每次模擬輸入前檢查使用者操作）。
+- CHANGELOG `[Unreleased]` 記錄 `AGENTS.md`；Phase 6 → complete；`v1.0.0` 標籤維持原位。
