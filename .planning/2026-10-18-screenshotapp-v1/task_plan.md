@@ -125,7 +125,7 @@ Checklist（格式：ID｜項目｜依賴｜Effort｜委派｜驗收）
 2. 建置 0 error、測試全綠；無占位功能。
 3. 使用者需驗證：MT-01（首次啟動只進匣、重複啟動、退出重啟）、MT-02 的「被占用提示」部分；MT-02「在桌面／瀏覽器／PowerPoint 中觸發截圖」於 Phase 2 控制點驗證。
 
-**Handoff**：`handoffs/phase-01-platform-foundation.md`（2026-10-18；114 個自動化測試通過、煙霧驗證 28 項全數通過）。
+**Handoff**：`handoffs/phase-01-platform-foundation.md`（2026-10-18；114 個自動化測試通過、煙霧驗證 31 項全數通過）。
 - **Status:** complete
 
 ### Phase 2: 截圖與區域選取（FR-07～FR-13）
@@ -349,7 +349,7 @@ Checklist
 | DPI 感知僅在非 PerMonitorV2 時記錄，驗證改用外部查詢 | NFR-09 日誌只保留錯誤；`GetDpiAwarenessContextForProcess` 可區分 PMv1／PMv2 |
 | 快捷鍵註冊以外部 `RegisterHotKey` 衝突檢查驗證；MT-02 觸發部分移至 Phase 2 | Phase 1 尚無截圖動作，不以日誌或假提示冒充 |
 | 收尾儀式改為先標記 complete 並 attest，再 commit | 確保 commit 內容、磁碟與 attestation 一致 |
-| Phase 1 不委派 Subagent | 單一專案並行 `dotnet build/test` 會造成 obj/bin 衝突；可委派項目規模小 |
+| Phase 1 只委派不涉及建置的圖示產生（P1-14），其餘自行實作 | 單一專案並行 `dotnet build/test` 會造成 obj/bin 衝突；圖示產生不建置專案，可安全並行 |
 | 系統匣圖示在快捷鍵註冊之後才顯示 | 圖示出現即代表常駐服務已就緒，消除外部檢查與註冊之間的時間窗 |
 | 無法開啟既有具名 Mutex 時視為已有執行個體 | 以系統管理員身分執行的既有執行個體會讓一般權限開啟失敗；避免啟動當機與重複圖示 |
 | 煙霧驗證腳本納入 `tools/smoke/`，證據存於 `docs/evidence/phase-NN/` | Phase 5 需以發佈版重跑各階段腳本；scratchpad 會隨工作階段消失 |
@@ -366,6 +366,8 @@ Checklist
 | 煙霧驗證：從桌面根節點搜尋 UI Automation 太慢、設定視窗內容未就緒、`SetFocus` 偶爾未生效 | 2 | 先以 Win32 找視窗再搜尋子樹、等待內容就緒、焦點重試且未取得焦點時不送出按鍵 |
 | 煙霧驗證：截圖遇開窗動畫或視窗被遮擋；WinForms 下拉選單不支援 `PrintWindow` | 2 | 延遲後以 `PrintWindow` 擷取視窗；選單改由螢幕擷取 |
 | 既有具名 Mutex 無法開啟時拋出 `UnauthorizedAccessException`（自我審查發現） | 1 | 以 `MutexAcl` 測試重現後捕捉，視為已有執行個體 |
+| 決策紀錄寫成「Phase 1 不委派 Subagent」，與實際委派圖示產生不符（advisor 審查發現） | 1 | 更正決策列並重新 attest |
+| 自訂顏色流程沒有任何驗證；補驗證時發現色彩清單 4 欄會截斷「自訂 #12ABEF」 | 1 | 煙霧腳本以視窗訊息操作 Windows 色彩對話框；清單改為 3 欄 |
 
 ## Notes
 

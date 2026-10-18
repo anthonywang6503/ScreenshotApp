@@ -32,7 +32,7 @@ Phase 1 其他自動化測試：
 
 - 腳本：[tools/smoke/Invoke-Phase1Smoke.ps1](../tools/smoke/Invoke-Phase1Smoke.ps1)（實際啟動 Release 建置；以 Win32 與 UI Automation 操作；測試前後還原設定檔與 Run 登錄值）
 - 環境：Windows 11 Pro 10.0.26200，單一顯示器 3456×2160、縮放 175%
-- 結果：**28 項全數通過**；最後連續 7 次執行皆無失敗。完整輸出：[evidence/phase-01/phase1-results.txt](evidence/phase-01/phase1-results.txt)
+- 結果：**31 項全數通過**；加入自訂顏色檢查後連續 4 次執行皆無失敗（先前 28 項版本另有連續 7 次無失敗）。完整輸出：[evidence/phase-01/phase1-results.txt](evidence/phase-01/phase1-results.txt)
 
 | 檢查 | 結果 |
 |------|------|
@@ -46,6 +46,7 @@ Phase 1 其他自動化測試：
 | 快捷鍵已被其他程式占用時仍常駐，設定視窗顯示原因 | 通過 |
 | 設定視窗：拒絕缺少修飾鍵的組合、變更快捷鍵立即生效並寫入設定檔、新組合衝突時保留原設定並提示、改回預設並以「確定」關閉 | 通過 |
 | 設定視窗切換「登入 Windows 時啟動」：寫入／移除 `HKCU\...\Run` 的帶引號路徑 | 通過 |
+| 自訂顏色：開啟 Windows 色彩對話框、輸入 RGB 後確定，清單出現並選取「自訂 #12ABEF」且寫入設定檔；再選回「紅色」 | 通過 |
 | 過程中沒有新的錯誤記錄 | 通過 |
 
 截圖：
@@ -53,6 +54,7 @@ Phase 1 其他自動化測試：
 - 設定視窗：[evidence/phase-01/phase1-settings.png](evidence/phase-01/phase1-settings.png)
 - 快捷鍵被占用時的狀態：[evidence/phase-01/phase1-settings-hotkey-in-use.png](evidence/phase-01/phase1-settings-hotkey-in-use.png)
 - 變更快捷鍵遇到衝突時的提示：[evidence/phase-01/phase1-settings-rebind-conflict.png](evidence/phase-01/phase1-settings-rebind-conflict.png)
+- 自訂顏色加入清單並選取：[evidence/phase-01/phase1-settings-custom-color.png](evidence/phase-01/phase1-settings-custom-color.png)
 - 系統匣選單：[evidence/phase-01/phase1-tray-menu.png](evidence/phase-01/phase1-tray-menu.png)
 
 腳本無法確認、需要使用者目視的部分：系統匣圖示的外觀與位置、快捷鍵被占用時的系統通知（可能被「專注」模式抑制）、從檔案總管雙擊執行檔時設定視窗是否來到最前景。

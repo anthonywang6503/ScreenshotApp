@@ -65,7 +65,7 @@
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <UniformGrid Columns="4" />
+                            <UniformGrid Columns="3" />
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
                     <ListBox.ItemContainerStyle>
@@ -88,7 +88,7 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <Button HorizontalAlignment="Left" Margin="0,6,0,0" Padding="10,2"
+                <Button x:Name="CustomColorButton" HorizontalAlignment="Left" Margin="0,6,0,0" Padding="10,2"
                         Content="{res:Str Settings_CustomColor}"
                         ToolTip="{res:Str Settings_CustomColorToolTip}"
                         Click="CustomColorButton_Click" />

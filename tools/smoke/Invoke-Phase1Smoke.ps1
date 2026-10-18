@@ -33,6 +33,9 @@ using System.Text;
 public static class SmokeNative
 {
     public const int WM_CLOSE = 0x0010;
+    public const int WM_SETTEXT = 0x000C;
+    public const int WM_COMMAND = 0x0111;
+    public const int IDOK = 1;
     public const int WM_LBUTTONDBLCLK = 0x0203;
     public const int WM_RBUTTONUP = 0x0205;
     // Windows Forms NotifyIcon 的回呼訊息（WM_USER + 1024）。
@@ -61,6 +64,11 @@ public static class SmokeNative
     [DllImport("dwmapi.dll")] public static extern int DwmGetWindowAttribute(IntPtr hWnd, int attribute, out RECT value, int size);
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
     [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr hWnd, IntPtr hdc, uint flags);
+    [DllImport("user32.dll")] public static extern IntPtr GetDlgItem(IntPtr dialog, int id);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, string lParam);
+
+    // 設定對話框中編輯框的文字；編輯框會通知對話框內容已變更。
+    public static void SetDialogItemText(IntPtr dialog, int id, string text) { SendMessage(GetDlgItem(dialog, id), WM_SETTEXT, IntPtr.Zero, text); }
     [DllImport("shell32.dll")] public static extern int Shell_NotifyIconGetRect(ref NOTIFYICONIDENTIFIER identifier, out RECT rect);
     [DllImport("user32.dll")] public static extern IntPtr MonitorFromPoint(long point, uint flags);
     [DllImport("shcore.dll")] public static extern int GetDpiForMonitor(IntPtr monitor, int type, out uint dpiX, out uint dpiY);
@@ -303,6 +311,25 @@ function Get-RunValue {
     (Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'ScreenshotApp' -ErrorAction SilentlyContinue)?.ScreenshotApp
 }
 
+function Find-ColorDialog([int]$ProcessId) {
+    foreach ($hWnd in [SmokeNative]::TopLevelWindows([uint32]$ProcessId)) {
+        if ([SmokeNative]::IsWindowVisible($hWnd) -and [SmokeNative]::ClassOf($hWnd) -eq '#32770') { return $hWnd }
+    }
+    return $null
+}
+
+function Get-SelectedColorName($Root) {
+    $selection = (Find-ById $Root 'ColorList').GetCurrentPattern([System.Windows.Automation.SelectionPattern]::Pattern).Current.GetSelection()
+    if ($selection.Count -gt 0) { $selection[0].Current.Name }
+}
+
+function Select-ColorByName($Root, [string]$Name) {
+    $item = (Find-ById $Root 'ColorList').FindFirst([System.Windows.Automation.TreeScope]::Children,
+        [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty, $Name))
+    $item.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    Start-Sleep -Milliseconds 200
+}
+
 # 等設定視窗出現且內容已能由 UI Automation 讀取：視窗變為可見與內容完成配置之間有短暫延遲。
 function Wait-SettingsWindow([int]$ProcessId) {
     Wait-Until {
@@ -330,7 +357,7 @@ $logLengthBefore = if (Test-Path $LogPath) { (Get-Item $LogPath).Length } else {
 try {
     $screens = [System.Windows.Forms.Screen]::AllScreens | ForEach-Object { '{0} {1}x{2} @({3},{4}) {5}%{6}' -f $_.DeviceName, $_.Bounds.Width, $_.Bounds.Height, $_.Bounds.X, $_.Bounds.Y, [SmokeNative]::ScalePercentAt($_.Bounds.X, $_.Bounds.Y), $(if ($_.Primary) { ' 主螢幕' } else { '' }) }
     Add-Info '顯示器' ($screens -join '；')
-    Add-Info '執行檔' $ExePath
+    Add-Info '執行檔' ([IO.Path]::GetRelativePath((Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path, $ExePath))
 
     # 1. 首次啟動只進系統匣
     $app = Start-App
@@ -463,6 +490,30 @@ try {
         Invoke-Element $root 'ApplyButton'
         Add-Result '停用登入時啟動移除 Run 登錄值' ($null -eq (Get-RunValue)) '已移除'
 
+        # 自訂顏色：Windows 色彩對話框輸入 RGB 後確定，成為預設顏色；之後改回紅色。
+        Invoke-Element $root 'CustomColorButton'
+        $dialog = Wait-Until { Find-ColorDialog $ui.Process.Id } 5000
+        Add-Result '開啟自訂顏色對話框' ([bool]$dialog) 'Windows 色彩對話框（#32770）'
+        if ($dialog) {
+            # Windows 色彩對話框的紅、綠、藍欄位識別碼為 706～708。受控 UI Automation 用戶端沒有 Win32 控制項代理，
+            # 這些欄位只呈現為無操作模式的窗格，因此直接以視窗訊息填值並按下確定。
+            foreach ($field in @(@(706, '18'), @(707, '171'), @(708, '239'))) {
+                [SmokeNative]::SetDialogItemText($dialog, $field[0], $field[1])
+            }
+            [void][SmokeNative]::PostMessage($dialog, [SmokeNative]::WM_COMMAND, [IntPtr][SmokeNative]::IDOK, [IntPtr]::Zero)
+            $dialogClosed = Wait-Until { -not (Find-ColorDialog $ui.Process.Id) } 3000
+            $selectedColor = Get-SelectedColorName $root
+            Invoke-Element $root 'ApplyButton'
+            $savedColor = (Get-Content $SettingsPath -Raw | ConvertFrom-Json).DefaultColor
+            Add-Result '自訂顏色成為預設顏色' ([bool]$dialogClosed -and $selectedColor -eq '自訂 #12ABEF' -and $savedColor -eq '#12ABEF') "選取 $selectedColor；settings.json $savedColor"
+            Add-Info '自訂顏色截圖' (Save-WindowImage $uiWindow 'phase1-settings-custom-color.png')
+
+            Select-ColorByName $root '紅色'
+            Invoke-Element $root 'ApplyButton'
+            $savedColor = (Get-Content $SettingsPath -Raw | ConvertFrom-Json).DefaultColor
+            Add-Result '選回常用色紅色' ($savedColor -eq '#FF0000') "settings.json $savedColor"
+        }
+
         $shown = Send-KeysToHotkeyBox $root '^+2'
         Invoke-Element $root 'OkButton'
         $closed = Wait-Until { -not (Find-SettingsWindow $ui.Process.Id) } 3000
@@ -487,7 +538,7 @@ finally {
     if (-not $dataDirectoryExisted -and (Test-Path $DataDirectory) -and -not (Get-ChildItem $DataDirectory -Force)) {
         Remove-Item $DataDirectory
     }
-    $results | Format-Table -AutoSize | Out-String -Width 200 | Set-Content (Join-Path $EvidenceDirectory 'phase1-results.txt') -Encoding utf8
+    $results | ForEach-Object { "[{0}] {1} — {2}" -f $_.Status, $_.Check, $_.Detail } | Set-Content (Join-Path $EvidenceDirectory 'phase1-results.txt') -Encoding utf8
 }
 
 $failed = @($results | Where-Object Status -eq 'FAIL').Count

@@ -43,23 +43,26 @@
 |------|------|
 | `dotnet build ScreenshotApp.sln -c Release` | 0 error、0 warning |
 | `dotnet test ScreenshotApp.sln -c Release` | 114 passed、0 failed |
-| 煙霧驗證（Release exe，Windows 11 Pro 10.0.26200，單一顯示器 3456×2160 @175%） | 28 項全數通過，最後連續 7 次無失敗 |
+| 煙霧驗證（Release exe，Windows 11 Pro 10.0.26200，單一顯示器 3456×2160 @175%） | 31 項全數通過（含自訂顏色流程），連續 4 次無失敗 |
 | 程式碼註解掃描（不得引用編號或文件路徑） | 無違規 |
 
-證據：`docs/evidence/phase-01/`（結果清單與 4 張截圖）；細節見 `docs/ACCEPTANCE.md`。
+證據：`docs/evidence/phase-01/`（結果清單與 5 張截圖）；細節見 `docs/ACCEPTANCE.md`。
 
-煙霧驗證過程中遇到的測試工具問題（皆已修正，非產品缺陷）：從桌面根節點搜尋 UI Automation 太慢、設定視窗可見後內容尚未就緒、`SetFocus` 偶爾未生效（已加重試，且未取得焦點時不送出按鍵）、截圖遇到開窗動畫或視窗被遮擋（改用 `PrintWindow`）、WinForms 下拉選單不支援 `PrintWindow`（選單改由螢幕擷取）。
+煙霧驗證發現並修正的產品問題：系統匣圖示先於快捷鍵註冊出現（改為註冊後顯示）；設定視窗色彩清單 4 欄時「自訂 #12ABEF」被截斷（改為 3 欄，8 個常用色加自訂色排成 3×3）。
+
+煙霧驗證過程中遇到的測試工具問題（皆已修正，非產品缺陷）：從桌面根節點搜尋 UI Automation 太慢、設定視窗可見後內容尚未就緒、`SetFocus` 偶爾未生效（已加重試，且未取得焦點時不送出按鍵）、截圖遇到開窗動畫或視窗被遮擋（改用 `PrintWindow`）、WinForms 下拉選單不支援 `PrintWindow`（選單改由螢幕擷取）、受控 UI Automation 用戶端沒有 Win32 控制項代理（Windows 色彩對話框改以視窗訊息操作）。
 
 ## 4. 風險
 
 - **混合 DPI 無法在本機驗證**：本機只有一顆 175% 顯示器；Phase 2 的覆蓋層定位需靠單螢幕多種縮放與使用者的 MT-04／MT-05。
 - **系統通知可能被「專注」模式抑制**：快捷鍵失敗原因同時顯示在工具提示與設定視窗，不只依賴通知。
 - **WPF Label 的 UI Automation 樹含原始存取鍵文字**：UI Automation 讀到同時有「快捷鍵(H)：」與「快捷鍵(_H)：」兩個文字元素，螢幕閱讀器可能多唸一次；列入 P5-01 操作性總檢。
-- **煙霧腳本會操作真實桌面**：執行期間設定視窗會短暫出現，並暫時寫入／移除 `HKCU\...\Run`（結束時還原）。
+- **煙霧腳本會操作真實桌面**：執行期間設定視窗與色彩對話框會短暫出現，並暫時寫入／移除 `HKCU\...\Run`（結束時還原）。
+- **設定檔讀取失敗後再套用會覆寫原檔**：啟動時若設定檔暫時無法讀取（例如被鎖定），本次使用預設值並提示；之後使用者在設定視窗按「套用」，寫入的是畫面上的值，原檔中其他欄位會被取代。情境罕見且有提示，暫不處理。
 
 ## 5. 後續工作（Phase 2）
 
-1. 建立 `feature/phase-02-capture-selection`，Phase 2 → `in_progress`，先寫 ADR-0007～0009。
+1. 從 `main` 建立 `feature/phase-02-capture-selection`（`feature/phase-01-platform-foundation` 已合併，保留但不要從它分出），Phase 2 → `in_progress`，先寫 ADR-0007～0009。
 2. P2-04 需一併實作 `SafeHdc`／`SafeHBitmap`／`SafeGdiObject` 與 `SafeHandleTests`。
 3. P2-08 需實作 `AppStateMachine`（含 `AppStateMachineTests`），並把 `HotkeyService.Pressed` 與新增的系統匣「開始截圖」接到同一個截圖入口（目前 `AppController` 尚未訂閱 `Pressed`）。
 4. 可重用：`TestSupport/StaRunner`、`TempDirectory`、`RepositoryPaths`；煙霧腳本的 Win32 + UI Automation 寫法（含等待內容就緒、只在取得焦點時送鍵、`PrintWindow` 截圖）。

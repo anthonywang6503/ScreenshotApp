@@ -68,3 +68,7 @@
 - WPF `Label` 的 UI Automation 樹同時出現去除存取鍵與含底線的兩個文字元素（例如「快捷鍵(H)：」「快捷鍵(_H)：」），列入操作性總檢。
 - `System.Threading.AccessControl`（`MutexAcl`）位於 WindowsDesktop 共享框架，測試可直接建立拒絕存取的具名 Mutex。
 - `System.Drawing.Icon(stream, 256, 256)` 在 ICO 同時有 64 與 256 項目時回傳 64（以目錄中的 0 計算尺寸差）；需要 256 時改用 `Icon.ExtractIcon` 或 WPF 解碼。
+- 受控的 `System.Windows.Automation` 用戶端（pwsh 7／.NET）沒有載入 Win32 控制項代理：Windows 色彩對話框（`#32770`）內的編輯框與按鈕只呈現為沒有任何操作模式的 Pane；自動化時改用 `GetDlgItem` + `WM_SETTEXT`（編輯框會送出 `EN_CHANGE`）與 `WM_COMMAND IDOK`。色彩對話框的紅、綠、藍欄位識別碼為 706～708。
+- 本機 Windows 介面語言為英文：系統對話框（例如色彩對話框）顯示英文，與本程式的繁中介面無關。
+- PowerShell 把 `$null` 傳給 .NET `string` 參數時會轉成空字串；Add-Type 的 C# 輔助方法需以 `string.IsNullOrEmpty` 判斷。
+- 在 C: 槽 scratchpad 的檔案上，從 E: 槽工作目錄執行 `sed -i` 會因跨磁碟重新命名失敗；改用 Edit 工具或 Python。
