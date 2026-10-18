@@ -15,11 +15,11 @@
 
 ## Next Step
 
-Phase 2 已完成（人工控制點）。等待使用者回報 MT（Phase 1 的 MT-01、MT-02 占用提示；Phase 2 的 MT-02 觸發、MT-03 取消部分、MT-04、MT-05，步驟見 `docs/ACCEPTANCE.md`）並授權 Phase 3；授權後從 `main` 建立 `feature/phase-03-editor-core`，將 Phase 3 標記 `in_progress`，先撰寫 ADR-0010～0013。
+Phase 3 已完成（人工控制點）。等待使用者回報 MT（Phase 1 的 MT-01、MT-02 占用提示；Phase 2 的 MT-02 觸發、MT-03 取消部分、MT-04、MT-05；Phase 3 的 MT-03 編輯器部分、MT-06、MT-07，步驟見 `docs/ACCEPTANCE.md`）並授權 Phase 4；Phase 3 煙霧驗證後半段待電腦閒置時執行 `tools/smoke/Invoke-Phase3Smoke.ps1` 補完。授權後從 `main` 建立 `feature/phase-04-image-io`，將 Phase 4 標記 `in_progress`，先撰寫 ADR-0014～0016。
 
 ## Current Phase
 
-Phase 2（截圖與區域選取）已完成（2026-10-18，handoff：`handoffs/phase-02-capture-selection.md`）。Phase 3 等待授權，尚未開始。
+Phase 3（圖片編輯核心）已完成（2026-10-18，handoff：`handoffs/phase-03-editor-core.md`；實機煙霧驗證部分完成）。Phase 4 等待授權，尚未開始。
 
 ## 執行規範（本任務專用）
 
@@ -165,31 +165,31 @@ Checklist
 **分支**：`feature/phase-03-editor-core`。
 
 Checklist
-- [ ] P3-00 ADR-0010～0013（文件模型與命令模式、共用 AnnotationPainter、畫布縮放模型、文字輸入策略）｜無｜medium｜否｜四份 ADR Accepted
-- [ ] P3-01 文件模型：`ImageDocument`（凍結 `SourceBitmap`、`PixelWidth/Height`、`CropRect`、`Annotations`（索引即 Z-order）、`HistoryVersion`、`ExportedVersion`、`IsDirty`、`NextStepNumber`）；`Annotation` 基底（Id、Style）與 `RectangleAnnotation`、`EllipseAnnotation`、`LineAnnotation`、`ArrowAnnotation`、`TextAnnotation`（Text、FontFamily、FontSizePx）、`StepNumberAnnotation`（Number、Center、Radius）；`AnnotationStyle{Color, StrokeWidthPx, FontFamily, FontSizePx}`；幾何：`Bounds`、`HitTest(imagePt, tolerance)`、`Translate`、控制點列舉與 `ApplyHandle`｜P2-01｜xhigh｜否｜AT-04 模型測試
-- [ ] P3-02 命令模式：`Editor/Commands/IEditCommand{Execute, Undo, Description}`、`UndoRedoStack`（上限 100、新命令清除 Redo、版本遞增）、`AddAnnotationCommand`、`RemoveAnnotationCommand`、`MoveAnnotationCommand`、`ResizeAnnotationCommand`、`ChangeStyleCommand`、`ChangeTextCommand`、`ChangeNumberCommand`、`SetCropCommand`、`ReorderZCommand`｜P3-01｜high｜可（含測試）｜AT-05：全部可逆、一次拖曳一筆、新修改清除 Redo、上限 100
-- [ ] P3-03 `Editor/Rendering/AnnotationPainter`（`DrawingContext` 於圖片像素座標繪製所有標註：矩形／橢圓／直線／箭頭頭部幾何／文字 `FormattedText`（像素字級、換行）／步驟編號圓形+置中數字）；顯示與匯出共用｜P3-01｜xhigh｜否｜渲染快照測試：同一文件在兩種縮放下輸出一致（AT-07 前置）
-- [ ] P3-04 `Editor/EditorWindow.xaml` 版面：工具列（八工具 ToggleButton，圖示+文字、ToolTip、AccessKey）、屬性列（8 常用色 + 自訂、線寬、字級、字型）、Undo／Redo／複製／儲存／開啟按鈕、畫布（`ScrollViewer` + 縮放容器 + `Image` + `AnnotationCanvas` 自訂元素）、狀態列（圖片尺寸、裁切尺寸、游標圖片像素、縮放 %）；`EditorViewModel`｜P3-01、P3-03｜xhigh｜否｜實機：開啟後以符合視窗縮放顯示；所有控制項可鍵盤到達
-- [ ] P3-05 縮放與平移：符合視窗、100%（1 圖片 px = 1 實體 px，`scale = zoom / dpiScale`）、25%～400% 階段、Ctrl+滾輪以游標為中心、空白鍵／中鍵拖曳平移、視窗調整不改變模型；`CoordinateMapper` 加入 Image ↔ ViewDip（縮放、平移）換算｜P3-04｜high｜否｜AT-01（縮放與平移部分）往返誤差 ≤ 1px；實機：各縮放下控制點尺寸固定、模型座標不變
-- [ ] P3-06 工具控制器：`Editor/Tools/ITool`（以圖片像素座標接收 Down/Move/Up/Key）、`SelectTool`（由上而下命中、拖曳移動、控制點調整、Delete）、`ShapeTool`（矩形／橢圓／直線／箭頭拖曳建立，零尺寸不建立）、`StepNumberTool`（點擊建立、自動遞增、刪除不重排）、`CropTool`、`TextTool`；一次拖曳僅在 Up 時提交一筆命令｜P3-02、P3-04｜xhigh｜否｜AT-04 + 實機操作截圖
-- [ ] P3-07 文字輸入：畫布上 WPF `TextBox` 覆蓋（`AcceptsReturn`、IME 可用、字級=像素字級隨縮放容器縮放）、Ctrl+Enter／點擊外部=提交、Esc=取消、空字串=取消或刪除、雙擊重編、建立與修改各為一筆命令；編輯中 Ctrl+C／Ctrl+Z 交給 TextBox｜P3-06｜xhigh｜否｜AT-06 模型測試 + 實機輸入中英文與換行
-- [ ] P3-08 樣式與屬性列：預設紅色、3px、20px；變更選取物件樣式→`ChangeStyleCommand`；未選取時變更工具預設並回寫設定；自訂顏色使用 WinForms `ColorDialog`｜P3-04、P3-06｜medium｜否｜實機：樣式變更可 Undo；尺寸以圖片像素為準
-- [ ] P3-09 裁切：`CropTool` 拖曳建立／調整控制點、Enter 或雙擊套用、重複調整、最小 1×1、夾取於原圖、裁切外暗化顯示、Undo/Redo｜P3-02、P3-06｜high｜否｜AT-03 + 實機
-- [ ] P3-10 Z-order：上移／下移／最上／最下（右鍵選單 + Ctrl+]／Ctrl+[）｜P3-02、P3-06｜low｜否｜AT-04 Z-order 測試
-- [ ] P3-11 編輯器快捷鍵：Ctrl+Z／Y／C／S、Delete、Esc（取消選取或工具操作）；文字編輯中不攔截｜P3-06、P3-07｜medium｜否｜實機驗證各鍵
-- [ ] P3-12 `Export/ImageRenderer` 基礎版（`RenderTargetBitmap(crop.W, crop.H, 96, 96, Pbgra32)`、`Translate(-crop.X,-crop.Y)`、`DrawImage` + `AnnotationPainter`、Freeze）+ 複製按鈕接 `ClipboardService` + 儲存按鈕接 `PngFileService` 基礎版（SaveFileDialog、預設檔名）｜P3-03｜high｜否｜輸出尺寸 = CropRect；複製／儲存為真實功能
-- [ ] P3-13 `AppController` 整合：`AppStateMachine` 加入 Editing（取消選取時返回先前狀態）；選取完成→`ImageDocument`→開啟／重用唯一 `EditorWindow`；取消選取時恢復原編輯視窗；關閉編輯器回常駐不退出｜P3-04、P2-08｜medium｜否｜`AppStateMachineTests` 涵蓋 Editing；實機流程驗證
-- [ ] P3-14 自動化測試：`ImageDocumentTests`、`AnnotationGeometryTests`（AT-04）、`UndoRedoStackTests`（AT-05）、`CropCommandTests`（AT-03）、`TextAnnotationTests`（AT-06：繁中、英文、Unicode、換行、空字串）、`AnnotationPainterRenderTests`（STA helper）｜P3-01～P3-12｜high｜可（P3-02 Subagent 含命令測試）｜全數通過
-- [ ] P3-15 Agent 端實機驗證：啟動→截圖→編輯器開啟；以模擬輸入建立矩形／箭頭／文字／編號→截圖檢視；Undo/Redo；縮放 25/100/400% 後複製輸出尺寸一致｜P3-13｜high｜否｜證據記錄
-- [ ] P3-16 使用者實機驗證請求：MT-06（微軟注音）、MT-07（多縮放一致性）｜P3-15｜low｜否｜於控制點提出
-- [ ] P3-17 Phase 收尾儀式（handoff `handoffs/phase-03-editor-core.md`）｜全部｜low｜否｜handoff 存在並註記
+- [x] P3-00 ADR-0010～0013（文件模型與命令模式、共用 AnnotationPainter、畫布縮放模型、文字輸入策略）｜無｜medium｜否｜四份 ADR Accepted
+- [x] P3-01 文件模型：`ImageDocument`（凍結 `Source`、`PixelWidth/Height`、`CropRect`、`Annotations`（索引即 Z-order）、`History`、`NextStepNumber`＝現有最大編號＋1）；不可變 `Annotation` record（Id、Color）：`BoxAnnotation`（矩形範圍＋線寬）→ `RectangleAnnotation`／`EllipseAnnotation`，`SegmentAnnotation`（起訖像素＋線寬）→ `LineAnnotation`／`ArrowAnnotation`，`TextAnnotation`（Origin、Text、FontFamily、FontSize）、`StepNumberAnnotation`（Center、Radius、Number）；幾何一律為整數圖片像素：`Bounds`、`HitTest(imagePt, tolerance)`（矩形與橢圓只命中外框）、`Translate`、控制點列舉與以拖曳位移套用控制點。`ExportedVersion`／`IsDirty` 隨唯一使用者移至 P4-05｜P2-01｜xhigh｜否｜AT-04 模型測試
+- [x] P3-02 命令模式：`Editor/Commands/IEditCommand{Execute, Undo}`、`UndoRedoStack`（上限 100、新命令清除 Redo）；五個命令皆以 Id 找標註、Execute／Undo 皆為「設為某值」（重複執行無害）：`AddAnnotationCommand`、`RemoveAnnotationCommand`、`ReplaceAnnotationCommand`（涵蓋移動、調整大小、樣式、文字、編號）、`SetCropCommand`、`ReorderAnnotationCommand`｜P3-01｜high｜可（含測試）｜AT-05：全部可逆、一次拖曳一筆、新修改清除 Redo、上限 100
+- [x] P3-03 `Editor/Rendering/AnnotationPainter`（`DrawingContext` 於圖片像素座標繪製所有標註：矩形／橢圓／直線／箭頭頭部幾何／文字 `FormattedText`（像素字級、換行）／步驟編號圓形+置中數字）；顯示與匯出共用｜P3-01｜xhigh｜否｜渲染快照測試：同一文件在兩種縮放下輸出一致（AT-07 前置）
+- [x] P3-04 `Editor/EditorWindow.xaml` 版面：工具列（八工具 ToggleButton，圖示+文字、ToolTip、AccessKey）、屬性列（8 常用色 + 自訂、線寬、字級、字型、步驟編號值）、Undo／Redo／複製／儲存按鈕（「開啟」隨功能於 P4-04 加入）、畫布（`ScrollViewer` + 縮放容器（`Image` + 標註層 + 文字輸入層）+ 縮放容器外的控制點層）、狀態列（圖片尺寸、裁切尺寸、游標圖片像素、縮放 %）；`EditorSession`（編輯狀態與工具邏輯，不依賴 WPF 元素，可單元測試）｜P3-01、P3-03｜xhigh｜否｜實機：開啟後以符合視窗縮放顯示；所有控制項可鍵盤到達
+- [x] P3-05 縮放與平移：符合視窗、100%（1 圖片 px = 1 實體 px，`scale = zoom / dpiScale`）、25%～400% 階段、Ctrl+滾輪以游標為中心、空白鍵／中鍵拖曳平移、視窗調整不改變模型；`CoordinateMapper` 加入 Image ↔ ViewDip（比例＋畫布原點）換算、螢幕長度 → 圖片長度（命中容差以螢幕像素定義）、浮點 → 整數像素取整、以游標為中心縮放的捲動位移；輸入、控制點層與縮放捲動都經由這些函式｜P3-04｜high｜否｜AT-01（縮放與平移部分）往返誤差 ≤ 1px；實機：各縮放下控制點尺寸固定、模型座標不變；100% 畫布與已知圖樣逐像素一致（P3-15）
+- [x] P3-06 工具邏輯集中於 `EditorSession`（以圖片像素座標接收按下／移動／放開，內部以拖曳類別區分）：選取（由上而下命中、拖曳移動、控制點調整、Delete）、矩形／橢圓／直線／箭頭（拖曳建立，零尺寸不建立）、步驟編號（按下放置、放開前可拖曳、自動遞增、刪除不重排）、裁切、文字；任何工具下都可拖曳選取標註的控制點；拖曳中只更新預覽、放開時提交一筆命令；控制點位移以指標移動量四捨五入計算｜P3-02、P3-04｜xhigh｜否｜AT-04 + 實機操作截圖
+- [x] P3-07 文字輸入：畫布上 WPF `TextBox` 覆蓋（`AcceptsReturn`、IME 可用、字級=像素字級隨縮放容器縮放）、Ctrl+Enter／點擊外部=提交、Esc=取消、空字串=取消或刪除、雙擊重編、建立與修改各為一筆命令；編輯中 Ctrl+C／Ctrl+Z 交給 TextBox｜P3-06｜xhigh｜否｜AT-06 模型測試 + 實機輸入中英文與換行
+- [x] P3-08 樣式與屬性列：預設紅色、3px、20px；變更選取物件樣式→`ReplaceAnnotationCommand`（不適用的屬性停用）；未選取時變更預設值並回寫設定（字型只在本次執行沿用）；文字輸入中套用到輸入中的文字；自訂顏色使用 WinForms `ColorDialog`｜P3-04、P3-06｜medium｜否｜實機：樣式變更可 Undo；尺寸以圖片像素為準
+- [x] P3-09 裁切：控制點以外的位置一律框選新範圍（進入裁切工具時範圍為整張圖片，不提供平移）、拖曳控制點調整（拖到圖片外停在邊緣）、Enter 或範圍內雙擊套用、Esc 取消、重複調整、最小 1×1、夾取於原圖、裁切外暗化顯示（裁切工具中顯示整張原圖）、Undo/Redo｜P3-02、P3-06｜high｜否｜AT-03 + 實機
+- [x] P3-10 Z-order：上移／下移／最上／最下（右鍵選單 + Ctrl+]／Ctrl+[）｜P3-02、P3-06｜low｜否｜AT-04 Z-order 測試
+- [x] P3-11 編輯器快捷鍵：Ctrl+Z／Y／C／S、Delete、Esc（取消選取或工具操作）；文字編輯中不攔截｜P3-06、P3-07｜medium｜否｜實機驗證各鍵
+- [x] P3-12 `Export/ImageRenderer` 基礎版（`RenderTargetBitmap(crop.W, crop.H, 96, 96, Pbgra32)`、`Translate(-crop.X,-crop.Y)`、`DrawImage` + `AnnotationPainter`、Freeze）+ 複製按鈕接 `ClipboardService` + 儲存按鈕接 `PngFileService` 基礎版（SaveFileDialog、預設檔名）｜P3-03｜high｜否｜輸出尺寸 = CropRect；複製／儲存為真實功能
+- [x] P3-13 `AppController` 整合：`AppStateMachine` 加入 Editing（可由常駐或編輯開始截圖並記住先前狀態，截圖結束回到先前狀態；`BeginEditing`／`EndEditing`）；選取完成→`ImageDocument`→開啟／重用唯一 `EditorWindow`；取消選取時恢復原編輯視窗；關閉編輯器回常駐不退出；編輯中第二個執行個體喚醒編輯視窗、系統匣「設定」仍可開啟｜P3-04、P2-08｜medium｜否｜`AppStateMachineTests` 涵蓋 Editing；實機流程驗證
+- [x] P3-14 自動化測試（兩個 subagent 各自在 worktree 撰寫、主 agent 合併）：`AnnotationGeometryTests`、`EditorSessionTests`、`EditCommandTests`（含 ImageDocument）、`UndoRedoStackTests`、`TextAnnotationTests`、`ImageRendererTests`、`CropCommandTests`、`EditorZoomTests`、`PngFileServiceTests`，以及 `CoordinateMapperTests`、`AppStateMachineTests` 的新增案例；GDI 物件量測輔助改為等數量穩定｜P3-01～P3-12｜high｜可｜774 passed（連續 5 次）
+- [x] P3-15 Agent 端實機驗證：啟動→截圖→編輯器開啟；100% 時畫布與已知圖樣逐像素一致；以模擬輸入建立矩形／箭頭／文字／編號→截圖檢視；Undo/Redo；縮放 25/100/400% 後複製輸出尺寸與像素一致｜P3-13｜high｜否｜證據記錄。**部分完成**：前 12 項通過（開啟、100% 逐像素、矩形純紅且在內側、箭頭、編號、Ctrl+Z／Y）；文字、刪除移動、縮放、介面裁切、文件取代、資源循環等因使用者正在使用電腦而未執行，於 `docs/ACCEPTANCE.md` 與 handoff 標示「尚未驗證」，使用者要求先收尾
+- [x] P3-16 使用者實機驗證請求：MT-03（選取後開啟編輯器、取消不影響先前文件）、MT-06（微軟注音）、MT-07（多縮放一致性）｜P3-15｜low｜否｜步驟寫入 `docs/ACCEPTANCE.md`，於控制點提出
+- [x] P3-17 Phase 收尾儀式（handoff `handoffs/phase-03-editor-core.md`）｜全部｜low｜否｜handoff 存在並註記
 
 **Acceptance Criteria（Phase 門檻）**
 1. FR-14～FR-25 可操作；AT-03～AT-06 通過；原始 Bitmap 在編輯中不被修改（測試以像素雜湊驗證）。
 2. 縮放／平移／視窗調整不改變輸出（AT-07 前置測試）。
 
-**Handoff**：尚未建立。
-- **Status:** pending
+**Handoff**：`handoffs/phase-03-editor-core.md`（2026-10-18；774 個自動化測試通過、煙霧驗證前 12 項通過，後半段尚未驗證）。
+- **Status:** complete
 
 ### Phase 4: 圖片輸入輸出（FR-24、FR-26～FR-32）
 
@@ -260,14 +260,14 @@ Checklist
 | FR-11 | AppController → EditorWindow | CaptureFlowTests | Agent 煙霧 + MT-03 | 2/3 |
 | FR-12 | AppController 錯誤路徑 | CaptureFlowTests | MT-09 | 2 |
 | FR-13 | docs/KNOWN_LIMITATIONS.md | — | 文件 | 2/5 |
-| FR-14 | EditorWindow、EditorViewModel | — | Agent 截圖 + MT-07 | 3 |
+| FR-14 | EditorWindow、EditorSession | — | Agent 截圖 + MT-07 | 3 |
 | FR-15 | Editor/Tools/* | AnnotationGeometryTests | Agent 截圖 | 3 |
 | FR-16 | Model/Annotation*、Commands | AnnotationGeometryTests（AT-04） | Agent 截圖 | 3 |
 | FR-17 | TextTool、TextAnnotation | TextAnnotationTests（AT-06） | MT-06 | 3 |
 | FR-18 | StepNumberTool、StepNumberAnnotation | AnnotationGeometryTests | Agent 截圖 | 3 |
-| FR-19 | 屬性列、AnnotationStyle | ChangeStyleCommand 測試 | Agent 截圖 | 3 |
+| FR-19 | 屬性列、AnnotationStyle | EditorSessionTests（樣式） | Agent 截圖 | 3 |
 | FR-20 | CropTool、SetCropCommand | CropCommandTests（AT-03） | Agent 截圖 | 3 |
-| FR-21 | 縮放容器、EditorViewModel.Zoom | AnnotationPainterRenderTests | MT-07 | 3 |
+| FR-21 | EditorWindow 縮放、CoordinateMapper | CoordinateMapperTests（AT-01 縮放平移）、ImageRendererTests | MT-07 | 3 |
 | FR-22 | Commands/UndoRedoStack | UndoRedoStackTests（AT-05） | Agent 煙霧 | 3 |
 | FR-23 | UnsavedChangesDialog、DirtyTracking | DirtyTrackingTests | Agent 煙霧 | 4 |
 | FR-24 | Export/ImageFileLoader | ImageFileLoaderTests（AT-10） | Agent 煙霧 | 4 |
@@ -293,7 +293,7 @@ Checklist
 | MT-04 | 單螢幕 100/125/150/200% 尺寸正確 | Phase 2 完成後 | 需變更系統縮放 |
 | MT-05 | 雙螢幕混合 DPI、負 X、上下排列、非主螢幕 | Phase 2 完成後 | 需實體多螢幕配置 |
 | MT-06 | 微軟注音輸入與重編 | Phase 3 完成後 | IME 需真人輸入 |
-| MT-07 | 25/100/400% 操作後匯出一致 | Phase 4 完成後 | 需人工檢視 |
+| MT-07 | 25/100/400% 操作後匯出一致 | Phase 3 完成後 | 需人工檢視 |
 | MT-08 | PowerPoint 貼上與 PNG 一致；Word／Teams 可接收 | Phase 4 完成後 | 需 Office |
 | MT-09 | 磁碟不可寫、剪貼簿占用、顯示器拔除 | Phase 4 完成後 | 拔除顯示器需實體操作 |
 | MT-10 | 30 次循環資源趨勢 | Phase 5（Agent 量測）後由使用者確認 | Agent 可量測 |
@@ -327,6 +327,8 @@ Checklist
 2. 使用者是否安裝 PowerPoint／Word／Teams？→ Phase 4 控制點詢問；未安裝則 MT-08 標示「尚未驗證」。
 3. Git 策略假設（feature branch + ff merge）是否接受？→ 使用者授權 Phase 1 時未覆寫，依計畫採用（2026-10-18）。
 4. Phase 2 授權？→ 2026-10-18 使用者以「載入專案狀態，開始開發」授權（與 Phase 1 授權句式相同）。MT-01、MT-02（占用提示）尚未回報，維持「尚未驗證」，於 Phase 2 控制點與 MT-02（觸發）、MT-04、MT-05 一併請使用者回報。
+5. Phase 3 授權？→ 2026-10-18 使用者以「使用 planning-with-files 載入專案狀態，繼續開發」授權（與 Phase 1、2 授權句式相同）。Phase 1、2 的 MT 尚未回報，維持「尚未驗證」，於 Phase 3 控制點與 MT-03（編輯器部分）、MT-06、MT-07 一併請使用者回報。
+6. Phase 3 收尾時機？→ 2026-10-18 使用者以「完成 phase 3」要求收尾。煙霧驗證後半段需要電腦閒置，使用者正在使用電腦而無法執行，列為「尚未驗證」並保留腳本供之後補完。
 
 ## Decisions Made
 
@@ -367,6 +369,18 @@ Checklist
 | 剪貼簿 DIB 格式以單元測試驗證，複製與 GDI 資源由煙霧驗證涵蓋 | 單元測試寫入真實剪貼簿會覆蓋使用者內容 |
 | 選取座標改取自滑鼠事件本身（WPF DIP 經 `CoordinateMapper` 以覆蓋層 DPI 換回實體像素），不在處理當下讀 `GetCursorPos` | 煙霧驗證量到 UI 執行緒延後處理按下事件時，起點落在游標稍後的位置（選取只剩拖曳路徑的 25%／75%）；DIP 往返誤差已證明為 0 |
 | 選取框改為實體像素計算的環形幾何，遮罩與選取框不做邊緣平滑 | 175% 下以 DIP 筆劃畫外框會蓋住選取範圍最後一列像素 |
+| 標註為不可變 record：矩形／橢圓共用 `BoxAnnotation`、直線／箭頭共用 `SegmentAnnotation`；幾何一律為整數圖片像素 | Undo 只需保存前後兩個值；整數像素讓輸出與測試可精確比對 |
+| 命令縮為新增、刪除、替換、裁切、層序五類；皆以 Id 找標註，Execute／Undo 為「設為某值」 | 不可變模型下移動、調整大小、樣式、文字、編號都是「把同一個標註設為新值」，分成多個類別只會重複相同程式碼；設值語意重複執行無害 |
+| 拖曳中只更新預覽，放開時才執行一筆命令；文件只經由命令修改 | 文件狀態永遠等於歷史紀錄的結果，取消拖曳只需丟棄預覽，一次拖曳只形成一筆 |
+| `ExportedVersion`／`IsDirty` 移至 P4-05；編輯器「開啟」按鈕留在 P4-04 | 有使用者時才加入、不放占位按鈕。Phase 3 期間新截圖直接取代目前文件、關閉編輯器直接丟棄，於 handoff、已知限制與控制點訊息揭露 |
+| Image ↔ ViewDip 由 `CoordinateMapper` 以「比例＋畫布原點」換算；控制點層在縮放容器之外；命中容差以螢幕像素定義 | 輸入、控制點與縮放捲動共用同一組純函式，AT-01 縮放平移部分測的是實際使用的程式；控制點在各縮放下維持固定螢幕尺寸 |
+| 狀態機：截圖可由常駐或編輯開始並記住先前狀態，結束時回到先前狀態；另加 `BeginEditing`／`EndEditing` | `CaptureFlow` 的回復邏輯不必改；取消新截圖自然回到原本的編輯狀態 |
+| 工具邏輯集中於 `EditorSession`（內部以拖曳類別區分），不另建 `Editor/Tools/ITool` 類別階層 | 各工具的差異只在按下時開始哪一種拖曳；集中後工具行為可直接以單元測試驗證 |
+| 裁切工具不提供平移：控制點以外的位置一律框選新範圍 | 進入裁切工具時範圍是整張圖片，範圍內拖曳若是平移，最常見的「直接框選」就無從開始 |
+| 控制點位移以指標移動量四捨五入計算；平移仍用限制在圖片內的所在像素 | 控制點畫在像素格線上，「所在像素」相減會多算一個像素且到不了圖片邊緣；平移時抓住的位置不應離開圖片 |
+| 測試的 GDI 物件量測等連續兩次讀數相同才回傳 | WPF 繪製資源在終結器之後才由繪製執行緒刪除，立即讀取會被其他測試遺留的物件干擾 |
+| 煙霧腳本：每次模擬輸入前偵測使用者輸入並檢查前景與目標視窗，編輯視窗以 PrintWindow 擷取，剪貼簿以序號判斷是否還原 | 第一次試跑時使用者回到電腦前，滑鼠操作落到其他程式、證據截到其他程式；保護必須在每一步而不只在開始前 |
+| Phase 3 在煙霧驗證部分完成時收尾，未執行的項目標示「尚未驗證」 | 使用者要求收尾，而後半段驗證需要電腦閒置；邏輯已由 774 個自動化測試涵蓋，腳本保留供補完 |
 
 ## Errors Encountered
 
@@ -390,6 +404,13 @@ Checklist
 | 煙霧驗證：使用者正在操作電腦時圖樣被遮住、自我檢查逾時 | 1 | 腳本開始前等待使用者閒置 20 秒（最多 15 分鐘，否則不做任何變更即結束） |
 | 煙霧驗證：選取尺寸只剩拖曳路徑的 25%／75%，30 次循環中 4 次失敗 | 1 | 在處理當下讀 `GetCursorPos` 會讀到游標稍後的位置；改取事件本身的位置 |
 | 煙霧驗證：覆蓋層選取範圍最後一列像素與快照不同 | 1 | DIP 筆劃外框在 175% 下蓋住最後一列；改為實體像素環形幾何、不做邊緣平滑 |
+| Phase 3 煙霧試跑：使用者回到電腦前，滑鼠點擊／拖曳／Ctrl+滾輪落到 QuiteRSS 與瀏覽器，螢幕擷取的證據截到其他程式 | 1 | 已告知使用者並刪除截圖；每次模擬輸入前偵測使用者輸入、檢查前景與目標視窗，改用 PrintWindow，剪貼簿以序號判斷 |
+| Phase 3 煙霧驗證：執行到 Ctrl+Y 之後前景變成 Windows Terminal（沒有使用者輸入） | 2 | 與同時執行的指令有關；腳本加入點擊編輯視窗標題列或狀態列恢復前景，驗證期間不執行其他指令 |
+| 裁切範圍為整張圖時無法框選（範圍內拖曳被當成平移） | 1 | 移除平移，控制點以外一律框選 |
+| 裁切右、下控制點拖到圖片邊緣差一個像素（subagent 測試發現） | 1 | 控制點位移改以指標移動量四捨五入 |
+| CS9124：主要建構函式參數同時被擷取又用來初始化欄位 | 1 | 預覽改為可為 null 的欄位，未移動時回傳原標註 |
+| 完整測試時 `SafeHandleTests` 固定失敗、單獨執行通過 | 1 | GDI 量測輔助改為等數量穩定 |
+| Firecrawl 搜尋額度不足 | 1 | 改用 mysearch 擷取 WPF 原始碼，只讀需要的段落 |
 
 ## Notes
 

@@ -47,7 +47,7 @@ public partial class App : Application
             controller.Start(store.Load());
 
             // 使用 BeginInvoke 而非 InvokeAsync：前者的例外會交給全域例外處理，後者會把例外存進工作而被忽略。
-            _instanceGuard.StartListening(() => Dispatcher.BeginInvoke(new Action(controller.ShowSettings)));
+            _instanceGuard.StartListening(() => Dispatcher.BeginInvoke(new Action(controller.ActivateFromSecondInstance)));
         }
         catch (Exception ex)
         {

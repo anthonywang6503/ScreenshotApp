@@ -1,0 +1,263 @@
+<Window x:Class="ScreenshotApp.Editor.EditorWindow"
+        x:ClassModifier="internal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:ScreenshotApp.Resources"
+        Title="{res:Str Editor_Title}"
+        MinWidth="720"
+        MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True">
+    <Window.Resources>
+        <!-- 工具列圖示：線條顏色跟隨按鈕的文字顏色，停用時一起變灰；每個圖示旁都有文字，圖示不是辨識功能的唯一方式。 -->
+        <Style x:Key="Icon" TargetType="Path">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="StrokeThickness" Value="1.25" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+            <Setter Property="Stroke" Value="{Binding (TextElement.Foreground), RelativeSource={RelativeSource Self}}" />
+        </Style>
+        <Style x:Key="ToolButton" TargetType="RadioButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+            <Setter Property="GroupName" Value="EditorTools" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="0,0,4,4" />
+        </Style>
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="0,0,4,4" />
+        </Style>
+        <Style x:Key="BarLabel" TargetType="Label">
+            <Setter Property="Padding" Value="0,0,6,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="BarSeparator" TargetType="Rectangle">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Margin" Value="6,2,10,6" />
+            <Setter Property="Fill" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" />
+        </Style>
+        <ContextMenu x:Key="AnnotationMenu">
+            <MenuItem Header="{res:Str Editor_BringToFront}" InputGestureText="{res:Str Editor_BringToFrontGesture}" Click="BringToFront_Click" />
+            <MenuItem Header="{res:Str Editor_BringForward}" InputGestureText="{res:Str Editor_BringForwardGesture}" Click="BringForward_Click" />
+            <MenuItem Header="{res:Str Editor_SendBackward}" InputGestureText="{res:Str Editor_SendBackwardGesture}" Click="SendBackward_Click" />
+            <MenuItem Header="{res:Str Editor_SendToBack}" InputGestureText="{res:Str Editor_SendToBackGesture}" Click="SendToBack_Click" />
+            <Separator />
+            <MenuItem Header="{res:Str Editor_Delete}" InputGestureText="{res:Str Editor_DeleteGesture}" Click="Delete_Click" />
+        </ContextMenu>
+    </Window.Resources>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Padding="8,6,8,2" BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}">
+            <WrapPanel>
+                <RadioButton x:Name="SelectToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolSelectToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M3.5,1.5 L3.5,13.5 L6.5,10.5 L8.5,14.5 L10.5,13.5 L8.5,9.5 L12.5,9.5 Z" />
+                        <AccessText Text="{res:Str Editor_ToolSelect}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="CropToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolCropToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M4.5,1 V11.5 H15 M1,4.5 H11.5 V15" />
+                        <AccessText Text="{res:Str Editor_ToolCrop}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="RectangleToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolRectangleToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M2.5,3.5 H13.5 V12.5 H2.5 Z" />
+                        <AccessText Text="{res:Str Editor_ToolRectangle}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="EllipseToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolEllipseToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M1.5,8 A6.5,5 0 1 1 14.5,8 A6.5,5 0 1 1 1.5,8 Z" />
+                        <AccessText Text="{res:Str Editor_ToolEllipse}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="LineToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolLineToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M2.5,13.5 L13.5,2.5" />
+                        <AccessText Text="{res:Str Editor_ToolLine}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="ArrowToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolArrowToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M2.5,13.5 L13,3 M7.5,2.5 H13.5 V8.5" />
+                        <AccessText Text="{res:Str Editor_ToolArrow}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="TextToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolTextToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M3,3.5 H13 M8,3.5 V13.5 M6,13.5 H10" />
+                        <AccessText Text="{res:Str Editor_ToolText}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="StepToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolStepToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M1.5,8 A6.5,6.5 0 1 1 14.5,8 A6.5,6.5 0 1 1 1.5,8 Z M6.5,5.8 L8.4,4.6 V11.4" />
+                        <AccessText Text="{res:Str Editor_ToolStep}" />
+                    </StackPanel>
+                </RadioButton>
+
+                <Rectangle Style="{StaticResource BarSeparator}" />
+
+                <Button x:Name="UndoButton" Style="{StaticResource ActionButton}" ToolTip="{res:Str Editor_UndoToolTip}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M5.5,3.5 L2.5,6.5 L5.5,9.5 M2.5,6.5 H10 A3.5,3.5 0 0 1 10,13.5 H6.5" />
+                        <AccessText Text="{res:Str Editor_Undo}" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="RedoButton" Style="{StaticResource ActionButton}" ToolTip="{res:Str Editor_RedoToolTip}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M10.5,3.5 L13.5,6.5 L10.5,9.5 M13.5,6.5 H6 A3.5,3.5 0 0 0 6,13.5 H9.5" />
+                        <AccessText Text="{res:Str Editor_Redo}" />
+                    </StackPanel>
+                </Button>
+
+                <Rectangle Style="{StaticResource BarSeparator}" />
+
+                <Button x:Name="CopyButton" Style="{StaticResource ActionButton}" ToolTip="{res:Str Editor_CopyToolTip}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M5.5,1.5 H13.5 V10.5 H5.5 Z M3.5,4.5 H2.5 V14.5 H10.5 V12.5" />
+                        <AccessText Text="{res:Str Editor_Copy}" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="SaveButton" Style="{StaticResource ActionButton}" ToolTip="{res:Str Editor_SaveToolTip}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M2.5,2.5 H11.5 L13.5,4.5 V13.5 H2.5 Z M5,2.5 V6 H10.5 V2.5 M5,13.5 V9.5 H11 V13.5" />
+                        <AccessText Text="{res:Str Editor_Save}" />
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+        </Border>
+
+        <Border DockPanel.Dock="Top" Padding="8,4" BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}">
+            <WrapPanel>
+                <Label Style="{StaticResource BarLabel}" Content="{res:Str Editor_ColorLabel}" Target="{Binding ElementName=ColorList}" />
+                <ListBox x:Name="ColorList" VerticalAlignment="Center" BorderThickness="0" Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                         SelectionChanged="ColorList_SelectionChanged">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="3" />
+                            <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+                            <Setter Property="ToolTip" Value="{Binding Name}" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="18" Height="18" BorderThickness="1"
+                                    BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}">
+                                <Border.Background>
+                                    <SolidColorBrush Color="{Binding Color}" />
+                                </Border.Background>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Button x:Name="CustomColorButton" Margin="4,0,0,0" Padding="8,2" VerticalAlignment="Center"
+                        ToolTip="{res:Str Editor_CustomColorToolTip}" Click="CustomColorButton_Click">
+                    <AccessText Text="{res:Str Editor_CustomColor}" />
+                </Button>
+
+                <Rectangle Style="{StaticResource BarSeparator}" />
+
+                <Label Style="{StaticResource BarLabel}" Content="{res:Str Editor_StrokeWidthLabel}" Target="{Binding ElementName=StrokeWidthBox}" />
+                <ComboBox x:Name="StrokeWidthBox" MinWidth="72" VerticalAlignment="Center"
+                          ItemStringFormat="{res:Str Settings_PixelFormat}" ToolTip="{res:Str Editor_StrokeWidthToolTip}"
+                          SelectionChanged="StrokeWidthBox_SelectionChanged" />
+
+                <Rectangle Style="{StaticResource BarSeparator}" />
+
+                <Label Style="{StaticResource BarLabel}" Content="{res:Str Editor_FontFamilyLabel}" Target="{Binding ElementName=FontFamilyBox}" />
+                <ComboBox x:Name="FontFamilyBox" MinWidth="110" VerticalAlignment="Center"
+                          ToolTip="{res:Str Editor_FontFamilyToolTip}" SelectionChanged="FontFamilyBox_SelectionChanged" />
+                <Label Style="{StaticResource BarLabel}" Margin="12,0,0,0" Content="{res:Str Editor_FontSizeLabel}" Target="{Binding ElementName=FontSizeBox}" />
+                <ComboBox x:Name="FontSizeBox" MinWidth="72" VerticalAlignment="Center"
+                          ItemStringFormat="{res:Str Settings_PixelFormat}" ToolTip="{res:Str Editor_FontSizeToolTip}"
+                          SelectionChanged="FontSizeBox_SelectionChanged" />
+
+                <Rectangle Style="{StaticResource BarSeparator}" />
+
+                <Label Style="{StaticResource BarLabel}" Content="{res:Str Editor_StepNumberLabel}" Target="{Binding ElementName=StepNumberBox}" />
+                <TextBox x:Name="StepNumberBox" Width="52" MaxLength="3" VerticalAlignment="Center" VerticalContentAlignment="Center"
+                         InputMethod.IsInputMethodEnabled="False" ToolTip="{res:Str Editor_StepNumberToolTip}"
+                         PreviewTextInput="StepNumberBox_PreviewTextInput" KeyDown="StepNumberBox_KeyDown"
+                         LostKeyboardFocus="StepNumberBox_LostKeyboardFocus" />
+            </WrapPanel>
+        </Border>
+
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem DockPanel.Dock="Right">
+                <StackPanel Orientation="Horizontal">
+                    <Label Style="{StaticResource BarLabel}" Content="{res:Str Editor_ZoomLabel}" Target="{Binding ElementName=ZoomBox}" />
+                    <ComboBox x:Name="ZoomBox" MinWidth="96" ToolTip="{res:Str Editor_ZoomToolTip}" SelectionChanged="ZoomBox_SelectionChanged" />
+                    <TextBlock x:Name="ZoomPercentText" MinWidth="44" Margin="8,0,4,0" VerticalAlignment="Center" TextAlignment="Right" />
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock x:Name="ImageSizeText" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="CropSizeText" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="CursorText" MinWidth="120" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="MessageText" TextTrimming="CharacterEllipsis" />
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- 畫布：縮放容器內的區域單位即圖片像素；控制點層由程式加入內容根的最上層，位於縮放容器之外。 -->
+        <ScrollViewer x:Name="Viewport" Focusable="False"
+                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      Background="{DynamicResource {x:Static SystemColors.AppWorkspaceBrushKey}}"
+                      PreviewMouseWheel="Viewport_PreviewMouseWheel" SizeChanged="Viewport_SizeChanged">
+            <Grid x:Name="ContentRoot" Background="Transparent" Focusable="True" FocusVisualStyle="{x:Null}"
+                  MinWidth="{Binding ViewportWidth, ElementName=Viewport}" MinHeight="{Binding ViewportHeight, ElementName=Viewport}"
+                  MouseLeftButtonDown="ContentRoot_MouseLeftButtonDown" MouseMove="ContentRoot_MouseMove"
+                  MouseLeftButtonUp="ContentRoot_MouseLeftButtonUp" MouseRightButtonUp="ContentRoot_MouseRightButtonUp"
+                  MouseDown="ContentRoot_MouseDown" MouseUp="ContentRoot_MouseUp" MouseLeave="ContentRoot_MouseLeave"
+                  LostMouseCapture="ContentRoot_LostMouseCapture" KeyDown="ContentRoot_KeyDown" KeyUp="ContentRoot_KeyUp"
+                  LostKeyboardFocus="ContentRoot_LostKeyboardFocus" SizeChanged="Canvas_SizeChanged">
+                <Grid x:Name="ZoomHost" Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="True"
+                      TextOptions.TextRenderingMode="Grayscale" SizeChanged="Canvas_SizeChanged">
+                    <Grid.LayoutTransform>
+                        <ScaleTransform x:Name="ZoomTransform" />
+                    </Grid.LayoutTransform>
+                    <Canvas x:Name="ImageLayer" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <Canvas.RenderTransform>
+                            <TranslateTransform x:Name="CropOffset" />
+                        </Canvas.RenderTransform>
+                        <Image x:Name="SourceImage" Stretch="Fill" />
+                        <TextBox x:Name="TextEditor" Visibility="Collapsed" AcceptsReturn="True" AcceptsTab="False" TextWrapping="NoWrap"
+                                 BorderThickness="0" Padding="0" Background="Transparent" FocusVisualStyle="{x:Null}"
+                                 HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"
+                                 PreviewKeyDown="TextEditor_PreviewKeyDown" SizeChanged="TextEditor_SizeChanged" />
+                    </Canvas>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

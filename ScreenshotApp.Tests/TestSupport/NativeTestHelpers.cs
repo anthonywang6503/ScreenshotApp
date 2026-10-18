@@ -16,12 +16,28 @@ internal static partial class NativeTestHelpers
     private const uint GR_GDIOBJECTS = 0;
     private const nint PerMonitorAwareV2 = -4;
 
-    /// <summary>目前處理程序持有的 GDI 物件數。先讓終結器跑完，避免其他測試遺留的物件在量測途中被釋放。</summary>
+    /// <summary>
+    /// 目前處理程序持有的 GDI 物件數。先讓終結器跑完，再等到連續兩次讀數相同才回傳：其他測試遺留的 WPF 繪製資源
+    /// 由終結器交給繪製執行緒後才實際刪除，若立即讀取，這些物件可能在量測途中才被釋放。
+    /// </summary>
     public static int GdiObjectCount()
     {
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        return (int)GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
+        var previous = -1;
+        for (var attempt = 0; attempt < 40; attempt++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            var count = (int)GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
+            if (count == previous)
+            {
+                return count;
+            }
+
+            previous = count;
+            Thread.Sleep(25);
+        }
+
+        return previous;
     }
 
     /// <summary>

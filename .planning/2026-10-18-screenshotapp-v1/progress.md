@@ -154,3 +154,61 @@
 
 ### Next
 - Phase 2 已完成並合併回 `main`。等待使用者回報 MT 並授權 Phase 3。
+
+
+## Session: 2026-10-18（Phase 3 圖片編輯核心）
+
+### Current Status
+- **Phase:** 3 - 圖片編輯核心 → in_progress
+- **Branch:** `feature/phase-03-editor-core`
+
+### Actions Taken
+- 使用者以「使用 planning-with-files 載入專案狀態，繼續開發」授權 Phase 3（Key Question 5）；Phase 1、2 的 MT 尚未回報，維持「尚未驗證」。
+- 徵詢 advisor 後調整計畫：標註改為不可變 record（Box／Segment 合併）、命令縮為五類、Image ↔ ViewDip 由 `CoordinateMapper` 擁有且控制點層在縮放容器外、狀態機可由編輯開始截圖並回到先前狀態、`ExportedVersion`／`IsDirty` 與「開啟」按鈕移至 Phase 4；更新 P3-01／02／04／05／13／15／16、追蹤矩陣、MT-07 時機與 Decisions 後重新 attest。
+- P3-00：`docs/adr/0010`～`0013`（文件模型與命令、共用 AnnotationPainter、畫布縮放模型、文字輸入策略）。
+- 實作：`Editor/Model`（Annotation 系列、BoxHandles、Geometry2D、TextLayout、ImageDocument）、`Editor/Commands`（UndoRedoStack、五個命令）、`Editor/Rendering/AnnotationPainter`、`Export/ImageRenderer`、`Export/PngFileService`、`CoordinateMapper` 縮放換算與 `ImageViewTransform`、`Editor/EditorSession`（工具邏輯）、`EditorZoom`、`Settings/StyleChoices`（設定視窗改用共用選項）、`AnnotationLayer`、`HandleLayer`、`EditorWindow`、`AppStateMachine` Editing、`AppController` 開啟／重用編輯器與預設樣式回寫、第二個執行個體在編輯中喚醒編輯視窗、66 個介面文字（移除 Phase 2 暫用的剪貼簿通知文字）。
+- 委派兩個 subagent（各自 worktree，避免單一專案並行建置衝突）撰寫單元測試：模型／命令／工作階段／文字；合成器／裁切／座標縮放／縮放階段／狀態機／PNG。
+
+### Test Results
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build ScreenshotApp.sln -c Release`（編輯器程式碼） | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test`（既有 314 個，含資源鍵與 XAML 硬編碼掃描） | 全數通過 | 314 passed | PASS |
+| subagent（合成器／裁切／縮放／狀態機／PNG）：`dotnet test --filter` 6 個類別 | 全數通過、測試專案 0 warning | 227 passed；回報產品 2 個 CS9124 警告與橘底白字對比偏低 | PASS |
+| 合併後 `dotnet build` / `dotnet test` | 0 warning / 全數通過 | 0 warning / 467 passed | PASS |
+| subagent（模型／命令／工作階段／文字）：5 個類別 | 全數通過 | 300/307；7 個失敗皆為同一產品缺陷：裁切右、下控制點拖到圖片邊緣差 1 像素 | 發現缺陷 |
+| 修正控制點位移後 `dotnet test` | 全數通過 | 773/774；`SafeHandleTests` 在完整執行時固定失敗（單獨執行通過） | FAIL → 修正 |
+| GDI 量測改為等數量穩定後 `dotnet test` ×5 | 全數通過 | 774 passed ×5 | PASS |
+
+### Actions Taken（續：實機煙霧驗證與修正）
+- 撰寫 `tools/smoke/Invoke-Phase3Smoke.ps1`。第一次試跑（2 循環）：編輯器開啟、100% 畫布與已知圖樣逐像素一致、3px 矩形筆劃 1764/1764 純紅且在範圍內側皆通過；之後使用者回到電腦前，QuiteRSS 與瀏覽器來到前景，按鍵因前景檢查未送出，但滑鼠點擊／拖曳／Ctrl+滾輪可能落在那些視窗（已告知使用者）；以螢幕擷取保存的證據截到其他程式，已刪除。
+- 腳本強化：每次模擬輸入前偵測使用者輸入（`GetLastInputInfo` 對照腳本最後一次模擬輸入時間），滑鼠操作前確認前景與目標位置都是 ScreenshotApp 的視窗，偵測到即停止且不再送出任何輸入；編輯視窗改以 `PrintWindow` 擷取；剪貼簿在驗證期間被其他程式寫入時不還原；預設閒置要求 60 秒。
+- 審查修正：裁切範圍為整張圖時拖曳只會被當成平移、無法框選 → 改為「控制點調整、其他位置框選新範圍」，移除平移裁切範圍；雙擊步驟編號時編號欄位可能尚未啟用 → 延後移入焦點；編號欄位 Esc 會套用輸入的數字 → 先還原；`MoveDrag`／`ResizeDrag` 的 CS9124；步驟編號亮色門檻 160 → 150（橘底改配黑字）。
+- 第三次煙霧驗證（使用者閒置後開始）：前 12 項通過（含 Ctrl+Z／Ctrl+Y），之後前景變成 Windows Terminal 而沒有使用者輸入，腳本依保護規則停止；研判是同時執行的 subagent 開啟主控台視窗，改為 subagent 結束後再跑。PrintWindow 證據只含編輯視窗。
+- 合併 subagent 測試後修正：控制點拖曳位移改以「連續座標差四捨五入」計算（原本以捨去後且限制在圖片內的像素相減，在格線上按下會多算一個像素，右、下邊到不了圖片邊緣）；`ResizeDrag` 同步修正。測試輔助 `GdiObjectCount` 改為等連續兩次讀數相同才回傳（WPF 繪製資源在終結器後才由繪製執行緒刪除，干擾以整個處理程序計數的量測）。
+- 移除兩個 subagent 的暫時 worktree 與分支（測試檔已合併；分支沒有額外 commit）。
+
+### Actions Taken（續：收尾）
+- 第五次煙霧驗證在第一個模擬輸入前偵測到使用者操作而停止（使用者正在使用電腦，保護機制如預期運作）。
+- 使用者以「完成 phase 3」要求收尾：取消排隊中的煙霧驗證；P3-15 標示部分完成，未執行的項目在 `docs/ACCEPTANCE.md` 與 handoff 標示「尚未驗證」，腳本保留供電腦閒置時補完。
+- 證據 `docs/evidence/phase-03/`（第四次執行的結果清單與兩張 PrintWindow 截圖）；`docs/ACCEPTANCE.md` 加入 Phase 3 自動化測試對照（AT-01 縮放平移、AT-03～AT-06、AT-07 前置）與煙霧驗證結果；`CHANGELOG.md`；handoff `handoffs/phase-03-editor-core.md`。
+
+### Test Results（最終）
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build ScreenshotApp.sln -c Release` | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test ScreenshotApp.sln -c Release` | 全數通過 | 774 passed（連續 5 次） | PASS |
+| `tools/smoke/Invoke-Phase3Smoke.ps1` | 全數通過 | 前 12 項 PASS；之後前景被其他視窗取走而停止，後半段尚未驗證 | 部分完成 |
+
+### Smoke Verification（P3-15）
+| 執行 | 結果 | 備註 |
+|------|------|------|
+| 試跑 1（2 循環） | 16 PASS／15 FAIL | 使用者回到電腦前；前 9 項通過後，滑鼠操作落到其他程式（保護不足，已強化） |
+| 2 | 未開始 | 等待閒置時因裁切設計修正而中止 |
+| 3 | 12 PASS 後停止 | 前景變成 Windows Terminal（同時有 subagent 在執行指令） |
+| 4 | 12 PASS 後停止 | 前景變成 Windows Terminal（同時有指令在執行）；加入前景恢復 |
+| 5 | 開始前停止 | 偵測到使用者操作 |
+| 6 | 取消 | 使用者要求收尾 |
+
+### Next
+- Phase 3 已完成並合併回 `main`。等待使用者回報 MT 並授權 Phase 4；電腦閒置時可補跑 Phase 3 煙霧驗證後半段。

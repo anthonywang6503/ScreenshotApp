@@ -10,8 +10,6 @@ namespace ScreenshotApp.Settings;
 
 internal partial class SettingsWindow : Window
 {
-    private static readonly int[] StrokeWidthChoices = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20];
-    private static readonly int[] FontSizeChoices = [10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 64, 72];
     private static readonly Brush ErrorBrush = CreateFrozenBrush(Color.FromRgb(0xC4, 0x2B, 0x1C));
 
     private readonly AppController _controller;
@@ -36,9 +34,9 @@ internal partial class SettingsWindow : Window
         LastSaveDirectoryBox.Text = settings.LastSaveDirectory ?? Strings.Get("Settings_LastSaveDirectoryNone");
 
         ShowColors(settings.DefaultColor);
-        StrokeWidthBox.ItemsSource = IncludeValue(StrokeWidthChoices, settings.DefaultStrokeWidth);
+        StrokeWidthBox.ItemsSource = StyleChoices.IncludeValue(StyleChoices.StrokeWidths, settings.DefaultStrokeWidth);
         StrokeWidthBox.SelectedItem = settings.DefaultStrokeWidth;
-        FontSizeBox.ItemsSource = IncludeValue(FontSizeChoices, settings.DefaultFontSize);
+        FontSizeBox.ItemsSource = StyleChoices.IncludeValue(StyleChoices.FontSizes, settings.DefaultFontSize);
         FontSizeBox.SelectedItem = settings.DefaultFontSize;
     }
 
@@ -186,9 +184,6 @@ internal partial class SettingsWindow : Window
 
     private static bool IsModifierKey(Key key) => key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt
         or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin;
-
-    private static int[] IncludeValue(int[] choices, int value) =>
-        choices.Contains(value) ? choices : [.. choices.Append(value).Order()];
 
     private static SolidColorBrush CreateFrozenBrush(Color color)
     {

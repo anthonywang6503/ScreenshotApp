@@ -89,3 +89,14 @@
 - pwsh 7.6（.NET 10）`Add-Type` 若要在 C# 中使用 WinForms／GDI+ 型別，需要大量實作組件參考且與預設參考衝突；改為 C# 只用基本型別，WinForms 操作留在 PowerShell 端。pwsh 主執行緒為 STA，可直接存取剪貼簿。
 - **在滑鼠事件處理當下讀 `GetCursorPos` 會讀到游標稍後的位置**：覆蓋層剛顯示、UI 執行緒仍在處理時開始拖曳，按下事件被延後處理，起點落在拖曳路徑中途（煙霧驗證得到 226×163、375×300，恰為路徑的 25%／75%）。改用 `MouseEventArgs.GetPosition`（WPF 由訊息的實體像素換成 DIP）再以覆蓋層 DPI 換回，整數像素往返誤差為 0。
 - 175% 下以 DIP 筆劃（`Rectangle` + `StrokeThickness=1`）畫在選取範圍外側的外框，經版面配置進位後會蓋住範圍最後一列像素；改為實體像素計算的環形幾何（外矩形減內矩形，EvenOdd）並對遮罩與外框設定 `RenderOptions.EdgeMode=Aliased`。
+
+## Phase 3 研究發現（2026-10-18）
+- WPF `WindowStartupLocation.CenterScreen` 對沒有擁有者的視窗，置中於**滑鼠目前所在的顯示器**（dotnet/wpf `Window.CalculateWindowLocation` → `GetCurrentMonitorFromMousePosition`；只讀了該段原始碼）。截圖完成時游標在選取的顯示器上，所以編輯器第一次開啟會出現在截圖的顯示器；重用時維持原位置。
+- 實機（單一顯示器 175%）：縮放容器 `LayoutTransform` 比例 1/1.75（`zoom / dpiScale`）搭配 `UseLayoutRounding`，100% 時畫布上的 600×400 截圖與已知圖樣**逐像素一致**（以腳本在編輯視窗擷取中搜尋一比一區塊）。不需要額外的對齊修正。
+- 實機：3px 矩形的筆劃畫在範圍內側時，複製結果的筆劃帶 1764 個像素全部為純紅 (255,0,0)，內外側像素與原圖完全相同。
+- 煙霧腳本的風險：開始前的閒置檢查不夠——第一次 Phase 3 試跑途中使用者回到電腦前，其他程式（QuiteRSS、瀏覽器）來到前景；按鍵有前景檢查沒有送出，但滑鼠點擊、拖曳與 Ctrl+滾輪落在那些視窗上，且以螢幕擷取保存的證據截到其他程式（已刪除）。改為：每次模擬輸入前以 `GetLastInputInfo` 比對「最後輸入時間」與「腳本最後一次模擬輸入時間」，晚 300 ms 以上即視為使用者操作並停止；滑鼠操作前以 `WindowFromPoint` + `GetAncestor(GA_ROOT)` 確認目標與前景都是 ScreenshotApp 的視窗；編輯視窗改以 `PrintWindow(PW_RENDERFULLCONTENT)` 擷取；剪貼簿以 `GetClipboardSequenceNumber` 判斷驗證期間是否被其他程式寫入，有就不還原備份。
+- 煙霧驗證進行中，若同時有指令在執行（主 agent、subagent 或 hook），Windows Terminal（`CASCADIA_HOSTING_WINDOW_CLASS`）會在沒有使用者輸入的情況下來到前景，模擬按鍵與點擊就無法送到受測視窗。腳本已加入：前景被取走且沒有使用者輸入時，點擊編輯視窗的標題列或狀態列左側（只會啟用視窗）帶回前景；最好的做法仍是驗證期間不執行其他指令。
+- WPF 繪製（`RenderTargetBitmap` 等）的資源在 `GC.Collect` + `WaitForPendingFinalizers` 之後，仍可能由繪製執行緒稍後才刪除對應的 GDI 物件；以整個處理程序計數的 GDI 量測需等數量穩定（連續兩次讀數相同）才可靠。
+- C# 主要建構函式的參數若同時被成員使用（被擷取）又用來初始化欄位，會產生 CS9124；預覽欄位改為可為 null、未變更時回傳原參數即可避免。
+- `FormattedText` 可在 xunit 的非 STA 執行緒建立與量測；`RenderTargetBitmap` 繪製與 PNG 編碼在測試中以 STA 執行緒執行。
+- 常用色中橙色 `#FF8C00` 的感知亮度約 158（0.299R + 0.587G + 0.114B），以 160 為門檻會配白字、對比偏低；門檻改為 150 後橙、黃、白配黑字，紅、綠、藍、紫、黑配白字。

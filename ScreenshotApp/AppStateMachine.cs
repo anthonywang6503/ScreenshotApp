@@ -10,6 +10,9 @@ internal enum AppState
 
     /// <summary>顯示覆蓋層讓使用者選取區域。</summary>
     Selecting,
+
+    /// <summary>編輯視窗開著一份文件。</summary>
+    Editing,
 }
 
 /// <summary>
@@ -18,16 +21,19 @@ internal enum AppState
 /// </summary>
 internal sealed class AppStateMachine
 {
+    private AppState _beforeCapture = AppState.Resident;
+
     public AppState Current { get; private set; } = AppState.Resident;
 
-    /// <summary>開始截圖；只有常駐狀態可以開始。</summary>
+    /// <summary>開始截圖；常駐或編輯中都可以開始，並記住開始前的狀態。</summary>
     public bool TryBeginCapture()
     {
-        if (Current != AppState.Resident)
+        if (Current is not (AppState.Resident or AppState.Editing))
         {
             return false;
         }
 
+        _beforeCapture = Current;
         Current = AppState.Capturing;
         return true;
     }
@@ -43,10 +49,32 @@ internal sealed class AppStateMachine
         Current = AppState.Selecting;
     }
 
-    /// <summary>截圖流程結束（完成、取消或失敗），回到常駐狀態。</summary>
+    /// <summary>截圖流程結束（完成、取消或失敗），回到開始截圖前的狀態；完成時由呼叫端再進入編輯。</summary>
     public void EndCapture()
     {
         if (Current is not (AppState.Capturing or AppState.Selecting))
+        {
+            throw InvalidTransition(_beforeCapture);
+        }
+
+        Current = _beforeCapture;
+    }
+
+    /// <summary>開啟編輯文件；已在編輯時代表以新文件取代目前的文件。</summary>
+    public void BeginEditing()
+    {
+        if (Current is not (AppState.Resident or AppState.Editing))
+        {
+            throw InvalidTransition(AppState.Editing);
+        }
+
+        Current = AppState.Editing;
+    }
+
+    /// <summary>關閉編輯視窗，回到常駐。</summary>
+    public void EndEditing()
+    {
+        if (Current != AppState.Editing)
         {
             throw InvalidTransition(AppState.Resident);
         }

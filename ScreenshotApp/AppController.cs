@@ -1,8 +1,9 @@
 using System.IO;
 using System.Windows;
-using System.Windows.Media.Imaging;
+using System.Windows.Media;
 using ScreenshotApp.Capture;
-using ScreenshotApp.Export;
+using ScreenshotApp.Editor;
+using ScreenshotApp.Editor.Model;
 using ScreenshotApp.Platform;
 using ScreenshotApp.Resources;
 using ScreenshotApp.Settings;
@@ -12,7 +13,7 @@ namespace ScreenshotApp;
 internal sealed record SettingsApplyResult(bool Succeeded, IReadOnlyList<string> Messages);
 
 /// <summary>
-/// 建立並連接常駐服務：設定、全域快捷鍵、系統匣、開機啟動與截圖流程。只在 UI 執行緒上使用。
+/// 建立並連接常駐服務：設定、全域快捷鍵、系統匣、開機啟動、截圖流程與唯一的編輯視窗。只在 UI 執行緒上使用。
 /// </summary>
 internal sealed class AppController : IDisposable
 {
@@ -26,6 +27,7 @@ internal sealed class AppController : IDisposable
     private AppSettings _settings = new();
     private HotkeyRegistrationResult _hotkeyFailure;
     private SettingsWindow? _settingsWindow;
+    private EditorWindow? _editor;
 
     public AppController(SettingsStore store, StartupService startup, ErrorLog log)
     {
@@ -104,10 +106,23 @@ internal sealed class AppController : IDisposable
         }
     }
 
+    /// <summary>第二個執行個體啟動時喚醒：編輯中帶出編輯視窗，否則顯示設定視窗。</summary>
+    public void ActivateFromSecondInstance()
+    {
+        if (_state.Current == AppState.Editing && _editor is not null)
+        {
+            ShowEditor(_editor);
+        }
+        else
+        {
+            ShowSettings();
+        }
+    }
+
     public void ShowSettings()
     {
         // 截圖或選取進行中（例如第二個執行個體在此時喚醒）不顯示，以免設定視窗被截入或蓋住覆蓋層。
-        if (_state.Current != AppState.Resident)
+        if (_state.Current is AppState.Capturing or AppState.Selecting)
         {
             return;
         }
@@ -175,9 +190,25 @@ internal sealed class AppController : IDisposable
         return new SettingsApplyResult(succeeded, messages);
     }
 
+    /// <summary>
+    /// 編輯器在沒有選取標註時變更的顏色、線寬與字級，寫入設定成為之後的預設值。
+    /// </summary>
+    public SettingsSaveResult SaveAnnotationDefaults(Color color, int strokeWidth, int fontSize)
+    {
+        var updated = _settings with { DefaultColor = color, DefaultStrokeWidth = strokeWidth, DefaultFontSize = fontSize };
+        if (updated == _settings)
+        {
+            return new SettingsSaveResult(true, null);
+        }
+
+        _settings = updated;
+        return _store.Save(_settings);
+    }
+
     public void Dispose()
     {
         _settingsWindow?.Close();
+        _editor?.Close();
         _hotkey.Dispose();
         _tray.Dispose();
     }
@@ -196,7 +227,7 @@ internal sealed class AppController : IDisposable
         switch (outcome.Status)
         {
             case CaptureStatus.Completed:
-                CopyToClipboard(outcome.Image!);
+                OpenEditor(new ImageDocument(outcome.Image!));
                 break;
             case CaptureStatus.Failed:
                 _log.Write("截圖失敗", outcome.Error);
@@ -206,20 +237,39 @@ internal sealed class AppController : IDisposable
         }
     }
 
-    // 編輯器完成前，選取結果直接複製到剪貼簿並以通知告知尺寸。
-    private void CopyToClipboard(BitmapSource image)
+    // 只有一個編輯視窗：已開啟時以新文件取代目前的文件。取消或失敗的截圖不會走到這裡，原本的文件與視窗由截圖流程恢復。
+    private void OpenEditor(ImageDocument document)
     {
-        if (ClipboardService.TrySetImage(image, out var errorCode))
+        _state.BeginEditing();
+        if (_editor is null)
         {
-            _tray.ShowNotification(
-                Strings.Get("App_Name"),
-                Strings.Format("Notify_CaptureCopied", image.PixelWidth, image.PixelHeight),
-                NotificationKind.Info);
+            var editor = new EditorWindow(this);
+            editor.Closed += (_, _) =>
+            {
+                _editor = null;
+
+                // 結束程式時編輯視窗由 Dispose 關閉，此時可能不在編輯狀態。
+                if (_state.Current == AppState.Editing)
+                {
+                    _state.EndEditing();
+                }
+            };
+            _editor = editor;
         }
-        else
+
+        _editor.Load(document);
+        ShowEditor(_editor);
+    }
+
+    private static void ShowEditor(EditorWindow editor)
+    {
+        editor.Show();
+        if (editor.WindowState == WindowState.Minimized)
         {
-            _tray.ShowNotification(Strings.Get("App_Name"), Strings.Format("Notify_ClipboardFailed", errorCode), NotificationKind.Error);
+            editor.WindowState = WindowState.Normal;
         }
+
+        editor.Activate();
     }
 
     private void UpdateTrayToolTip() =>

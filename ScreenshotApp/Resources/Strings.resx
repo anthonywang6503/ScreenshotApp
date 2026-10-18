@@ -54,14 +54,8 @@
   <data name="Notify_StartupSyncFailed" xml:space="preserve">
     <value>無法更新「登入 Windows 時啟動」設定：{0}</value>
   </data>
-  <data name="Notify_CaptureCopied" xml:space="preserve">
-    <value>已將 {0} × {1} 像素的截圖複製到剪貼簿。</value>
-  </data>
   <data name="Notify_CaptureFailed" xml:space="preserve">
     <value>截圖失敗：{0}</value>
-  </data>
-  <data name="Notify_ClipboardFailed" xml:space="preserve">
-    <value>無法將截圖複製到剪貼簿（錯誤碼 0x{0:X8}），剪貼簿可能正被其他程式使用，請稍後再試。</value>
   </data>
 
   <data name="Capture_NoMonitor" xml:space="preserve">
@@ -204,6 +198,210 @@
   </data>
   <data name="Settings_SaveFailed" xml:space="preserve">
     <value>設定已套用，但無法寫入設定檔：{0}</value>
+  </data>
+
+  <data name="Editor_Title" xml:space="preserve">
+    <value>ScreenshotApp 編輯器</value>
+  </data>
+  <data name="Editor_ToolSelect" xml:space="preserve">
+    <value>選取(_V)</value>
+  </data>
+  <data name="Editor_ToolSelectToolTip" xml:space="preserve">
+    <value>選取、移動或調整標註；雙擊文字可重新編輯，雙擊步驟編號可修改數值</value>
+  </data>
+  <data name="Editor_ToolCrop" xml:space="preserve">
+    <value>裁切(_C)</value>
+  </data>
+  <data name="Editor_ToolCropToolTip" xml:space="preserve">
+    <value>拖曳框選裁切範圍或拖曳控制點調整，按 Enter 或在範圍內雙擊套用，Esc 取消</value>
+  </data>
+  <data name="Editor_ToolRectangle" xml:space="preserve">
+    <value>矩形(_R)</value>
+  </data>
+  <data name="Editor_ToolRectangleToolTip" xml:space="preserve">
+    <value>拖曳繪製矩形框</value>
+  </data>
+  <data name="Editor_ToolEllipse" xml:space="preserve">
+    <value>橢圓(_E)</value>
+  </data>
+  <data name="Editor_ToolEllipseToolTip" xml:space="preserve">
+    <value>拖曳繪製橢圓</value>
+  </data>
+  <data name="Editor_ToolLine" xml:space="preserve">
+    <value>直線(_L)</value>
+  </data>
+  <data name="Editor_ToolLineToolTip" xml:space="preserve">
+    <value>拖曳繪製直線</value>
+  </data>
+  <data name="Editor_ToolArrow" xml:space="preserve">
+    <value>箭頭(_A)</value>
+  </data>
+  <data name="Editor_ToolArrowToolTip" xml:space="preserve">
+    <value>拖曳繪製箭頭，箭頭指向放開滑鼠的位置</value>
+  </data>
+  <data name="Editor_ToolText" xml:space="preserve">
+    <value>文字(_T)</value>
+  </data>
+  <data name="Editor_ToolTextToolTip" xml:space="preserve">
+    <value>點一下開始輸入文字；Ctrl+Enter 或點擊其他位置完成，Esc 取消；點擊既有文字可重新編輯</value>
+  </data>
+  <data name="Editor_ToolStep" xml:space="preserve">
+    <value>編號(_N)</value>
+  </data>
+  <data name="Editor_ToolStepToolTip" xml:space="preserve">
+    <value>點一下放置自動遞增的步驟編號，按住可拖曳調整位置</value>
+  </data>
+  <data name="Editor_Undo" xml:space="preserve">
+    <value>復原(_Z)</value>
+  </data>
+  <data name="Editor_UndoToolTip" xml:space="preserve">
+    <value>復原上一個操作（Ctrl+Z）</value>
+  </data>
+  <data name="Editor_Redo" xml:space="preserve">
+    <value>重做(_Y)</value>
+  </data>
+  <data name="Editor_RedoToolTip" xml:space="preserve">
+    <value>重做被復原的操作（Ctrl+Y）</value>
+  </data>
+  <data name="Editor_Copy" xml:space="preserve">
+    <value>複製(_P)</value>
+  </data>
+  <data name="Editor_CopyToolTip" xml:space="preserve">
+    <value>將完成的圖片複製到剪貼簿（Ctrl+C）</value>
+  </data>
+  <data name="Editor_Save" xml:space="preserve">
+    <value>另存 PNG(_S)</value>
+  </data>
+  <data name="Editor_SaveToolTip" xml:space="preserve">
+    <value>將完成的圖片另存為 PNG 檔（Ctrl+S）</value>
+  </data>
+  <data name="Editor_ColorLabel" xml:space="preserve">
+    <value>顏色(_O)：</value>
+  </data>
+  <data name="Editor_CustomColor" xml:space="preserve">
+    <value>自訂(_K)…</value>
+  </data>
+  <data name="Editor_CustomColorToolTip" xml:space="preserve">
+    <value>選擇其他顏色</value>
+  </data>
+  <data name="Editor_StrokeWidthLabel" xml:space="preserve">
+    <value>線寬(_W)：</value>
+  </data>
+  <data name="Editor_StrokeWidthToolTip" xml:space="preserve">
+    <value>矩形、橢圓、直線與箭頭的線寬，以圖片像素為單位，不隨縮放改變</value>
+  </data>
+  <data name="Editor_FontFamilyLabel" xml:space="preserve">
+    <value>字型(_F)：</value>
+  </data>
+  <data name="Editor_FontFamilyToolTip" xml:space="preserve">
+    <value>文字標註的字型</value>
+  </data>
+  <data name="Editor_FontSizeLabel" xml:space="preserve">
+    <value>字級(_I)：</value>
+  </data>
+  <data name="Editor_FontSizeToolTip" xml:space="preserve">
+    <value>文字標註的字級，以圖片像素為單位；也決定新步驟編號的大小</value>
+  </data>
+  <data name="Editor_StepNumberLabel" xml:space="preserve">
+    <value>編號值(_B)：</value>
+  </data>
+  <data name="Editor_StepNumberToolTip" xml:space="preserve">
+    <value>選取步驟編號後輸入新的數值（1～999），按 Enter 套用</value>
+  </data>
+  <data name="Editor_ZoomLabel" xml:space="preserve">
+    <value>縮放(_M)：</value>
+  </data>
+  <data name="Editor_ZoomToolTip" xml:space="preserve">
+    <value>Ctrl+滾輪以游標為中心縮放，Ctrl+0 符合視窗；按住空白鍵或滑鼠中鍵拖曳可平移</value>
+  </data>
+  <data name="Editor_ZoomFit" xml:space="preserve">
+    <value>符合視窗</value>
+  </data>
+  <data name="Editor_ZoomPercent" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="Editor_ImageSize" xml:space="preserve">
+    <value>圖片：{0} × {1}</value>
+  </data>
+  <data name="Editor_CropSize" xml:space="preserve">
+    <value>裁切：{0} × {1}</value>
+  </data>
+  <data name="Editor_CursorPosition" xml:space="preserve">
+    <value>游標：{0}, {1}</value>
+  </data>
+  <data name="Editor_CropHint" xml:space="preserve">
+    <value>拖曳框選裁切範圍或拖曳控制點調整；按 Enter 或在範圍內雙擊套用，Esc 取消。</value>
+  </data>
+  <data name="Editor_Copied" xml:space="preserve">
+    <value>已將 {0} × {1} 像素的圖片複製到剪貼簿。</value>
+  </data>
+  <data name="Editor_CopyFailed" xml:space="preserve">
+    <value>無法複製到剪貼簿（錯誤碼 0x{0:X8}），剪貼簿可能正被其他程式使用。
+
+圖片仍保留在編輯器中，請稍後再試。</value>
+  </data>
+  <data name="Editor_SaveTitle" xml:space="preserve">
+    <value>另存 PNG</value>
+  </data>
+  <data name="Editor_SaveFilter" xml:space="preserve">
+    <value>PNG 圖片 (*.png)|*.png</value>
+  </data>
+  <data name="Editor_Saved" xml:space="preserve">
+    <value>已儲存：{0}</value>
+  </data>
+  <data name="Editor_SaveFailed" xml:space="preserve">
+    <value>無法儲存圖片：{0}
+
+圖片仍保留在編輯器中，可以改存到其他位置。</value>
+  </data>
+  <data name="Editor_DefaultsSaveFailed" xml:space="preserve">
+    <value>無法儲存預設樣式：{0}</value>
+  </data>
+  <data name="Editor_BringToFront" xml:space="preserve">
+    <value>移到最上層(_T)</value>
+  </data>
+  <data name="Editor_BringToFrontGesture" xml:space="preserve">
+    <value>Ctrl+Shift+]</value>
+  </data>
+  <data name="Editor_BringForward" xml:space="preserve">
+    <value>上移一層(_F)</value>
+  </data>
+  <data name="Editor_BringForwardGesture" xml:space="preserve">
+    <value>Ctrl+]</value>
+  </data>
+  <data name="Editor_SendBackward" xml:space="preserve">
+    <value>下移一層(_B)</value>
+  </data>
+  <data name="Editor_SendBackwardGesture" xml:space="preserve">
+    <value>Ctrl+[</value>
+  </data>
+  <data name="Editor_SendToBack" xml:space="preserve">
+    <value>移到最下層(_K)</value>
+  </data>
+  <data name="Editor_SendToBackGesture" xml:space="preserve">
+    <value>Ctrl+Shift+[</value>
+  </data>
+  <data name="Editor_Delete" xml:space="preserve">
+    <value>刪除(_D)</value>
+  </data>
+  <data name="Editor_DeleteGesture" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+
+  <data name="Font_MicrosoftJhengHei" xml:space="preserve">
+    <value>微軟正黑體</value>
+  </data>
+  <data name="Font_PMingLiU" xml:space="preserve">
+    <value>新細明體</value>
+  </data>
+  <data name="Font_DFKaiSB" xml:space="preserve">
+    <value>標楷體</value>
+  </data>
+  <data name="Font_SegoeUI" xml:space="preserve">
+    <value>Segoe UI</value>
+  </data>
+  <data name="Font_Consolas" xml:space="preserve">
+    <value>Consolas</value>
   </data>
 
   <data name="Color_Red" xml:space="preserve">
