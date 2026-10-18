@@ -64,6 +64,7 @@
 3. `ImageDocument` 加入版本追蹤（`ExportedVersion`／`IsDirty`）與 `UnsavedChangesDialog`，套用於新截圖、開啟圖片、關閉編輯器與系統匣結束。
 4. 編輯器「開啟」按鈕與系統匣「開啟圖片」（`ImageFileLoader`）。
 5. 補完 Phase 3 煙霧驗證的後半段（電腦閒置時執行 `Invoke-Phase3Smoke.ps1`）。
+6. 更新 `tools/smoke/Invoke-Phase2Smoke.ps1`：它依 Phase 2 行為（選取後直接複製到剪貼簿）比對結果，Phase 3 之後選取完成會開啟編輯器，剪貼簿比對全部會失敗，編輯視窗也會蓋住置頂圖樣。改為由編輯器 `Ctrl+C` 取得結果並在比對後關閉編輯器（或併入 Phase 3 腳本）；P5-07 以發佈版重跑各階段腳本前必須完成。
 
 ## 6. 未驗證項目
 
