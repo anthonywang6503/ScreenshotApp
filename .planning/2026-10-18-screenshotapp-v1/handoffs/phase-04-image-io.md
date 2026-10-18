@@ -66,7 +66,7 @@
 ## 5. 後續工作（Phase 5）
 
 1. 從 `main` 建立 `feature/phase-05-release`，先寫 ADR-0017（發佈與封裝策略）。
-2. P5-11：查明並修正 Delete 鍵問題（先以 `EditorSessionTests` 判別「點選沒有移動後仍在拖曳」，再查視窗與輸入層），之後以發佈版重跑 Phase 1～4 的腳本（P5-07）。
+2. P5-11：查明並修正 Delete 鍵問題（先以 `EditorSessionTests` 判別「點選沒有移動後仍在拖曳」，再查視窗與輸入層），之後以發佈版重跑 Phase 1～4 的腳本（P5-07）；`Invoke-Phase4Smoke.ps1` 由產生器複製了 Phase 3 的原生方法，其中 `ControlWheel` 沒有被呼叫，屆時一併移除。
 3. 繁中介面與操作性總檢、錯誤恢復總檢、30 次完整循環的資源量測（含另存與開啟圖片）。
 4. 文件完整版（`docs/ARCHITECTURE.md`、`docs/USER_GUIDE.md`、`docs/KNOWN_LIMITATIONS.md`）與 `win-x64` 自包含發佈。
 5. 依使用者回報處理 MT-04、MT-05、MT-07、MT-08（重新確認）、MT-09 與十字游標的重新確認；若使用者希望未修改的截圖也要詢問，調整新文件的初始匯出版本。
