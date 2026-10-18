@@ -1,0 +1,16 @@
+# .NET build output
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+artifacts/
+publish/
+*.binlog
+
+# planning-with-files session-only state
+.planning/**/.stop_blocks
+.planning/**/.gate_last_ledger
+.planning/**/.nonce
+.planning/**/ledger-*.jsonl
