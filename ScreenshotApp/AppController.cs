@@ -1,5 +1,8 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Media.Imaging;
+using ScreenshotApp.Capture;
+using ScreenshotApp.Export;
 using ScreenshotApp.Platform;
 using ScreenshotApp.Resources;
 using ScreenshotApp.Settings;
@@ -9,24 +12,31 @@ namespace ScreenshotApp;
 internal sealed record SettingsApplyResult(bool Succeeded, IReadOnlyList<string> Messages);
 
 /// <summary>
-/// 建立並連接常駐服務：設定、全域快捷鍵、系統匣與開機啟動。只在 UI 執行緒上使用。
+/// 建立並連接常駐服務：設定、全域快捷鍵、系統匣、開機啟動與截圖流程。只在 UI 執行緒上使用。
 /// </summary>
 internal sealed class AppController : IDisposable
 {
     private readonly SettingsStore _store;
     private readonly StartupService _startup;
+    private readonly ErrorLog _log;
     private readonly HotkeyService _hotkey;
     private readonly TrayService _tray;
+    private readonly AppStateMachine _state = new();
+    private readonly CaptureFlow _captureFlow;
     private AppSettings _settings = new();
     private HotkeyRegistrationResult _hotkeyFailure;
     private SettingsWindow? _settingsWindow;
 
-    public AppController(SettingsStore store, StartupService startup)
+    public AppController(SettingsStore store, StartupService startup, ErrorLog log)
     {
         _store = store;
         _startup = startup;
+        _log = log;
+        _captureFlow = new CaptureFlow(_state, new DesktopCaptureEnvironment());
         _hotkey = new HotkeyService();
+        _hotkey.Pressed += (_, _) => StartCapture();
         _tray = new TrayService();
+        _tray.CaptureRequested += (_, _) => StartCaptureAfterMenuCloses();
         _tray.SettingsRequested += (_, _) => ShowSettings();
         _tray.ExitRequested += (_, _) => RequestExit();
     }
@@ -87,12 +97,21 @@ internal sealed class AppController : IDisposable
         _tray.Show();
         if (notices.Count > 0)
         {
-            _tray.ShowNotification(Strings.Get("App_Name"), string.Join(Environment.NewLine, notices), isError: !registration.Succeeded);
+            _tray.ShowNotification(
+                Strings.Get("App_Name"),
+                string.Join(Environment.NewLine, notices),
+                registration.Succeeded ? NotificationKind.Warning : NotificationKind.Error);
         }
     }
 
     public void ShowSettings()
     {
+        // 截圖或選取進行中（例如第二個執行個體在此時喚醒）不顯示，以免設定視窗被截入或蓋住覆蓋層。
+        if (_state.Current != AppState.Resident)
+        {
+            return;
+        }
+
         if (_settingsWindow is null)
         {
             _settingsWindow = new SettingsWindow(this);
@@ -166,6 +185,42 @@ internal sealed class AppController : IDisposable
     // 延後到系統匣選單的事件處理結束後才關閉，避免在選單事件中途釋放系統匣圖示。
     private static void RequestExit() =>
         Application.Current.Dispatcher.BeginInvoke(new Action(Application.Current.Shutdown));
+
+    // 延後到選單事件處理結束、選單從畫面移除之後才開始，選單才不會被截入。
+    private void StartCaptureAfterMenuCloses() =>
+        Application.Current.Dispatcher.BeginInvoke(new Action(StartCapture));
+
+    private async void StartCapture()
+    {
+        var outcome = await _captureFlow.RunAsync();
+        switch (outcome.Status)
+        {
+            case CaptureStatus.Completed:
+                CopyToClipboard(outcome.Image!);
+                break;
+            case CaptureStatus.Failed:
+                _log.Write("截圖失敗", outcome.Error);
+                _tray.ShowNotification(
+                    Strings.Get("App_Name"), Strings.Format("Notify_CaptureFailed", outcome.Error!.Message), NotificationKind.Error);
+                break;
+        }
+    }
+
+    // 編輯器完成前，選取結果直接複製到剪貼簿並以通知告知尺寸。
+    private void CopyToClipboard(BitmapSource image)
+    {
+        if (ClipboardService.TrySetImage(image, out var errorCode))
+        {
+            _tray.ShowNotification(
+                Strings.Get("App_Name"),
+                Strings.Format("Notify_CaptureCopied", image.PixelWidth, image.PixelHeight),
+                NotificationKind.Info);
+        }
+        else
+        {
+            _tray.ShowNotification(Strings.Get("App_Name"), Strings.Format("Notify_ClipboardFailed", errorCode), NotificationKind.Error);
+        }
+    }
 
     private void UpdateTrayToolTip() =>
         _tray.SetToolTip(IsHotkeyActive

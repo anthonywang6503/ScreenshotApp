@@ -26,11 +26,21 @@ dotnet test ScreenshotApp.sln -c Release
 
 程式啟動後不顯示主視窗，只在系統匣常駐：
 
+- 按下截圖快捷鍵或選擇系統匣的「開始截圖」：開始截圖（見下節）。
 - 雙擊系統匣圖示或選擇「設定」：開啟設定視窗（截圖快捷鍵、登入 Windows 時啟動、預設標註樣式）。
 - 選擇「結束」：解除快捷鍵、移除系統匣圖示並結束程式。
 - 再次執行程式不會產生第二個執行個體，而是顯示既有執行個體的設定視窗。
 
 預設截圖快捷鍵為 `Ctrl+Shift+2`。快捷鍵被其他程式占用時，系統匣通知、圖示工具提示與設定視窗都會顯示原因。
+
+### 截圖
+
+1. 按下快捷鍵後，畫面凍結並變暗，每個顯示器都可以操作。
+2. 按住滑鼠左鍵拖曳選取範圍，選取框旁顯示實際像素寬高；選取限於起始的顯示器內。
+3. 放開滑鼠即完成。編輯器完成前，截圖會直接複製到剪貼簿，並以系統通知顯示尺寸。
+4. 按 `Esc` 或滑鼠右鍵取消；在原地點一下（沒有拖曳）不會產生截圖，可以重新拖曳。
+
+已知限制（不擷取游標、受保護內容、安全桌面等）見 [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)。
 
 ## 本機資料位置
 
@@ -44,7 +54,10 @@ dotnet test ScreenshotApp.sln -c Release
 
 ```
 ScreenshotApp/            WPF 應用程式（net10.0-windows）
-  Platform/               Win32 互操作、快捷鍵、系統匣、單一執行個體、開機啟動、故障日誌
+  Platform/               Win32 互操作、快捷鍵、系統匣、顯示器列舉、GDI 擷取、單一執行個體、開機啟動、故障日誌
+  Capture/                截圖流程、座標換算、區域選取覆蓋層
+  Editor/Model/           圖片像素座標模型
+  Export/                 剪貼簿輸出
   Settings/               設定模型、JSON 持久化、設定視窗
   Resources/              介面文字（Strings.resx，台灣繁體中文）與應用程式圖示
 ScreenshotApp.Tests/      xunit 自動化測試
@@ -56,3 +69,4 @@ tools/                    開發輔助腳本：圖示產生、實機煙霧驗證
 
 - 架構決策紀錄：[docs/adr/](docs/adr/)
 - 驗收紀錄（自動化測試、煙霧驗證、實機驗收）：[docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)
+- 已知限制：[docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)

@@ -20,6 +20,9 @@
     <value>、</value>
   </data>
 
+  <data name="Tray_StartCapture" xml:space="preserve">
+    <value>開始截圖(&amp;C)</value>
+  </data>
   <data name="Tray_Settings" xml:space="preserve">
     <value>設定(&amp;S)</value>
   </data>
@@ -50,6 +53,31 @@
   </data>
   <data name="Notify_StartupSyncFailed" xml:space="preserve">
     <value>無法更新「登入 Windows 時啟動」設定：{0}</value>
+  </data>
+  <data name="Notify_CaptureCopied" xml:space="preserve">
+    <value>已將 {0} × {1} 像素的截圖複製到剪貼簿。</value>
+  </data>
+  <data name="Notify_CaptureFailed" xml:space="preserve">
+    <value>截圖失敗：{0}</value>
+  </data>
+  <data name="Notify_ClipboardFailed" xml:space="preserve">
+    <value>無法將截圖複製到剪貼簿（錯誤碼 0x{0:X8}），剪貼簿可能正被其他程式使用，請稍後再試。</value>
+  </data>
+
+  <data name="Capture_NoMonitor" xml:space="preserve">
+    <value>找不到可擷取的顯示器。</value>
+  </data>
+  <data name="Capture_ApiFailed" xml:space="preserve">
+    <value>Windows 無法擷取畫面（錯誤碼 {0}）。</value>
+  </data>
+  <data name="Capture_DisplayChanged" xml:space="preserve">
+    <value>選取期間顯示設定已變更，已取消本次截圖，請重新截圖。</value>
+  </data>
+  <data name="Selection_Title" xml:space="preserve">
+    <value>ScreenshotApp 區域選取</value>
+  </data>
+  <data name="Selection_Size" xml:space="preserve">
+    <value>{0} × {1}</value>
   </data>
 
   <data name="SettingsField_Hotkey" xml:space="preserve">

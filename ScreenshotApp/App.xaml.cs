@@ -42,7 +42,7 @@ public partial class App : Application
         {
             var executablePath = Environment.ProcessPath ?? throw new InvalidOperationException("無法取得執行檔路徑。");
             var store = new SettingsStore(SettingsStore.DefaultFilePath);
-            var controller = new AppController(store, new StartupService(executablePath));
+            var controller = new AppController(store, new StartupService(executablePath), log);
             _controller = controller;
             controller.Start(store.Load());
 

@@ -15,11 +15,11 @@
 
 ## Next Step
 
-Phase 1 已完成（人工控制點）。等待使用者回報 MT-01、MT-02（占用提示）並授權 Phase 2；授權後建立 `feature/phase-02-capture-selection`，將 Phase 2 標記 `in_progress`，先撰寫 ADR-0007～0009。
+Phase 2 已完成（人工控制點）。等待使用者回報 MT（Phase 1 的 MT-01、MT-02 占用提示；Phase 2 的 MT-02 觸發、MT-03 取消部分、MT-04、MT-05，步驟見 `docs/ACCEPTANCE.md`）並授權 Phase 3；授權後從 `main` 建立 `feature/phase-03-editor-core`，將 Phase 3 標記 `in_progress`，先撰寫 ADR-0010～0013。
 
 ## Current Phase
 
-Phase 1（Windows 平台基礎）已完成（2026-10-18，handoff：`handoffs/phase-01-platform-foundation.md`）。Phase 2 等待授權，尚未開始。
+Phase 2（截圖與區域選取）已完成（2026-10-18，handoff：`handoffs/phase-02-capture-selection.md`）。Phase 3 等待授權，尚未開始。
 
 ## 執行規範（本任務專用）
 
@@ -135,28 +135,28 @@ Checklist（格式：ID｜項目｜依賴｜Effort｜委派｜驗收）
 **分支**：`feature/phase-02-capture-selection`。
 
 Checklist
-- [ ] P2-00 ADR-0007～0009（截圖策略、覆蓋層定位與輸入座標策略、狀態機與重入保護）｜無｜medium｜否｜三份 ADR Accepted
-- [ ] P2-01 `Editor/Model/PixelRect`（int、左上含右下不含、`FromPoints`、`Normalize`、`Intersect`、`Clamp`、`Contains`、`IsEmpty`、`Offset`）｜P1-01｜high｜可｜AT-02 單元測試
-- [ ] P2-02 `Platform/MonitorService`（`EnumDisplayMonitors`、`GetMonitorInfo`、`GetDpiForMonitor` → `MonitorInfo{Index, Handle, PhysicalBounds, WorkArea, DpiScale, IsPrimary, DeviceName}`；負座標與非主螢幕）｜P1-03｜high｜否｜實機列舉結果與 Windows 顯示設定一致（記錄於 progress）
-- [ ] P2-03 `Capture/CoordinateMapper`（DesktopPhysical ↔ MonitorLocal ↔ Image ↔ ViewDIP；純函式、唯一換算點）｜P2-01、P2-02｜xhigh｜可（含測試）｜AT-01：正負起點、混合 DPI、非主螢幕、縮放平移往返誤差 ≤ 1px
-- [ ] P2-04 `Platform/CaptureService`（每顯示器 `GetDC(NULL)` + `CreateCompatibleDC/Bitmap` + `BitBlt(SRCCOPY|CAPTUREBLT)` + `GetDIBits` → 凍結 `BitmapSource` Bgra32；失敗丟 `CaptureException` 含 Win32 碼；`SafeHdc`／`SafeHBitmap`／`SafeGdiObject`（自 P1-03 移入）全程釋放）｜P1-03、P2-02｜xhigh｜否｜`SafeHandleTests`（以 `GetGuiResources` 比對 GDI 物件數）；Agent 實機：各顯示器 PNG 輸出至 scratchpad 檢視；30 次循環 GDI 物件數不成長
-- [ ] P2-05 `Capture/DesktopSnapshot`（monitors + 每顯示器 bitmap + 擷取時間）｜P2-02、P2-04｜low｜否｜編譯通過
-- [ ] P2-06 `Capture/SelectionOverlayWindow`（每顯示器一個：無邊框、Topmost、`SourceInitialized` 後 `SetWindowPos` 實體像素定位；背景為該顯示器快照 `Stretch=Fill`；暗化遮罩、選取框、實體 px 尺寸標籤、十字游標；Esc／右鍵取消）｜P2-03、P2-05｜xhigh｜否｜Agent 實機：覆蓋層精確貼合各顯示器（截圖檢視）；混合 DPI 不偏移
-- [ ] P2-07 `Capture/SelectionController`（協調全部覆蓋層；滑鼠座標取 `GetCursorPos` 實體像素；拖曳夾取於起始顯示器；零尺寸→取消；完成→`SelectionResult{MonitorIndex, MonitorLocalRect}`；`SystemEvents.DisplaySettingsChanged`→取消）｜P2-06｜xhigh｜否｜AT-02 行為測試（控制器邏輯可測部分）；實機拖曳各方向正確
-- [ ] P2-08 `AppStateMachine`（自 P1-04 移入：Resident/Capturing/Selecting/Editing、轉換守衛、取消時返回先前狀態）與 `AppController` 截圖流程（快捷鍵與系統匣新增的「開始截圖」共用入口）：Resident→Capturing（隱藏自家視窗、等待合成器、快照）→Selecting→完成：裁切出 `BitmapSource` → 暫以 `Export/ClipboardService`（基礎版）複製並 Balloon 提示 → Resident；取消→恢復先前視窗；Capturing/Selecting 期間忽略快捷鍵｜P2-04～P2-07｜high｜否｜實機：快捷鍵→選取→剪貼簿影像尺寸 = 選取尺寸（PowerShell 讀取比對）；連按快捷鍵不重入
-- [ ] P2-09 擷取失敗處理：例外→關閉全部覆蓋層→繁中提示→Resident；顯示設定變更→安全取消｜P2-08｜medium｜否｜以注入失敗的 CaptureService 測試狀態回復；實機模擬（變更解析度）盡力驗證
-- [ ] P2-10 自動化測試：`PixelRectTests`（AT-02）、`CoordinateMapperTests`（AT-01）、`SelectionLogicTests`（AT-02 夾取／零尺寸／半開區間）、`CaptureFlowTests`（狀態回復）、`AppStateMachineTests`、`SafeHandleTests`｜P2-01～P2-09｜high｜可（P2-01/03 同一 Subagent）｜全數通過
-- [ ] P2-11 Agent 端實機驗證：查詢使用者顯示器配置；啟動 app → `keybd_event` 送快捷鍵 → 全螢幕截圖檢視覆蓋層 → `mouse_event` 模擬拖曳 → 剪貼簿尺寸比對；Esc 取消不留遮罩；30 次循環 handle／記憶體量測｜P2-08｜high｜否｜證據與量測條件記錄於 `progress.md`
-- [ ] P2-12 已知限制文件初稿：游標不擷取、DRM／UAC 安全桌面、跨螢幕選取限制｜無｜low｜可｜`docs/KNOWN_LIMITATIONS.md` 初版
-- [ ] P2-13 使用者實機驗證請求：MT-03、MT-04（100/125/150/200%）、MT-05（雙螢幕混合 DPI、負 X、上下排列）｜P2-11｜low｜否｜於控制點提出清單
-- [ ] P2-14 Phase 收尾儀式（handoff `handoffs/phase-02-capture-selection.md`）｜全部｜low｜否｜handoff 存在並註記
+- [x] P2-00 ADR-0007～0009（截圖策略、覆蓋層定位與輸入座標策略、狀態機與重入保護）｜無｜medium｜否｜三份 ADR Accepted
+- [x] P2-01 `Editor/Model/PixelRect` 與 `PixelPoint`（int、左上含右下不含、寬高不得為負、`FromCorners`（正規化）、`Intersect`、`Clamp(點)`、`Contains`（點／矩形）、`IsEmpty`、`Offset`）｜P1-01｜high｜可｜AT-02 單元測試
+- [x] P2-02 `Platform/MonitorService`（`EnumDisplayMonitors` → `MonitorInfo{Index, Bounds}`；覆蓋層的 DPI 由 WPF 依 HWND 取得，`WorkArea`／`DpiScale`／`IsPrimary`／`DeviceName` 沒有使用者，不加入；負座標與非主螢幕）｜P1-03｜high｜否｜`MonitorServiceTests` 與系統計量（顯示器數、主螢幕、虛擬桌面）一致
+- [x] P2-03 `Capture/CoordinateMapper`（Phase 2 範圍：DesktopPhysical ↔ MonitorLocal ↔ 覆蓋層 ViewDip；純函式、唯一換算點。編輯器的 Image ↔ ViewDip（縮放、平移）隨 P3-05 加入）｜P2-01｜xhigh｜可（含測試）｜AT-01（Phase 2 部分）：正負起點、混合 DPI、非主螢幕、往返誤差 ≤ 1px
+- [x] P2-04 `Platform/CaptureService`（每顯示器 `GetDC(NULL)` + `CreateCompatibleDC/Bitmap` + `BitBlt(SRCCOPY|CAPTUREBLT)` + `GetDIBits` 直接寫入 `WriteableBitmap` → 凍結 `Bgr32`（BitBlt 的 alpha 未定義，不用 Bgra32）；失敗丟 `CaptureException` 含 Win32 碼；`SafeScreenDcHandle`（ReleaseDC）／`SafeMemoryDcHandle`（DeleteDC）／`SafeGdiObjectHandle`（DeleteObject），刪除 DC 前換回原 bitmap）｜P1-03、P2-02｜xhigh｜否｜`SafeHandleTests`（以 `GetGuiResources` 比對 GDI 物件數）；Agent 實機：30 次循環 GDI 物件數不成長
+- [x] P2-05 `Capture/DesktopSnapshot`（每顯示器的 `MonitorInfo` + bitmap；裁切為獨立 bitmap）｜P2-02、P2-04｜low｜否｜編譯通過
+- [x] P2-06 `Capture/SelectionOverlay(.xaml)`（每顯示器一個 `HwndSource`，直接以該顯示器實體像素邊界建立（`WS_POPUP`、`WS_EX_TOPMOST|WS_EX_TOOLWINDOW`），出生即為該顯示器 DPI，不經跨 DPI 移動；背景為該顯示器快照 `Stretch=Fill`；暗化遮罩、選取框、實體 px 尺寸標籤、十字游標；Esc／右鍵取消；`WM_DISPLAYCHANGE`／`WM_DPICHANGED`→取消）｜P2-03、P2-05｜xhigh｜否｜Agent 實機：覆蓋層精確貼合各顯示器（截圖檢視）；混合 DPI 依賴 MT-05
+- [x] P2-07 `Capture/SelectionController` 與 `Capture/DragSelection`（協調全部覆蓋層；滑鼠座標取自事件本身並換回實體像素；拖曳期間 `Mouse.Capture` 於起始覆蓋層並夾取於起始顯示器；選取包含起點與終點像素；在起點像素放開＝零尺寸，不產生文件、維持選取狀態；完成→`SelectionResult{MonitorIndex, MonitorLocalRect}`）｜P2-06｜xhigh｜否｜AT-02 行為測試（`DragSelection`）；實機拖曳各方向正確
+- [x] P2-08 `AppStateMachine`（自 P1-04 移入：Resident/Capturing/Selecting、轉換守衛；Editing 隨 P3-13 編輯器加入）、`Capture/CaptureFlow`（隱藏自家視窗（先關閉淡出動畫）→`DwmFlush`×2→快照→選取→裁切；任何結束路徑都恢復視窗並回到 Resident；以 `ICaptureEnvironment` 注入平台步驟供測試）與 `AppController` 接線（快捷鍵與系統匣新增的「開始截圖」共用入口）：完成→暫以 `Export/ClipboardService`（基礎版，24 位元 DIB）複製並通知 → Resident；Capturing/Selecting 期間忽略快捷鍵、系統匣與第二個執行個體的喚醒｜P2-04～P2-07｜high｜否｜實機：快捷鍵→選取→剪貼簿影像與已知圖樣逐像素一致；連按快捷鍵不重入
+- [x] P2-09 擷取失敗處理：例外→關閉全部覆蓋層→繁中提示→Resident；顯示設定變更→安全取消並提示｜P2-08｜medium｜否｜以注入失敗的環境測試狀態回復；實機以送出 `WM_DISPLAYCHANGE` 模擬
+- [x] P2-10 自動化測試：`PixelRectTests`（AT-02）、`CoordinateMapperTests`（AT-01）、`SelectionLogicTests`（AT-02 夾取／零尺寸／半開區間）、`CaptureFlowTests`（狀態回復）、`AppStateMachineTests`、`SafeHandleTests`、`MonitorServiceTests`、`CaptureServiceTests`、`ClipboardServiceTests`（DIB 格式）｜P2-01～P2-09｜high｜可（P2-01/03 同一 Subagent）｜314 個全數通過
+- [x] P2-11 Agent 端實機驗證：查詢使用者顯示器配置；記事本置於前景後啟動 app → 送快捷鍵 → 截圖檢視覆蓋層與邊界 → 模擬拖曳 → 剪貼簿與已知圖樣視窗逐像素比對（含設定視窗遮在圖樣上時不被截入、系統匣「開始截圖」路徑）；Esc／右鍵取消不留遮罩；零尺寸；連按快捷鍵；30 次循環 GDI／USER 物件、handle、記憶體量測｜P2-08｜high｜否｜證據與量測條件記錄於 `progress.md` 與 `docs/evidence/phase-02/`
+- [x] P2-12 已知限制文件初稿：游標不擷取、DRM／UAC 安全桌面、跨螢幕選取限制｜無｜low｜可｜`docs/KNOWN_LIMITATIONS.md` 初版
+- [x] P2-13 使用者實機驗證請求：MT-02（觸發）、MT-03（取消部分）、MT-04（100/125/150/200%）、MT-05（雙螢幕混合 DPI、負 X、上下排列）｜P2-11｜low｜否｜步驟寫入 `docs/ACCEPTANCE.md`，於控制點提出
+- [x] P2-14 Phase 收尾儀式（handoff `handoffs/phase-02-capture-selection.md`）｜全部｜low｜否｜handoff 存在並註記
 
 **Acceptance Criteria（Phase 門檻）**
 1. FR-07～FR-13 可操作；AT-01、AT-02 通過；覆蓋層無 DPI 偏移（Agent 截圖證據 + 使用者 MT-04/05 回報）。
 2. GDI 資源 30 次循環無成長趨勢（附量測數據）。
 
-**Handoff**：尚未建立。
-- **Status:** pending
+**Handoff**：`handoffs/phase-02-capture-selection.md`（2026-10-18；314 個自動化測試通過、煙霧驗證 38 項全數通過、30 次循環 GDI 物件恆為 38）。
+- **Status:** complete
 
 ### Phase 3: 圖片編輯核心（FR-14～FR-25）
 
@@ -170,7 +170,7 @@ Checklist
 - [ ] P3-02 命令模式：`Editor/Commands/IEditCommand{Execute, Undo, Description}`、`UndoRedoStack`（上限 100、新命令清除 Redo、版本遞增）、`AddAnnotationCommand`、`RemoveAnnotationCommand`、`MoveAnnotationCommand`、`ResizeAnnotationCommand`、`ChangeStyleCommand`、`ChangeTextCommand`、`ChangeNumberCommand`、`SetCropCommand`、`ReorderZCommand`｜P3-01｜high｜可（含測試）｜AT-05：全部可逆、一次拖曳一筆、新修改清除 Redo、上限 100
 - [ ] P3-03 `Editor/Rendering/AnnotationPainter`（`DrawingContext` 於圖片像素座標繪製所有標註：矩形／橢圓／直線／箭頭頭部幾何／文字 `FormattedText`（像素字級、換行）／步驟編號圓形+置中數字）；顯示與匯出共用｜P3-01｜xhigh｜否｜渲染快照測試：同一文件在兩種縮放下輸出一致（AT-07 前置）
 - [ ] P3-04 `Editor/EditorWindow.xaml` 版面：工具列（八工具 ToggleButton，圖示+文字、ToolTip、AccessKey）、屬性列（8 常用色 + 自訂、線寬、字級、字型）、Undo／Redo／複製／儲存／開啟按鈕、畫布（`ScrollViewer` + 縮放容器 + `Image` + `AnnotationCanvas` 自訂元素）、狀態列（圖片尺寸、裁切尺寸、游標圖片像素、縮放 %）；`EditorViewModel`｜P3-01、P3-03｜xhigh｜否｜實機：開啟後以符合視窗縮放顯示；所有控制項可鍵盤到達
-- [ ] P3-05 縮放與平移：符合視窗、100%（1 圖片 px = 1 實體 px，`scale = zoom / dpiScale`）、25%～400% 階段、Ctrl+滾輪以游標為中心、空白鍵／中鍵拖曳平移、視窗調整不改變模型｜P3-04｜high｜否｜實機：各縮放下控制點尺寸固定、模型座標不變
+- [ ] P3-05 縮放與平移：符合視窗、100%（1 圖片 px = 1 實體 px，`scale = zoom / dpiScale`）、25%～400% 階段、Ctrl+滾輪以游標為中心、空白鍵／中鍵拖曳平移、視窗調整不改變模型；`CoordinateMapper` 加入 Image ↔ ViewDip（縮放、平移）換算｜P3-04｜high｜否｜AT-01（縮放與平移部分）往返誤差 ≤ 1px；實機：各縮放下控制點尺寸固定、模型座標不變
 - [ ] P3-06 工具控制器：`Editor/Tools/ITool`（以圖片像素座標接收 Down/Move/Up/Key）、`SelectTool`（由上而下命中、拖曳移動、控制點調整、Delete）、`ShapeTool`（矩形／橢圓／直線／箭頭拖曳建立，零尺寸不建立）、`StepNumberTool`（點擊建立、自動遞增、刪除不重排）、`CropTool`、`TextTool`；一次拖曳僅在 Up 時提交一筆命令｜P3-02、P3-04｜xhigh｜否｜AT-04 + 實機操作截圖
 - [ ] P3-07 文字輸入：畫布上 WPF `TextBox` 覆蓋（`AcceptsReturn`、IME 可用、字級=像素字級隨縮放容器縮放）、Ctrl+Enter／點擊外部=提交、Esc=取消、空字串=取消或刪除、雙擊重編、建立與修改各為一筆命令；編輯中 Ctrl+C／Ctrl+Z 交給 TextBox｜P3-06｜xhigh｜否｜AT-06 模型測試 + 實機輸入中英文與換行
 - [ ] P3-08 樣式與屬性列：預設紅色、3px、20px；變更選取物件樣式→`ChangeStyleCommand`；未選取時變更工具預設並回寫設定；自訂顏色使用 WinForms `ColorDialog`｜P3-04、P3-06｜medium｜否｜實機：樣式變更可 Undo；尺寸以圖片像素為準
@@ -178,7 +178,7 @@ Checklist
 - [ ] P3-10 Z-order：上移／下移／最上／最下（右鍵選單 + Ctrl+]／Ctrl+[）｜P3-02、P3-06｜low｜否｜AT-04 Z-order 測試
 - [ ] P3-11 編輯器快捷鍵：Ctrl+Z／Y／C／S、Delete、Esc（取消選取或工具操作）；文字編輯中不攔截｜P3-06、P3-07｜medium｜否｜實機驗證各鍵
 - [ ] P3-12 `Export/ImageRenderer` 基礎版（`RenderTargetBitmap(crop.W, crop.H, 96, 96, Pbgra32)`、`Translate(-crop.X,-crop.Y)`、`DrawImage` + `AnnotationPainter`、Freeze）+ 複製按鈕接 `ClipboardService` + 儲存按鈕接 `PngFileService` 基礎版（SaveFileDialog、預設檔名）｜P3-03｜high｜否｜輸出尺寸 = CropRect；複製／儲存為真實功能
-- [ ] P3-13 `AppController` 整合：選取完成→`ImageDocument`→開啟／重用唯一 `EditorWindow`；取消選取時恢復原編輯視窗；關閉編輯器回常駐不退出｜P3-04、P2-08｜medium｜否｜實機流程驗證
+- [ ] P3-13 `AppController` 整合：`AppStateMachine` 加入 Editing（取消選取時返回先前狀態）；選取完成→`ImageDocument`→開啟／重用唯一 `EditorWindow`；取消選取時恢復原編輯視窗；關閉編輯器回常駐不退出｜P3-04、P2-08｜medium｜否｜`AppStateMachineTests` 涵蓋 Editing；實機流程驗證
 - [ ] P3-14 自動化測試：`ImageDocumentTests`、`AnnotationGeometryTests`（AT-04）、`UndoRedoStackTests`（AT-05）、`CropCommandTests`（AT-03）、`TextAnnotationTests`（AT-06：繁中、英文、Unicode、換行、空字串）、`AnnotationPainterRenderTests`（STA helper）｜P3-01～P3-12｜high｜可（P3-02 Subagent 含命令測試）｜全數通過
 - [ ] P3-15 Agent 端實機驗證：啟動→截圖→編輯器開啟；以模擬輸入建立矩形／箭頭／文字／編號→截圖檢視；Undo/Redo；縮放 25/100/400% 後複製輸出尺寸一致｜P3-13｜high｜否｜證據記錄
 - [ ] P3-16 使用者實機驗證請求：MT-06（微軟注音）、MT-07（多縮放一致性）｜P3-15｜low｜否｜於控制點提出
@@ -310,7 +310,7 @@ Checklist
 | 0005 | 文字資源策略：resx + 靜態存取 + XAML 標記延伸 | 1 |
 | 0006 | 系統匣與 WinForms 使用邊界 | 1 |
 | 0007 | 截圖策略：逐顯示器 BitBlt + GetDIBits | 2 |
-| 0008 | 覆蓋層定位（SetWindowPos 實體像素）與輸入座標（GetCursorPos） | 2 |
+| 0008 | 覆蓋層定位（HwndSource 直接建立於顯示器實體邊界）與輸入座標（取自事件本身的實體像素） | 2 |
 | 0009 | 應用程式狀態機與重入保護 | 2 |
 | 0010 | 文件模型與命令模式（Undo/Redo） | 3 |
 | 0011 | 共用 AnnotationPainter：顯示與匯出同一繪製碼 | 3 |
@@ -326,6 +326,7 @@ Checklist
 1. 使用者實機顯示器配置（數量、解析度、縮放）為何？→ 2026-10-18 查詢：單一顯示器 3456×2160、縮放 175%。混合 DPI 與多螢幕本機無法驗證，需使用者以 MT-04／MT-05 回報，否則標示「尚未驗證」。
 2. 使用者是否安裝 PowerPoint／Word／Teams？→ Phase 4 控制點詢問；未安裝則 MT-08 標示「尚未驗證」。
 3. Git 策略假設（feature branch + ff merge）是否接受？→ 使用者授權 Phase 1 時未覆寫，依計畫採用（2026-10-18）。
+4. Phase 2 授權？→ 2026-10-18 使用者以「載入專案狀態，開始開發」授權（與 Phase 1 授權句式相同）。MT-01、MT-02（占用提示）尚未回報，維持「尚未驗證」，於 Phase 2 控制點與 MT-02（觸發）、MT-04、MT-05 一併請使用者回報。
 
 ## Decisions Made
 
@@ -334,7 +335,7 @@ Checklist
 | Phase 劃分沿用規格第 9 節五階段，另加 Phase 0 規劃 | 規格已將 FR 分配至各階段，沿用可直接對應驗收 |
 | `ImageRenderer` 基礎版提前至 Phase 3 | 讓編輯器的複製／儲存按鈕為真實功能，避免占位按鈕；Phase 4 負責完整化與強化 |
 | Phase 2 選取完成先複製到剪貼簿 | 在編輯器完成前提供可驗證的真實結果（Agent 可讀剪貼簿比對尺寸），不是假功能 |
-| 選取座標以 `GetCursorPos` 實體像素為準，覆蓋層以 `SetWindowPos` 定位 | 避免 WPF DIP 往返換算與跨 DPI 視窗初始定位錯誤 |
+| ~~選取座標以 `GetCursorPos` 實體像素為準，覆蓋層以 `SetWindowPos` 定位~~（Phase 2 已取代：覆蓋層以 `HwndSource` 直接建立於顯示器邊界；座標取自滑鼠事件本身，見下方決策） | 避免 WPF DIP 往返換算與跨 DPI 視窗初始定位錯誤 |
 | 標註繪製集中於 `AnnotationPainter`（DrawingContext） | 顯示與匯出共用同一繪製碼，確保 PNG／剪貼簿／畫面一致 |
 | 100% 縮放定義為 1 圖片像素 = 1 實體像素 | 符合「尺寸以最終圖片像素為準」且在高 DPI 螢幕上所見即所得 |
 | 測試框架 xunit 2.9.x，WPF 物件測試以 STA helper 執行 | 範本內建、本機快取可用 |
@@ -353,6 +354,19 @@ Checklist
 | 系統匣圖示在快捷鍵註冊之後才顯示 | 圖示出現即代表常駐服務已就緒，消除外部檢查與註冊之間的時間窗 |
 | 無法開啟既有具名 Mutex 時視為已有執行個體 | 以系統管理員身分執行的既有執行個體會讓一般權限開啟失敗；避免啟動當機與重複圖示 |
 | 煙霧驗證腳本納入 `tools/smoke/`，證據存於 `docs/evidence/phase-NN/` | Phase 5 需以發佈版重跑各階段腳本；scratchpad 會隨工作階段消失 |
+| 覆蓋層改用 `HwndSource` 直接以目標顯示器實體像素邊界建立，不用 `Window` + `SetWindowPos` | WPF 原始碼確認 PMv2 下初始 DPI 取自 HWND（`GetDpiForWindow`）；出生即在目標顯示器就沒有跨 DPI 移動路徑。本機只有單一顯示器，跨 DPI 路徑永遠不會被執行到，不能依賴它 |
+| 顯示設定變更以覆蓋層 hook 處理 `WM_DISPLAYCHANGE`，不訂閱 `SystemEvents.DisplaySettingsChanged` | 覆蓋層關閉即解除，不留靜態事件訂閱 |
+| 快照格式 `Bgr32`（非 Bgra32），`GetDIBits` 直接寫入 `WriteableBitmap` | BitBlt 結果的 alpha 未定義（多為 0），Bgra32 會變成全透明；直接寫入避免多一份 4K 緩衝 |
+| `AppStateMachine` 的 Editing、`CoordinateMapper` 的縮放平移換算延至 Phase 3 | 與 SafeHandle、狀態機後移同一原則：在有使用者時才加入；AT-01 縮放平移部分隨 P3-05 驗證 |
+| 選取包含起點與終點像素；在起點像素放開視為零尺寸，不產生文件並維持選取狀態 | 可選到顯示器最後一列／行；誤點不會丟掉剛凍結的畫面（與 Windows 剪取工具一致），Esc／右鍵才取消 |
+| 截圖流程抽出 `CaptureFlow` + `ICaptureEnvironment` | 讓「失敗、取消、重入時恢復視窗並回到 Resident」可用測試替身驗證，不必在測試中建立系統匣與全螢幕視窗 |
+| Phase 2 剪貼簿改放 24 位元 DIB 位元組，不用 `Clipboard.SetImage` | 煙霧驗證量到 `SetImage` 每次留下 1 個 GDI 物件（NFR-04）；DIB 由 Windows 自動轉換為 CF_BITMAP；24 位元避免接收端誤用 alpha。Phase 4 在此基礎上加入 PNG 格式 |
+| 隱藏自家視窗前關閉其 DWM 轉場動畫，恢復顯示後再開啟 | 只等 `DwmFlush` 時快照截到設定視窗淡出中的半透明殘影；關閉動畫讓隱藏在下一個合成畫面立即生效，不需猜測等待時間 |
+| `MonitorInfo` 只保留 `Index`、`Bounds` | 覆蓋層的 DPI 由 WPF 依 HWND 取得；工作區、DPI、主螢幕、裝置名稱在 Phase 2 沒有使用者 |
+| 煙霧驗證以已知圖樣視窗逐像素比對，證據只裁切圖樣範圍；開始前等使用者閒置 | 單螢幕上唯一能證明「無 DPI 偏移、沒有截入自家視窗或選單」的強證據；不把使用者桌面內容存進儲存庫；模擬輸入不干擾正在使用電腦的人 |
+| 剪貼簿 DIB 格式以單元測試驗證，複製與 GDI 資源由煙霧驗證涵蓋 | 單元測試寫入真實剪貼簿會覆蓋使用者內容 |
+| 選取座標改取自滑鼠事件本身（WPF DIP 經 `CoordinateMapper` 以覆蓋層 DPI 換回實體像素），不在處理當下讀 `GetCursorPos` | 煙霧驗證量到 UI 執行緒延後處理按下事件時，起點落在游標稍後的位置（選取只剩拖曳路徑的 25%／75%）；DIP 往返誤差已證明為 0 |
+| 選取框改為實體像素計算的環形幾何，遮罩與選取框不做邊緣平滑 | 175% 下以 DIP 筆劃畫外框會蓋住選取範圍最後一列像素 |
 
 ## Errors Encountered
 
@@ -368,6 +382,14 @@ Checklist
 | 既有具名 Mutex 無法開啟時拋出 `UnauthorizedAccessException`（自我審查發現） | 1 | 以 `MutexAcl` 測試重現後捕捉，視為已有執行個體 |
 | 決策紀錄寫成「Phase 1 不委派 Subagent」，與實際委派圖示產生不符（advisor 審查發現） | 1 | 更正決策列並重新 attest |
 | 自訂顏色流程沒有任何驗證；補驗證時發現色彩清單 4 欄會截斷「自訂 #12ABEF」 | 1 | 煙霧腳本以視窗訊息操作 Windows 色彩對話框；清單改為 3 欄 |
+| pwsh 7.6 `Add-Type` 在 C# 中使用 WinForms／GDI+ 型別：缺組件、型別轉送衝突 | 4 | C# 只用基本型別；WinForms 操作留在 PowerShell；圖樣視窗改為獨立 pwsh 處理程序 |
+| 煙霧腳本：嚴格模式下空陣列經函式回傳為 `$null`，`.Count` 拋錯 | 1 | 一律以 `@(...)` 包住函式回傳值 |
+| 煙霧驗證：GDI 物件每個循環 +1 | 1 | 診斷測試分離出 `Clipboard.SetImage` 洩漏，改以 DIB 位元組提供剪貼簿圖片，歸零 |
+| 煙霧驗證：設定視窗遮住的區域 98.8% 像素差 1 個色階（淡出殘影被截入） | 1 | 隱藏前關閉該視窗的 DWM 轉場動畫 |
+| 煙霧驗證：故障日誌比對失敗（記錄行尾的 `\r` 被納入比對） | 1 | 正規表示式排除行尾 `\r` |
+| 煙霧驗證：使用者正在操作電腦時圖樣被遮住、自我檢查逾時 | 1 | 腳本開始前等待使用者閒置 20 秒（最多 15 分鐘，否則不做任何變更即結束） |
+| 煙霧驗證：選取尺寸只剩拖曳路徑的 25%／75%，30 次循環中 4 次失敗 | 1 | 在處理當下讀 `GetCursorPos` 會讀到游標稍後的位置；改取事件本身的位置 |
+| 煙霧驗證：覆蓋層選取範圍最後一列像素與快照不同 | 1 | DIP 筆劃外框在 175% 下蓋住最後一列；改為實體像素環形幾何、不做邊緣平滑 |
 
 ## Notes
 

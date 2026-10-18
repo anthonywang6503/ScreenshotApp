@@ -34,7 +34,7 @@
 |----------|-----------|
 | 專案層級 `nuget.config` 指向 nuget.org | 使用者機器未註冊 nuget.org；專案層級設定不影響全域環境 |
 | 測試框架 xunit 2.9.x | 範本內建、套件已在本機快取；STA 需求以 helper 處理 |
-| 選取座標直接取 Win32 `GetCursorPos`（實體像素） | 避免 DIP↔實體像素往返換算誤差，符合「實體像素為唯一真值」 |
+| ~~選取座標直接取 Win32 `GetCursorPos`（實體像素）~~（Phase 2 已取代：改取滑鼠事件本身的位置，見下方 Phase 2 發現） | 避免 DIP↔實體像素往返換算誤差，符合「實體像素為唯一真值」 |
 | 每顆顯示器各自 `BitBlt` 一張快照 | v1.0 選取限單一顯示器；逐顯示器快照可直接依顯示器本地座標裁切 |
 | 標註繪製邏輯集中於單一 `AnnotationPainter`（DrawingContext） | 畫布顯示與 `ImageRenderer` 匯出共用同一繪製碼，確保所見即所得 |
 
@@ -72,3 +72,20 @@
 - 本機 Windows 介面語言為英文：系統對話框（例如色彩對話框）顯示英文，與本程式的繁中介面無關。
 - PowerShell 把 `$null` 傳給 .NET `string` 參數時會轉成空字串；Add-Type 的 C# 輔助方法需以 `string.IsNullOrEmpty` 判斷。
 - 在 C: 槽 scratchpad 的檔案上，從 E: 槽工作目錄執行 `sed -i` 會因跨磁碟重新命名失敗；改用 Edit 工具或 Python。
+
+## Phase 2 研究發現（2026-10-18）
+- 本專案沒有 `.codegraph/`，也未被 codebase-memory-mcp 索引；依探索規則直接讀檔。
+- WPF 原始碼（dotnet/wpf main）的 `WM_DPICHANGED` 處理：`HwndTarget.HandleDpiChangedMessage` 以 `Marshal.PtrToStructure` 讀取 lParam 的建議矩形 → `HwndSource.OnDpiChanged` 先引發 `HwndSource.DpiChanged`，若事件 `Handled = true` 則 **不更新 DPI 縮放也不調整視窗**；否則 `HwndTarget.OnDpiChanged` 更新世界轉換後以建議矩形 `SetWindowPos(SWP_NOZORDER | SWP_ASYNCWINDOWPOS)`。
+- `HwndDpiChangedEventArgs.SuggestedRect` 只有 private setter，無法透過事件改寫。
+- `HwndWrapper.AddHook` 插入清單開頭且依序呼叫：`HwndSource.AddHook` 加入的公開 hook 會在 `HwndTarget` 之前收到訊息。因此可在自己的 hook 中把目標實體像素邊界寫回 lParam 指向的 RECT（不設 handled），WPF 會照常更新 DPI 並把視窗設為該邊界。
+- 「先 SetWindowPos 再補一次 SetWindowPos」不可靠：跨 DPI 移動時 WPF 會以建議矩形再次調整；建議矩形會依 DPI 比例縮放尺寸。
+- `Window` 在 `SourceInitialized` 之後執行 `SetRootVisualAndUpdateSTC`：`SizeToContent=Manual` 且 `WindowStartupLocation=Manual` 時不移動、也不改尺寸（只會以 `SWP_NOSIZE` 處理置中類位置）。在 `SourceInitialized` 以 `SetWindowPos` 設定的邊界會保留。
+- WPF 在 PMv2 下由 `HwndTarget.InitializeDpiAwarenessAndDpiScales` 以 `GetDpiForWindow` 取得 HWND 初始 DPI；因此以 `HwndSourceParameters` 直接在目標顯示器實體邊界建立的 `HwndSource`，一建立就是該顯示器 DPI，不會收到 `WM_DPICHANGED`。
+- .NET 10 的 WPF 剪貼簿改用與 WinForms 共用的 `System.Private.Windows.Core` `ClipboardCore`：`OleSetClipboard` 與 `OleFlushClipboard` 失敗時各重試 10 次、間隔 100 ms（約 1 秒）後才拋出。Phase 2 基礎版只需攔截最終例外；Phase 4 的剪貼簿 ADR 需考慮內建重試，避免重複重試造成長時間阻塞 UI。
+- 煙霧驗證設計：不啟動記事本（Windows 11 記事本會把新檔案開成既有視窗的分頁，結束處理程序可能關掉使用者的未存檔內容）；改由腳本自己的圖樣視窗擔任「其他程式在前景」。證據截圖只裁切圖樣視窗範圍，避免把使用者桌面內容存進儲存庫。
+- **.NET 10 WPF `Clipboard.SetImage(BitmapSource)` 每次呼叫在本處理程序留下 1 個 GDI 物件**（10 次 +10，被其他程式清空剪貼簿後也不釋放）。煙霧驗證的循環量測以每循環精確 +1 發現，再以診斷測試分離出來源（通知、覆蓋層建立／釋放皆無成長）。改為以 `DataObject.SetData(DataFormats.Dib, MemoryStream)` 提供 24 位元由下而上的 DIB 位元組後歸零；需要 `CF_BITMAP` 的程式由 Windows 從 DIB 自動轉換。
+- 隱藏自家視窗後只等 `DwmFlush` 兩次不夠：Windows 11 隱藏視窗有淡出動畫（含 DWM 陰影），快照會截到半透明的殘影（設定視窗區域 98.8% 像素差 1 個色階）。需在隱藏前對該視窗設定 `DWMWA_TRANSITIONS_FORCEDISABLED`。
+- 已知圖樣視窗（Show-TestPattern.ps1，PMv2、NearestNeighbor、SourceCopy）在 175% 螢幕上與圖樣逐像素一致（96 萬像素 0 差異），可作為截圖像素正確性的比對基準。
+- pwsh 7.6（.NET 10）`Add-Type` 若要在 C# 中使用 WinForms／GDI+ 型別，需要大量實作組件參考且與預設參考衝突；改為 C# 只用基本型別，WinForms 操作留在 PowerShell 端。pwsh 主執行緒為 STA，可直接存取剪貼簿。
+- **在滑鼠事件處理當下讀 `GetCursorPos` 會讀到游標稍後的位置**：覆蓋層剛顯示、UI 執行緒仍在處理時開始拖曳，按下事件被延後處理，起點落在拖曳路徑中途（煙霧驗證得到 226×163、375×300，恰為路徑的 25%／75%）。改用 `MouseEventArgs.GetPosition`（WPF 由訊息的實體像素換成 DIP）再以覆蓋層 DPI 換回，整數像素往返誤差為 0。
+- 175% 下以 DIP 筆劃（`Rectangle` + `StrokeThickness=1`）畫在選取範圍外側的外框，經版面配置進位後會蓋住範圍最後一列像素；改為實體像素計算的環形幾何（外矩形減內矩形，EvenOdd）並對遮罩與外框設定 `RenderOptions.EdgeMode=Aliased`。

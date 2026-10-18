@@ -101,3 +101,56 @@
 - 結果清單改為逐行輸出（不截斷），執行檔以儲存庫相對路徑記錄。
 - handoff 補充風險：設定檔讀取失敗後再套用會覆寫原檔。
 - 煙霧驗證：31 項全數通過，連續 4 次無失敗；`dotnet test` 114 passed；證據更新於 `docs/evidence/phase-01/`。
+
+
+## Session: 2026-10-18（Phase 2 截圖與區域選取）
+
+### Current Status
+- **Phase:** 2 - 截圖與區域選取 → in_progress
+- **Branch:** `feature/phase-02-capture-selection`
+
+### Actions Taken
+- 使用者以「載入專案狀態，開始開發」授權 Phase 2；MT-01、MT-02（占用提示）尚未回報，維持「尚未驗證」。
+- 查 WPF 原始碼確認 `WM_DPICHANGED` 處理與 PMv2 初始 DPI 取自 HWND（記錄於 findings）；徵詢 advisor 後改採「HwndSource 直接建立於顯示器實體邊界」，計畫與決策更新後重新 attest。
+- P2-00：`docs/adr/0007`～`0009`（截圖策略、覆蓋層定位與輸入、狀態機與重入）。
+- P2-12：`docs/KNOWN_LIMITATIONS.md` 初稿。
+- P2-01＋P2-03 委派 subagent：`PixelPoint`、`PixelRect`、`CoordinateMapper` 與 145 個測試；主 agent 審查 API、語意與註解後整合。
+- 主 agent 實作：`NativeMethods` 擴充、`GdiHandles`（三種 SafeHandle）、`MonitorService`、`CaptureService`、`DesktopSnapshot`、`DragSelection`、`SelectionOverlay`（HwndSource）、`SelectionController`、`CaptureFlow`／`ICaptureEnvironment`／`DesktopCaptureEnvironment`、`AppStateMachine`、`Export/ClipboardService`、系統匣「開始截圖」、`AppController` 接線、資源字串。
+
+### Test Results
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| subagent：`dotnet build` / `dotnet test` | 0 warning / 全過 | 0 warning / 259 passed | PASS |
+| 整合後 `dotnet build -c Release` | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| 整合後 `dotnet test -c Release` | 全數通過 | 302 passed | PASS |
+
+### Actions Taken（續：實機煙霧驗證與修正）
+- 撰寫 `tools/smoke/Show-TestPattern.ps1`（已知圖樣視窗，螢幕上 96 萬像素逐一一致）與 `tools/smoke/Invoke-Phase2Smoke.ps1`。
+- 試跑發現並修正：`Clipboard.SetImage` GDI 洩漏（改 DIB）、設定視窗淡出殘影被截入（關閉轉場動畫）、日誌比對的行尾 `\r`、嚴格模式 `$null.Count`。
+- 第一次正式 30 次循環：GDI／USER／Handle／記憶體皆持平，但 4 個失敗——選取起點落在游標稍後的位置（改取事件本身的位置）、175% 下外框蓋住最後一列（改實體像素環形外框）。
+- 使用者正在操作電腦時圖樣被遮住：腳本改為開始前等待閒置 20 秒。
+- 新增 `ClipboardServiceTests`（DIB 格式，不寫入真實剪貼簿）；ADR-0008 更新輸入座標決策；`docs/ACCEPTANCE.md`、`README.md`、`CHANGELOG.md`、handoff 草稿。
+- 修正後重跑正式 30 次循環（等待使用者閒置 164 秒後開始）：**38 項全數通過**；GDI 物件 31 個取樣恆為 38、USER 52～54、Handle 595～600、私有記憶體 286～381 MB 起伏無成長。
+- 煙霧腳本的剪貼簿備份改為盡力還原所有格式（正式執行時只會還原文字，使用者原本的非文字剪貼簿內容已被覆蓋，於控制點告知）；以 PowerShell 剖析器確認語法、以實際圖片備份還原確認邏輯。
+- 撰寫 `handoffs/phase-02-capture-selection.md`；`docs/ACCEPTANCE.md` 加入 Phase 2 自動化測試、煙霧驗證結果與使用者驗證步驟。
+
+### Test Results（最終）
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build ScreenshotApp.sln -c Release` | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test ScreenshotApp.sln -c Release` | 全數通過 | 314 passed（20 個測試類別） | PASS |
+| `tools/smoke/Invoke-Phase2Smoke.ps1 -Cycles 30` | 全數通過 | 38 PASS、0 FAIL | PASS |
+| 程式碼註解掃描（編號、文件路徑） | 無違規 | 無違規 | PASS |
+
+### Smoke Verification（P2-11）
+| 執行 | 結果 | 備註 |
+|------|------|------|
+| 試跑 1 | 中途例外 | 嚴格模式 `$null.Count`（測試工具問題） |
+| 試跑 2（3 循環） | 34 PASS／3 FAIL | 設定視窗淡出殘影、GDI 每循環 +1、日誌行尾 `\r` |
+| 試跑 3（5 循環） | 36 PASS／1 FAIL | USER 物件 +1 後持平（循環數太少無法判斷） |
+| 試跑 4 | 圖樣自我檢查逾時 | 使用者正在操作電腦；腳本改為先等閒置 |
+| 正式 1（30 循環） | 34 PASS／4 FAIL | 選取起點延後（改取事件位置）、外框蓋住最後一列（實體像素外框）；資源全部持平 |
+| 正式 2（30 循環） | 38 PASS／0 FAIL | 環境：Windows 11 Pro 10.0.26200，單一顯示器 3456×2160 @175% |
+
+### Next
+- Phase 2 已完成並合併回 `main`。等待使用者回報 MT 並授權 Phase 3。

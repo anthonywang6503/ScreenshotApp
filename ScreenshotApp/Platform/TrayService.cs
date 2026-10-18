@@ -4,6 +4,13 @@ using Forms = System.Windows.Forms;
 
 namespace ScreenshotApp.Platform;
 
+internal enum NotificationKind
+{
+    Info,
+    Warning,
+    Error,
+}
+
 /// <summary>系統匣圖示與選單。選單只放已實作的功能。</summary>
 internal sealed class TrayService : IDisposable
 {
@@ -19,6 +26,7 @@ internal sealed class TrayService : IDisposable
     {
         _icon = LoadIcon();
         _menu = new Forms.ContextMenuStrip();
+        _menu.Items.Add(Strings.Get("Tray_StartCapture"), null, (_, _) => CaptureRequested?.Invoke(this, EventArgs.Empty));
         _menu.Items.Add(Strings.Get("Tray_Settings"), null, (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty));
         _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add(Strings.Get("Tray_Exit"), null, (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty));
@@ -38,6 +46,8 @@ internal sealed class TrayService : IDisposable
         };
     }
 
+    public event EventHandler? CaptureRequested;
+
     public event EventHandler? SettingsRequested;
 
     public event EventHandler? ExitRequested;
@@ -49,12 +59,17 @@ internal sealed class TrayService : IDisposable
     /// <summary>
     /// 顯示系統通知。Windows 的專注模式可能抑制通知，重要狀態必須另有持續可見的呈現方式。
     /// </summary>
-    public void ShowNotification(string title, string message, bool isError) =>
+    public void ShowNotification(string title, string message, NotificationKind kind) =>
         _notifyIcon.ShowBalloonTip(
             5000,
             Truncate(title, MaxNotificationLength),
             Truncate(message, MaxNotificationLength),
-            isError ? Forms.ToolTipIcon.Error : Forms.ToolTipIcon.Warning);
+            kind switch
+            {
+                NotificationKind.Info => Forms.ToolTipIcon.Info,
+                NotificationKind.Warning => Forms.ToolTipIcon.Warning,
+                _ => Forms.ToolTipIcon.Error,
+            });
 
     public void Dispose()
     {
