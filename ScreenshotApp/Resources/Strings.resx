@@ -23,6 +23,9 @@
   <data name="Tray_StartCapture" xml:space="preserve">
     <value>開始截圖(&amp;C)</value>
   </data>
+  <data name="Tray_OpenImage" xml:space="preserve">
+    <value>開啟圖片(&amp;O)…</value>
+  </data>
   <data name="Tray_Settings" xml:space="preserve">
     <value>設定(&amp;S)</value>
   </data>
@@ -275,6 +278,12 @@
   <data name="Editor_SaveToolTip" xml:space="preserve">
     <value>將完成的圖片另存為 PNG 檔（Ctrl+S）</value>
   </data>
+  <data name="Editor_Open" xml:space="preserve">
+    <value>開啟(_G)…</value>
+  </data>
+  <data name="Editor_OpenToolTip" xml:space="preserve">
+    <value>開啟 PNG、JPEG 或 BMP 圖片（Ctrl+O）</value>
+  </data>
   <data name="Editor_ColorLabel" xml:space="preserve">
     <value>顏色(_O)：</value>
   </data>
@@ -336,7 +345,12 @@
     <value>已將 {0} × {1} 像素的圖片複製到剪貼簿。</value>
   </data>
   <data name="Editor_CopyFailed" xml:space="preserve">
-    <value>無法複製到剪貼簿（錯誤碼 0x{0:X8}），剪貼簿可能正被其他程式使用。
+    <value>無法複製到剪貼簿（錯誤碼 0x{0:X8}）。
+
+圖片仍保留在編輯器中，請稍後再試。</value>
+  </data>
+  <data name="Editor_CopyFailedBusy" xml:space="preserve">
+    <value>剪貼簿正被其他程式使用，無法複製。
 
 圖片仍保留在編輯器中，請稍後再試。</value>
   </data>
@@ -349,6 +363,9 @@
   <data name="Editor_Saved" xml:space="preserve">
     <value>已儲存：{0}</value>
   </data>
+  <data name="Editor_SavedDirectoryNotRemembered" xml:space="preserve">
+    <value>已儲存：{0}（無法記住儲存位置：{1}）</value>
+  </data>
   <data name="Editor_SaveFailed" xml:space="preserve">
     <value>無法儲存圖片：{0}
 
@@ -356,6 +373,44 @@
   </data>
   <data name="Editor_DefaultsSaveFailed" xml:space="preserve">
     <value>無法儲存預設樣式：{0}</value>
+  </data>
+  <data name="Open_Title" xml:space="preserve">
+    <value>開啟圖片</value>
+  </data>
+  <data name="Open_Filter" xml:space="preserve">
+    <value>圖片檔 (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|所有檔案 (*.*)|*.*</value>
+  </data>
+  <data name="Open_Failed" xml:space="preserve">
+    <value>無法開啟「{0}」。
+
+{1}</value>
+  </data>
+  <data name="UnsavedChanges_Message" xml:space="preserve">
+    <value>圖片有尚未複製或儲存的變更，繼續之前要怎麼處理？</value>
+  </data>
+  <data name="UnsavedChanges_Save" xml:space="preserve">
+    <value>另存 PNG 後繼續(_S)…</value>
+  </data>
+  <data name="UnsavedChanges_SaveToolTip" xml:space="preserve">
+    <value>將完成的圖片另存為 PNG 檔，儲存成功後繼續</value>
+  </data>
+  <data name="UnsavedChanges_Copy" xml:space="preserve">
+    <value>複製後繼續(_C)</value>
+  </data>
+  <data name="UnsavedChanges_CopyToolTip" xml:space="preserve">
+    <value>將完成的圖片複製到剪貼簿，複製成功後繼續</value>
+  </data>
+  <data name="UnsavedChanges_Discard" xml:space="preserve">
+    <value>捨棄變更(_D)</value>
+  </data>
+  <data name="UnsavedChanges_DiscardToolTip" xml:space="preserve">
+    <value>不保留這些變更，直接繼續</value>
+  </data>
+  <data name="UnsavedChanges_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="UnsavedChanges_CancelToolTip" xml:space="preserve">
+    <value>回到編輯器，不做任何變更（Esc）</value>
   </data>
   <data name="Editor_BringToFront" xml:space="preserve">
     <value>移到最上層(_T)</value>
@@ -450,5 +505,27 @@
 
 錯誤細節已記錄於：
 {1}</value>
+  </data>
+
+  <data name="ImageLoad_FileNotFound" xml:space="preserve">
+    <value>找不到這個檔案，檔案可能已被移動或刪除。</value>
+  </data>
+  <data name="ImageLoad_AccessDenied" xml:space="preserve">
+    <value>沒有讀取這個檔案的權限。</value>
+  </data>
+  <data name="ImageLoad_ReadFailed" xml:space="preserve">
+    <value>無法讀取檔案：{0}</value>
+  </data>
+  <data name="ImageLoad_UnsupportedFormat" xml:space="preserve">
+    <value>不支援這種圖片格式，只能開啟 PNG、JPEG 或 BMP 圖片。</value>
+  </data>
+  <data name="ImageLoad_Corrupt" xml:space="preserve">
+    <value>圖片檔案已損壞或格式不正確。</value>
+  </data>
+  <data name="ImageLoad_SizeOutOfRange" xml:space="preserve">
+    <value>圖片尺寸 {0} × {1} 無效或超過上限：寬與高至少須為 1 像素，寬 × 高最多 {2:N0} 像素。</value>
+  </data>
+  <data name="ImageLoad_OutOfMemory" xml:space="preserve">
+    <value>記憶體不足，無法開啟這張圖片。</value>
   </data>
 </root>

@@ -127,6 +127,12 @@
 
                 <Rectangle Style="{StaticResource BarSeparator}" />
 
+                <Button x:Name="OpenButton" Style="{StaticResource ActionButton}" ToolTip="{res:Str Editor_OpenToolTip}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M1.5,3.5 H6 L7.5,5 H13.5 V13.5 H1.5 Z M1.5,7.5 H13.5" />
+                        <AccessText Text="{res:Str Editor_Open}" />
+                    </StackPanel>
+                </Button>
                 <Button x:Name="CopyButton" Style="{StaticResource ActionButton}" ToolTip="{res:Str Editor_CopyToolTip}">
                     <StackPanel Orientation="Horizontal">
                         <Path Style="{StaticResource Icon}" Data="M5.5,1.5 H13.5 V10.5 H5.5 Z M3.5,4.5 H2.5 V14.5 H10.5 V12.5" />

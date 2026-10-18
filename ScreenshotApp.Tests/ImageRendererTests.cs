@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using ScreenshotApp.Capture;
+using ScreenshotApp.Editor;
 using ScreenshotApp.Editor.Commands;
 using ScreenshotApp.Editor.Model;
 using ScreenshotApp.Export;
@@ -22,6 +24,7 @@ public class ImageRendererTests
     private static readonly Color Black = Color.FromRgb(0x00, 0x00, 0x00);
     private static readonly Color White = Color.FromRgb(0xFF, 0xFF, 0xFF);
     private static readonly Color Gray = Color.FromRgb(0x80, 0x80, 0x80);
+    private static readonly Color Green = Color.FromRgb(0x00, 0xFF, 0x00);
 
     [Theory]
     [InlineData(0, 0, 64, 48, 96.0)]
@@ -145,6 +148,30 @@ public class ImageRendererTests
         });
     }
 
+    // 小字級文字的平滑像素會隨繪製位置改變（實測 Segoe UI 14 在這些裁切位置會不同）；裁切只能去掉範圍外的像素，不能改變範圍內的像素。
+    [Theory]
+    [InlineData(16, 16)]
+    [InlineData(20, 20)]
+    [InlineData(32, 32)]
+    [InlineData(64, 64)]
+    public void Render_CroppedOutput_EqualsSameRegionOfUncroppedOutput(int x, int y)
+    {
+        StaRunner.Run(() =>
+        {
+            var document = new ImageDocument(CreateSolidImage(600, 400, White));
+            Add(document, new TextAnnotation { Color = Red, Origin = new PixelPoint(60, 220), Text = "AB 12", FontFamily = "Segoe UI", FontSize = 14 });
+            Add(document, new ArrowAnnotation { Color = Red, Start = new PixelPoint(300, 60), End = new PixelPoint(450, 180), StrokeWidth = 3 });
+            var uncropped = ImageRenderer.Render(document);
+
+            var crop = new PixelRect(x, y, 400, 280);
+            var expected = new byte[crop.Width * 4 * crop.Height];
+            uncropped.CopyPixels(new Int32Rect(crop.X, crop.Y, crop.Width, crop.Height), expected, crop.Width * 4, 0);
+            SetCrop(document, crop);
+
+            AssertPixelsEqual(expected, CopyPixels(ImageRenderer.Render(document)), crop.Width);
+        });
+    }
+
     [Fact]
     public void Render_SameDocumentTwice_ProducesIdenticalBytes()
     {
@@ -162,6 +189,35 @@ public class ImageRendererTests
             var second = CopyPixels(ImageRenderer.Render(document));
 
             Assert.Equal(first, second);
+        });
+    }
+
+    [Fact]
+    public void Render_SameEditsAtCanvasZoomsFrom25To400Percent_ProduceIdenticalOutput()
+    {
+        StaRunner.Run(() =>
+        {
+            var documents = new[] { 0.25, 1.0, 4.0 }.Select(EditAtZoom).ToList();
+            var outputs = documents.Select(document => ImageRenderer.Render(document)).ToList();
+
+            foreach (var output in outputs)
+            {
+                Assert.Equal(240, output.PixelWidth);
+                Assert.Equal(160, output.PixelHeight);
+            }
+
+            var pixels = outputs.Select(CopyPixels).ToList();
+            Assert.Equal(pixels[1], pixels[0]);
+            Assert.Equal(pixels[1], pixels[2]);
+
+            // 綠色矩形完全在裁切範圍外，不能出現在輸出中；底圖的像素不會是純綠色。
+            for (var y = 0; y < 160; y++)
+            {
+                for (var x = 0; x < 240; x++)
+                {
+                    Assert.False(PixelIs(pixels[1], 240, x, y, Green), Describe(pixels[1], 240, x, y));
+                }
+            }
         });
     }
 
@@ -358,6 +414,48 @@ public class ImageRendererTests
         "StepNumber" => new StepNumberAnnotation { Color = Red, Center = new PixelPoint(80, 60), Radius = 24, Number = 3 },
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "未知的標註種類。"),
     };
+
+    /// <summary>
+    /// 在指定的畫布縮放下完成同一組編輯：矩形、箭頭、文字、一個完全在裁切範圍外的綠色矩形，以及裁切。
+    /// 指標位置以圖片座標描述，先換成畫布上的 DIP 再換回圖片座標，與實際滑鼠事件經過的換算相同。
+    /// </summary>
+    private static ImageDocument EditAtZoom(double zoom)
+    {
+        const double dpiScale = 1.75;
+        var view = new ImageViewTransform(CoordinateMapper.ImageToViewScale(zoom, dpiScale), new Point(31.7, 18.3));
+        var tolerance = CoordinateMapper.ViewLengthToImage(6, view);
+        var session = new EditorSession(new ImageDocument(CreatePatternImage(400, 300)), new AnnotationStyle(Red, 3, "Segoe UI", 14));
+
+        Point Pointer(double x, double y) =>
+            CoordinateMapper.ViewDipToImage(CoordinateMapper.ImageToViewDip(new Point(x, y), view), view);
+
+        void Drag(EditorTool tool, double x1, double y1, double x2, double y2)
+        {
+            session.SetTool(tool);
+            session.PointerDown(Pointer(x1, y1), tolerance, 1);
+            session.PointerMove(Pointer((x1 + x2) / 2, (y1 + y2) / 2));
+            session.PointerUp(Pointer(x2, y2));
+
+            // 低縮放時容差涵蓋很多圖片像素，取消選取以免下一次按下落在上一個標註的控制點上。
+            session.Select(null);
+        }
+
+        Drag(EditorTool.Rectangle, 80.5, 80.5, 180.5, 140.5);
+        Drag(EditorTool.Arrow, 90, 200, 250, 100);
+        session.SetTool(EditorTool.Text);
+        session.PointerDown(Pointer(100.25, 165.75), tolerance, 1);
+        session.CommitTextEdit("縮放 AB 12");
+
+        // 提交後文字仍是選取狀態；先取消選取，變更的才是之後新增標註的預設顏色。
+        session.Select(null);
+        session.SetColor(Green);
+        Drag(EditorTool.Rectangle, 320.5, 230.5, 390.5, 290.5);
+        Drag(EditorTool.Crop, 60.25, 60.25, 299.75, 219.75);
+        Assert.True(session.ApplyCrop());
+        Assert.Equal(new PixelRect(60, 60, 240, 160), session.Document.CropRect);
+        Assert.Equal(4, session.Document.Annotations.Count);
+        return session.Document;
+    }
 
     private static void SetCrop(ImageDocument document, PixelRect crop) =>
         document.History.Execute(new SetCropCommand(document, document.CropRect, crop));

@@ -40,9 +40,18 @@ internal sealed class ImageDocument
 
     public UndoRedoStack History { get; } = new();
 
+    /// <summary>最後一次成功複製或儲存時的歷史版本；剛建立的文件視為已匯出（沒有修改）。</summary>
+    public int ExportedVersion { get; private set; }
+
+    /// <summary>內容自最後一次成功匯出後是否有變更；修改後復原回匯出時的狀態視為沒有變更。</summary>
+    public bool IsDirty => History.Version != ExportedVersion;
+
     /// <summary>新步驟編號：現有最大編號加 1。刪除編號不會重排，也不會重複使用比現有最大值小的編號。</summary>
     public int NextStepNumber =>
         _annotations.OfType<StepNumberAnnotation>().Select(step => step.Number).DefaultIfEmpty(0).Max() + 1;
+
+    /// <summary>記錄匯出成功；傳入合成圖片當時的版本，匯出期間的修改仍會是未匯出的變更。</summary>
+    public void MarkExported(int version) => ExportedVersion = version;
 
     public int IndexOf(Guid id) => _annotations.FindIndex(annotation => annotation.Id == id);
 

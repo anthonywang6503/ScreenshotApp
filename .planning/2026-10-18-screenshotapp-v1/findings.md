@@ -112,3 +112,36 @@
 - **游標會記住建立時執行緒的 DPI 感知**：在非 Per-Monitor V2 的執行緒建立 48 像素游標、再於 PMv2 執行緒以 `DrawIconEx`（寬高 0＝原始尺寸）繪製時，被當成 96 DPI 設計而放大成約 72 像素（1.5 倍，等於 168 DPI 的游標級距 48／32）；同一情境建立與繪製則維持原始尺寸。應用程式整個處理程序為 PMv2，游標在 UI 執行緒建立與顯示，不受影響；以腳本產生對照圖或做量測時要先切換執行緒的 DPI 感知再建立游標。
 - 煙霧腳本可用 `GetCursorInfo` 取得目前顯示中的游標，再以 `GetIconInfo` + `GetDIBits` 讀出遮罩（跨處理程序可用）；Windows 11 的預設箭頭是彩色游標（有 `hbmColor`）。
 - 本機以 Python 文字模式寫檔會把換行改成 CRLF；本儲存庫的檔案為 LF（`core.autocrlf=input`），以位元組讀寫並在寫入前確認沒有 `\r\n`。
+
+## Phase 4 研究發現（2026-10-18）
+- .NET 10 共用的剪貼簿核心（dotnet/winforms `System.Private.Windows.Core` 的 `ClipboardCore`，WPF 與 Windows Forms 共用）：`OleRetryCount = 10`、`OleRetryDelay = 100`。`SetData` 先重試 `OleSetClipboard`（失敗時最多再試 10 次、每次間隔 100 ms），`copy: true` 時再以相同次數重試 `OleFlushClipboard`；每段最多約 1 秒，在呼叫端執行緒以 `Thread.Sleep` 等待。因此外層不再加重試（ADR-0014）。
+- WPF `CursorInteropHelper.Create(SafeHandle)` 直接保存傳入的 SafeHandle（見 MT 回饋一節），同樣適用於自繪游標的快取。
+- Phase 3 的煙霧腳本幾乎每次修改後都按 `Ctrl+C`，文件因此回到已匯出狀態，Phase 4 加入的未匯出變更詢問不會在該腳本中出現；Phase 2 腳本改為以 UI Automation 按編輯器的「複製」按鈕取得截圖結果並關閉編輯器。
+- 煙霧腳本的做法（尚未實機執行驗證）：WPF 視窗的 `x:Name` 即 UI Automation 的 AutomationId，以 `InvokePattern` 按下按鈕，不必模擬滑鼠或鍵盤，也不需要前景。
+- 煙霧腳本的做法（尚未實機執行驗證）：Win32 檔案對話框以視窗訊息操作——在控制項識別碼 1148 之下的 `Edit` 以 `WM_SETTEXT` 填入完整路徑，再對對話框送 `WM_COMMAND IDOK`；覆寫確認先送 `TDM_CLICK_BUTTON`（`WM_USER + 102`，TaskDialog），視窗仍在時再送 `WM_COMMAND IDYES`。
+- **實測（Phase 4 煙霧驗證）**：WPF `SaveFileDialog` 預設會建立測試檔，選擇唯讀檔時由 Windows 存檔對話框自行顯示「This file is set to read-only. Try again with a different file name.」（只有「確定」、標題為存檔對話框標題、內文是 DirectUI 沒有 Static 控制項），不會把路徑交給程式；程式自己的寫入失敗路徑（暫存檔或取代失敗）無法經由唯讀檔觸發，由單元測試涵蓋。WPF 的覆寫確認則是 WPF 自己的 `MessageBox`（擁有者為作用中的檔案對話框）。
+- **實測**：UI Automation 的 `InvokePattern` 對 WPF 按鈕在擁有視窗被模態對話框停用（Win32 `EnableWindow(FALSE)`）時仍然有效，WPF 的 `IsEnabled` 也不反映這個狀態；煙霧腳本要判斷視窗是否可操作需用 `IsWindowEnabled`。
+- 煙霧腳本的 PowerShell 陷阱：`Wait-Until` 的參數名為 `$Condition`，傳入的腳本區塊若引用呼叫端名為 `$condition` 的變數，因變數不分大小寫且為動態範圍，取到的是 `Wait-Until` 的參數本身。
+- 煙霧腳本以剪貼簿序號判斷結束時是否還原使用者的剪貼簿：腳本自己每次寫入剪貼簿後都必須立即更新序號，否則中途失敗時會誤判為使用者寫入而不還原（第一次 Phase 4 煙霧驗證因此沒有還原使用者原本的剪貼簿內容，已修正三支腳本）。
+- `.NET` 剪貼簿占用實測：腳本以 `OpenClipboard(NULL)` 持有剪貼簿時，按下「複製」約 1.1～1.2 秒後出現「剪貼簿正被其他程式使用」（包含背景編碼與內建重試）。
+- **實測（Phase 3 煙霧驗證補跑）**：覆蓋層實際顯示的游標經 `GetCursorInfo` + `GetIconInfo` 確認為 48×48、熱點 (23,23)、黑 165／白 120／反相 0 像素（黑像素數與系統十字的反相像素數相同）。文字輸入中與完成後的位置差異 0 像素；縮放 400%／25% 後複製結果與 100% 相同；裁切與復原重做、取消新截圖恢復原文件、新截圖取代文件、第二個執行個體帶出編輯視窗、關閉編輯器回常駐皆通過。
+- 同一次執行中，Windows Terminal 在沒有使用者輸入、也沒有其他指令執行時兩度取走前景；推測其中一次發生在前景檢查之後、送出 `Ctrl+C` 之前（之後 `Ctrl+Z` 的前景檢查發現並恢復），導致「選取箭頭後 Delete」一項沒有取得複製結果。Phase 3 腳本改為以 UI Automation 按「複製」按鈕讀取結果，只在第一次以 `Ctrl+C` 驗證快捷鍵。
+- 編輯器屬性列的顏色清單：以標籤存取鍵（Alt+O）把焦點移到清單後，第一次按方向鍵可能只是讓焦點落在目前選取的項目而不改變選取（推測，未實測），可解釋「未選取時變更顏色寫入設定檔」一項失敗；待以修正後的腳本重跑確認。
+
+## Phase 3 煙霧腳本強化後重跑與診斷（2026-10-18）
+- **更正上一節**：「縮放 400%／25% 後複製結果與 100% 相同」與「文字輸入中與完成後的位置差異 0 像素」在第一次補跑時的通過不可採信——當時 Ctrl+滾輪與打字的按鍵因 Windows Terminal 取走前景沒有送達，縮放與文字都沒有發生，比較的是同一張圖。腳本已強化：縮放比較前要求狀態列顯示「400%」「25%」，文字改以 UI Automation `ValuePattern` 填入並先確認畫布上出現紅色像素，工具改以 `SelectionItemPattern` 選擇、複製改按「複製」按鈕。
+- 強化後重跑（Release）：33 PASS／4 FAIL。失敗：選取箭頭後按 Delete 沒有刪除；縮放 400% 與 25% 兩項（狀態列仍為 100%）；裁切後尺寸正確（400×280）但內容有 58 個像素不同。文字輸入（紅色像素 990、輸入中與完成後位置差異 0）、Ctrl+Z／Ctrl+Y、Enter 套用裁切、存取鍵 Alt+R 都確實生效。
+- **Ctrl+滾輪的注入方式**（診斷腳本實測，產品正常）：本機 `MouseWheelRouting = 2`。以 `SendInput` 送出滾輪（與 Ctrl 同一批或分開送出）、或直接 `PostMessage(WM_MOUSEWHEEL)` 並在 wParam 帶 `MK_CONTROL`，編輯器都維持 100%；先以 `SendInput` 按住 Ctrl、再 `PostMessage(WM_MOUSEWHEEL)` 給游標下的頂層視窗、再放開 Ctrl，縮放成 150%。WPF 依鍵盤狀態判斷 Ctrl，不看 wParam 的 `MK_CONTROL`；`SendInput` 滾輪沒有送達的原因未確定。鍵盤 `Ctrl+=` 可縮放（150%）。
+- **裁切後內容差異**：與裁切前的複製結果逐像素比較，58 個不同像素全部在文字「Hello 測試」的範圍（裁切座標 x 42～87、y 206～221），矩形、箭頭、步驟編號與底圖都相同；尚未確認是產品問題（輸出位移改變文字反鋸齒）或比對方式的問題。
+- **裁切後內容差異的根因（以測試重現）**：`ImageRenderer` 原本建立裁切大小的點陣圖、平移到裁切原點後繪製。在 600×400 白底上只畫 Segoe UI 14 的「AB 12」時，裁切原點 (16,16)、(20,20)、(32,32) 有 66 個、(64,64) 有 91 個像素與未裁切輸出的同一範圍不同；原點 (1,0)、(0,1)、(3,7)、(10,10) 與 32 級字（Segoe UI、微軟正黑體）沒有差異；加上斜向箭頭後為 118～136 個。WPF 的平滑像素會隨繪製位置改變。修正：一律以原始圖片尺寸合成，再以 `CopyPixels` 取出裁切範圍（整張時直接回傳），第 1 次修正即通過；新增 `Render_CroppedOutput_EqualsSameRegionOfUncroppedOutput`（4 個位置，先紅後綠），ADR-0011 第 4 點已修訂。代價：每次匯出合成整張圖片。
+- 附帶觀察（未處理）：合成結果中文字邊緣有 alpha 254 的像素（底圖不透明，`RenderTargetBitmap` 的灰階文字混合改了 alpha）；另存的 PNG 為 RGBA（色彩型態 6），這些像素在 PNG 中有 1/255 的透明度，剪貼簿 24 位元 DIB 則捨棄 alpha。肉眼無法分辨，暫不處理。
+
+## 待辦：Delete 鍵在實機模擬輸入下沒有刪除選取的標註（2026-10-18，原因未查明）
+- 現象：強化後的 Phase 3 煙霧驗證與兩支診斷腳本中，以選取工具點選箭頭（PrintWindow 擷取可見選取控制點）後送出 Delete（`SendInput`，非延伸鍵與延伸鍵各一次），箭頭範圍的紅色像素始終為 560，沒有刪除。同一次執行、同樣的送鍵方式下，`Ctrl+Z`、`Ctrl+Y`、沒有修飾鍵的 Enter（套用裁切）都生效。
+- 焦點：畫布左鍵按下時呼叫 `ContentRoot.Focus()`；UI Automation 回報的焦點是編輯視窗本身（`ContentRoot` 是 `Grid`，沒有自動化對等物件，推測因此回報祖先），以 UI Automation 選擇工具後焦點在該工具的 `RadioButton`，點畫布後回到視窗。
+- 程式碼現況：`DeleteCommand` 由 `RegisterShortcut` 以 `KeyGesture(Key.Delete)` 綁在視窗；可執行條件為「來源不是 `TextBox`」且 `_session is { Selected: not null, IsDragging: false }`。路由 `ContentRoot`（只處理空白鍵）→ `Viewport`（`ScrollViewer`，`Focusable=False`，WPF 的 `ScrollViewer` 只處理方向鍵、PageUp／PageDown、Home／End）→ `DockPanel` → 視窗；程式中沒有其他 `KeyDown`／`PreviewKeyDown` 處理 Delete，`TextEditor_PreviewKeyDown` 只掛在文字輸入框。`EditorSession.DeleteSelected` 的單元測試通過。
+- 已排除：全域快捷鍵是 `Ctrl+Shift+2`（不是 Delete）；送鍵時前景是編輯視窗（`Send-KeysTo` 有前景檢查）。
+- 尚未驗證：實體鍵盤按 Delete 是否有效（請使用者試一次即可區分產品缺陷或模擬輸入問題）；畫完標註後直接按 Delete；Esc（同為沒有修飾鍵）是否能取消選取；右鍵選單「刪除」（診斷腳本以視窗類別含「Popup」尋找選單，但 WPF 快顯視窗的類別是 `HwndWrapper[…]`，結果不能採信）。
+- 下一步：以暫存區已準備的診斷腳本 `Invoke-Diag3.ps1`（畫完直接 Delete、點選後 Delete、Esc、右鍵選單以「新出現的視窗」尋找）在電腦閒置時執行；或在測試中建立真正的 `EditorWindow`，以 `InputManager` 送出 Delete 的 `KeyDown` 檢查路由與 `CanExecute`。查明後補測試再修正。
+- 線索（advisor 檢視診斷資料後指出）：診斷 1 中 Delete 失敗之後按的 `Ctrl+Z` 也沒有移除最後加入的文字（之後兩次複製的結果都有文字）；Enter 套用裁切是在以 UI Automation 切換到裁切工具（`SetTool` 會清除 `_drag`）之後才生效。因此可能不是 Delete 特有的問題，而是「選取工具點選標註但沒有移動」之後一直處於拖曳狀態（`IsDragging`／`IsBusy` 為真），連帶擋下 Delete 與復原。Phase 3 煙霧驗證的「刪除後 Ctrl+Z 恢復箭頭」通過不可採信（箭頭根本沒有被刪除）。
+- 最便宜的判別方式：在 `EditorSessionTests` 以選取工具對標註 `PointerDown` 後在同一點 `PointerUp`，檢查 `IsDragging` 為 false 且 `DeleteSelected()` 回傳 true。通過 → 問題在視窗與輸入層（檢查按鍵當下的 `Keyboard.Modifiers` 與焦點元素、滑鼠放開事件是否送到 `ContentRoot`）；失敗 → 沒有移動的拖曳完成邏輯。

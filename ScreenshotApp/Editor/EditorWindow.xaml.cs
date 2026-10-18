@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Security;
@@ -30,6 +31,7 @@ internal partial class EditorWindow : Window
     private static readonly RoutedCommand RedoCommand = new();
     private static readonly RoutedCommand CopyCommand = new();
     private static readonly RoutedCommand SaveCommand = new();
+    private static readonly RoutedCommand OpenCommand = new();
     private static readonly RoutedCommand DeleteCommand = new();
     private static readonly RoutedCommand CancelCommand = new();
     private static readonly RoutedCommand ApplyCropCommand = new();
@@ -58,6 +60,12 @@ internal partial class EditorWindow : Window
     private Point? _panStart;
     private Point _panStartOffset;
     private string? _message;
+
+    // 複製或儲存進行中（背景編碼）；期間停用兩個命令，不重疊也不排隊。
+    private bool _exporting;
+
+    // 未匯出的變更已處理（或由呼叫端處理），這次關閉不再詢問。
+    private bool _closeConfirmed;
 
     public EditorWindow(AppController controller)
     {
@@ -147,6 +155,67 @@ internal partial class EditorWindow : Window
         }
     }
 
+    /// <summary>複製或儲存的背景編碼是否正在進行。</summary>
+    public bool IsExporting => _exporting;
+
+    /// <summary>完成進行中的文字輸入後，文件是否有未匯出的變更。</summary>
+    public bool HasUnexportedChanges()
+    {
+        if (_session is null)
+        {
+            return false;
+        }
+
+        CommitTextEdit();
+        return _session.Document.IsDirty;
+    }
+
+    /// <summary>
+    /// 文件有未匯出的變更時詢問使用者；回傳 true 表示可以繼續（已複製、已儲存、選擇捨棄或沒有未匯出的變更）。
+    /// </summary>
+    public async Task<bool> ConfirmDiscardAsync()
+    {
+        if (!HasUnexportedChanges())
+        {
+            return true;
+        }
+
+        Show();
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Activate();
+        return UnsavedChangesDialog.Ask(this) switch
+        {
+            UnsavedChangesChoice.Copy => await CopyImageAsync(),
+            UnsavedChangesChoice.Save => await SaveImageAsync(),
+            UnsavedChangesChoice.Discard => true,
+            _ => false,
+        };
+    }
+
+    /// <summary>關閉而不詢問；呼叫端已處理未匯出的變更（例如結束程式前已詢問）。</summary>
+    public void CloseWithoutConfirmation()
+    {
+        _closeConfirmed = true;
+        Close();
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        base.OnClosing(e);
+        if (_closeConfirmed || e.Cancel || !HasUnexportedChanges())
+        {
+            return;
+        }
+
+        // 有未匯出的變更時先取消這次關閉，由控制器詢問後再關閉；關閉中的視窗不能再呼叫 Close，因此延後執行。
+        e.Cancel = true;
+        Dispatcher.BeginInvoke(new Action(_controller.RequestCloseEditor));
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         _messageTimer.Stop();
@@ -163,7 +232,8 @@ internal partial class EditorWindow : Window
             () => _session?.CanRedo == true,
             new KeyGesture(Key.Y, ModifierKeys.Control),
             new KeyGesture(Key.Z, ModifierKeys.Control | ModifierKeys.Shift));
-        RegisterShortcut(CopyCommand, CopyImage, () => _session is not null, new KeyGesture(Key.C, ModifierKeys.Control));
+        RegisterShortcut(
+            CopyCommand, async () => await CopyImageAsync(), () => _session is not null && !_exporting, new KeyGesture(Key.C, ModifierKeys.Control));
         RegisterShortcut(
             DeleteCommand, () => _session?.DeleteSelected(), () => _session is { Selected: not null, IsDragging: false }, new KeyGesture(Key.Delete));
         RegisterShortcut(CancelCommand, CancelOperation, () => _session is not null, new KeyGesture(Key.Escape));
@@ -197,10 +267,14 @@ internal partial class EditorWindow : Window
         RegisterShortcut(
             ZoomFitCommand, ApplyFit, () => _session is not null, new KeyGesture(Key.D0, ModifierKeys.Control), new KeyGesture(Key.NumPad0, ModifierKeys.Control));
 
-        // 儲存在文字輸入中也可以使用：先完成輸入再儲存。
-        CommandBindings.Add(new CommandBinding(SaveCommand, (_, _) => SaveImage(), (_, e) => e.CanExecute = _session is not null));
+        // 儲存與開啟在文字輸入中也可以使用：先完成輸入再儲存或詢問。
+        CommandBindings.Add(new CommandBinding(
+            SaveCommand, async (_, _) => await SaveImageAsync(), (_, e) => e.CanExecute = _session is not null && !_exporting));
         InputBindings.Add(new KeyBinding(SaveCommand, new KeyGesture(Key.S, ModifierKeys.Control)));
+        CommandBindings.Add(new CommandBinding(OpenCommand, (_, _) => _controller.OpenImage()));
+        InputBindings.Add(new KeyBinding(OpenCommand, new KeyGesture(Key.O, ModifierKeys.Control)));
 
+        OpenButton.Command = OpenCommand;
         UndoButton.Command = UndoCommand;
         RedoButton.Command = RedoCommand;
         CopyButton.Command = CopyCommand;
@@ -968,30 +1042,45 @@ internal partial class EditorWindow : Window
         }
     }
 
-    private void CopyImage()
+    /// <summary>複製合成後的圖片；成功時記錄匯出版本並回傳 true，失敗時顯示原因、文件不變。</summary>
+    private async Task<bool> CopyImageAsync()
     {
-        if (_session is null)
+        if (_session is null || _exporting)
         {
-            return;
+            return false;
         }
 
         CommitTextEdit();
-        var image = ImageRenderer.Render(_session.Document);
-        if (ClipboardService.TrySetImage(image, out var errorCode))
+        var document = _session.Document;
+        var version = document.History.Version;
+        var image = ImageRenderer.Render(document);
+        SetExporting(true);
+        try
         {
-            ShowMessage(Strings.Format("Editor_Copied", image.PixelWidth, image.PixelHeight));
+            // 合成需要 UI 執行緒；耗時的 PNG 編碼在背景執行緒進行，寫入剪貼簿再回到 UI 執行緒。
+            var payload = await Task.Run(() => ClipboardPayload.Create(image));
+            if (!ClipboardService.TrySetImage(payload, out var errorCode))
+            {
+                ShowError(ClipboardService.DescribeError(errorCode));
+                return false;
+            }
         }
-        else
+        finally
         {
-            MessageBox.Show(this, Strings.Format("Editor_CopyFailed", errorCode), Strings.Get("Error_Title"), MessageBoxButton.OK, MessageBoxImage.Error);
+            SetExporting(false);
         }
+
+        document.MarkExported(version);
+        ShowMessage(Strings.Format("Editor_Copied", image.PixelWidth, image.PixelHeight));
+        return true;
     }
 
-    private void SaveImage()
+    /// <summary>另存 PNG；成功時記錄匯出版本與資料夾並回傳 true，取消或失敗時回傳 false、文件不變。</summary>
+    private async Task<bool> SaveImageAsync()
     {
-        if (_session is null)
+        if (_session is null || _exporting)
         {
-            return;
+            return false;
         }
 
         CommitTextEdit();
@@ -1003,22 +1092,64 @@ internal partial class EditorWindow : Window
             AddExtension = true,
             OverwritePrompt = true,
             FileName = PngFileService.DefaultFileName(DateTime.Now),
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
+            InitialDirectory = InitialSaveDirectory(),
         };
         if (dialog.ShowDialog(this) != true)
         {
-            return;
+            return false;
         }
 
+        // 儲存的是此刻的內容；編碼期間的修改會讓文件再次成為未匯出狀態。
+        var document = _session.Document;
+        var version = document.History.Version;
+        var image = ImageRenderer.Render(document);
+        var path = dialog.FileName;
+        SetExporting(true);
         try
         {
-            PngFileService.Save(ImageRenderer.Render(_session.Document), dialog.FileName);
-            ShowMessage(Strings.Format("Editor_Saved", dialog.FileName));
+            await Task.Run(() => PngFileService.Save(image, path));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or SecurityException)
         {
             // 寫入失敗時文件仍完整保留在編輯器中，使用者可改存到其他位置。
-            MessageBox.Show(this, Strings.Format("Editor_SaveFailed", ex.Message), Strings.Get("Error_Title"), MessageBoxButton.OK, MessageBoxImage.Error);
+            ShowError(Strings.Format("Editor_SaveFailed", ex.Message));
+            return false;
+        }
+        finally
+        {
+            SetExporting(false);
+        }
+
+        document.MarkExported(version);
+        var remembered = _controller.SaveLastSaveDirectory(Path.GetDirectoryName(path)!);
+        ShowMessage(remembered.Succeeded
+            ? Strings.Format("Editor_Saved", path)
+            : Strings.Format("Editor_SavedDirectoryNotRemembered", path, remembered.ErrorMessage));
+        return true;
+    }
+
+    // 上次成功儲存的資料夾仍存在時從那裡開始，否則從「圖片」資料夾開始。
+    private string InitialSaveDirectory() =>
+        _controller.Settings.LastSaveDirectory is { } directory && Directory.Exists(directory)
+            ? directory
+            : Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+
+    private void SetExporting(bool exporting)
+    {
+        _exporting = exporting;
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    // 背景編碼期間編輯器可能已被關閉；關閉的視窗不能作為對話框的擁有者。
+    private void ShowError(string message)
+    {
+        if (IsVisible)
+        {
+            MessageBox.Show(this, message, Strings.Get("Error_Title"), MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        else
+        {
+            MessageBox.Show(message, Strings.Get("Error_Title"), MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

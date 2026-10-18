@@ -10,14 +10,21 @@ internal interface IEditCommand
 
 /// <summary>
 /// 編輯歷史：執行新命令時清除可重做的紀錄；超過容量時捨棄最舊的一筆。只保存命令，不保存任何 Bitmap。
+/// 每個狀態有一個版本：執行新命令產生新的版本，復原與重做回到該狀態原本的版本。
 /// </summary>
 internal sealed class UndoRedoStack
 {
     public const int DefaultCapacity = 100;
 
     private readonly int _capacity;
-    private readonly LinkedList<IEditCommand> _undo = new();
-    private readonly Stack<IEditCommand> _redo = new();
+
+    // 每筆紀錄附上命令執行後那個狀態的版本。
+    private readonly LinkedList<(IEditCommand Command, int Version)> _undo = new();
+    private readonly Stack<(IEditCommand Command, int Version)> _redo = new();
+    private int _nextVersion = 1;
+
+    // 最底層（無法再復原）的狀態的版本：一開始是初始狀態的 0，捨棄最舊的一筆後是那筆命令執行後的版本。
+    private int _baseVersion;
 
     public UndoRedoStack(int capacity = DefaultCapacity)
     {
@@ -33,13 +40,17 @@ internal sealed class UndoRedoStack
 
     public int RedoCount => _redo.Count;
 
+    /// <summary>目前狀態的版本；初始狀態為 0。兩個時間點的版本相同代表內容相同。</summary>
+    public int Version => _undo.Last?.Value.Version ?? _baseVersion;
+
     /// <summary>執行並記錄命令；命令拋出例外時不記錄。</summary>
     public void Execute(IEditCommand command)
     {
         command.Execute();
-        _undo.AddLast(command);
+        _undo.AddLast((command, _nextVersion++));
         if (_undo.Count > _capacity)
         {
+            _baseVersion = _undo.First!.Value.Version;
             _undo.RemoveFirst();
         }
 
@@ -55,7 +66,7 @@ internal sealed class UndoRedoStack
         }
 
         _undo.RemoveLast();
-        last.Value.Undo();
+        last.Value.Command.Undo();
         _redo.Push(last.Value);
         return true;
     }
@@ -63,13 +74,13 @@ internal sealed class UndoRedoStack
     /// <summary>重做最近一筆被復原的操作；沒有時回傳 false。</summary>
     public bool Redo()
     {
-        if (!_redo.TryPop(out var command))
+        if (!_redo.TryPop(out var entry))
         {
             return false;
         }
 
-        command.Execute();
-        _undo.AddLast(command);
+        entry.Command.Execute();
+        _undo.AddLast(entry);
         return true;
     }
 }

@@ -243,3 +243,59 @@
 ### Actions Taken（續）
 - 一次詢問使用者三件事，皆採建議：五項 MT 全數通過、十字游標是唯一問題（登錄於 `docs/ACCEPTANCE.md`，MT-08 註明以 Phase 3 版本驗證、Phase 4 加入 PNG 後再確認）；修正現在單獨 commit 並合併回 `main`；使用者自行從系統匣結束程式。
 - commit `phase-02: …`（分支 `fix/crosshair-contrast`）並 fast-forward 合併回 `main`；接著從 `main` 建立 `feature/phase-04-image-io` 開始 Phase 4。
+
+### Actions Taken（Phase 4）
+- 從 `main` 建立 `feature/phase-04-image-io`，Phase 4 → `in_progress`。讀 Phase 3 handoff 的風險、後續工作與未驗證項目。
+- 徵詢 advisor 後定案：剪貼簿沿用 .NET 內建重試（取代原計畫的外層 5 次）；「未匯出」以編輯歷史的狀態版本判斷、剛截取或剛開啟的圖片沒有未匯出變更；開啟的圖片以白色背景合成透明度；結束程式前詢問（`Shutdown` 關閉視窗時不能取消）；登出或關機時攔截。
+- ADR-0014（剪貼簿格式與重試）、ADR-0015（檔案寫入與背景編碼）、ADR-0016（未匯出變更保護）。
+- TDD：`UndoRedoStack.Version`、`ImageDocument.ExportedVersion`／`IsDirty`／`MarkExported`（`UndoRedoStackTests` +5、`DirtyTrackingTests` 7）；`ClipboardPayload`（DIB＋PNG，可在背景執行緒產生）、`ClipboardService.TrySetImage` 可注入、`DescribeError`（`ClipboardServiceTests` +9，以 COM `IDataObject.GetData` 驗證兩種格式轉成 HGLOBAL，不碰使用者剪貼簿）；`PngFileService.Encode`（剪貼簿與存檔共用）。
+- 編輯器：複製與另存改為背景編碼、進行中停用兩個命令、成功才以合成當時的版本標記匯出、另存記住資料夾；`ConfirmDiscardAsync`、`HasUnexportedChanges`、`CloseWithoutConfirmation`、`OnClosing` 攔截；「開啟」按鈕與 `Ctrl+O`；`UnsavedChangesDialog`（WPF，預設為另存、Esc 取消）。
+- 控制器：新截圖前、開啟圖片前、關閉編輯器、系統匣結束、登出或關機的詢問；詢問或開檔期間、編輯器背景匯出中、編輯器開著自己的對話框時忽略新的截圖／開啟／結束要求；系統匣「開啟圖片」；開檔在背景執行緒解碼。
+- 委派 subagent（worktree）實作 `ImageFileLoader` 與 AT-10 測試（白名單：載入器、測試、`Strings.resx` 結尾新增 `ImageLoad_` 鍵）。
+- `ImageRendererTests` 加入同一組編輯在 25%／100%／400% 畫布縮放下輸出逐位元組相同（AT-07）；`PngFileServiceTests` 加入執行緒集區存檔。
+- 煙霧腳本：新增 `tools/smoke/Invoke-Phase4Smoke.ps1`（以產生器複製 Phase 3 的基礎設施，加入 UI Automation 按鈕、檔案對話框、剪貼簿兩種格式、占用模擬、未匯出詢問各路徑；語法與內嵌 C# 編譯通過，尚未執行）；`Invoke-Phase2Smoke.ps1` 改為從編輯器以「複製」按鈕取得截圖結果（P4-11，語法通過，尚未執行）。
+- 文件：README、KNOWN_LIMITATIONS、CHANGELOG、ACCEPTANCE（Phase 4 驗證步驟）。
+- 使用者仍在使用電腦（閒置 1 秒），煙霧驗證延後。
+
+### Actions Taken（Phase 4 整合與煙霧驗證）
+- subagent 完成 `ImageFileLoader` 與 `ImageFileLoaderTests`（26 個；以約 3.6 萬個截斷或竄改的變體實測例外型別；以記憶體峰值證明讀標頭時不解碼像素）。合併到主工作目錄（`Strings.resx` 以修補檔套用，與主 agent 新增的鍵不重疊），移除暫時 worktree 與分支。
+- 修正 subagent 測試類別摘要（實際在背景執行緒開檔），新增執行緒集區載入與拒絕存取兩個測試（28 個）；已知限制加入「只缺後段影像資料的檔案仍可開啟（WIC 以黑色補足）」。
+- AT-07 新測試第一次失敗：文字提交後仍為選取狀態，`SetColor` 套用到文字；測試先取消選取後通過（測試寫法問題）。
+- 自我審查修正：`RequestCloseEditor` 也檢查忙碌狀態；背景匯出進行中視為忙碌；`OpenFileDialog` 依有無擁有者分別呼叫；`IsBusy` 移至私有成員區。
+- 以離屏繪製檢查未匯出變更對話框的版面（四個按鈕、存取鍵）。
+
+### Test Results（Phase 4）
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build ScreenshotApp.sln -c Release` | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test ScreenshotApp.sln -c Release` | 全數通過 | 876 passed | PASS |
+
+### Smoke Verification（P4-08，使用者閒置時以前景方式執行）
+| 執行 | 結果 | 備註 |
+|------|------|------|
+| 1 | 3 PASS 後腳本例外 | `Invoke-Button` 的 `$condition` 與 `Wait-Until` 參數同名；腳本寫入剪貼簿後未更新序號，結束時沒有還原使用者原本的剪貼簿（已修正三支腳本並記錄於記憶） |
+| 2 | 9 PASS／8 FAIL | 剪貼簿兩種格式、另存 PNG 與剪貼簿逐位元組相同、記住儲存位置、剪貼簿占用（約 1.2 秒）通過；另存到唯讀檔時存檔對話框一直開著，後續步驟被忙碌保護擋下 |
+| 3 | 10 PASS／3 FAIL | 確認唯讀檔由 Windows 存檔對話框自行拒絕（腳本改為記錄並回答提示、取消存檔，通過）；新截圖前的詢問沒有出現（原因未確定），接著偵測到使用者操作而停止 |
+| 4 | 22 PASS／0 FAIL | 加入診斷與錯誤訊息框的關閉處理後全數通過 |
+| 5 | 22 PASS／0 FAIL | 腳本改為不送出模擬按鍵（UI Automation 選工具、右鍵取消覆蓋層）後，以含合成器修正的 Release 建置重跑 |
+
+### Actions Taken（Phase 4 煙霧驗證之後的診斷與收尾）
+- Phase 3 腳本強化（UI Automation 選工具、填文字、按「複製」，縮放比較前確認狀態列百分比）後重跑：33 PASS／4 FAIL（Delete、縮放 400%／25%、裁切內容）。更正先前縮放與文字檢查的通過紀錄（當時動作沒有發生）。
+- 兩支診斷腳本：Ctrl+滾輪需先以 SendInput 按住 Ctrl 再 `PostMessage(WM_MOUSEWHEEL)`（產品正常）；Delete 在非延伸鍵與延伸鍵下都沒有刪除選取的箭頭，同樣送法的 Ctrl+Z、Ctrl+Y、Enter 有效，程式碼中找不到攔截 Delete 的處理。
+- 使用者指示「Delete 鍵失敗原因，整理目前資訊後，先列為待辦，先繼續處理後續問題」：調查紀錄寫入 `findings.md`，列為 P5-11（Key Question 8）；advisor 指出 Delete 失敗後的 Ctrl+Z 也沒有作用，可能是點選沒有移動後仍處於拖曳狀態，已補入 findings。
+- 使用者指示「後續測試失敗，修正超過 3 次無法改好，則列入待辦，不要拖累進度」。
+- 裁切內容差異：暫時的實驗測試重現（Segoe UI 14 在部分裁切原點有 66～91 個像素不同，32 級字沒有）→ 新增 `Render_CroppedOutput_EqualsSameRegionOfUncroppedOutput`（紅燈 4 個）→ `ImageRenderer` 改為整張合成後再取出裁切範圍（第 1 次即綠燈）；刪除實驗檔；ADR-0011 修訂第 4 點；已知限制加入匯出成本。
+- Phase 3 腳本：Ctrl+滾輪改為逐格「按住 Ctrl → 送 WM_MOUSEWHEEL → 一定放開 Ctrl」直到狀態列顯示目標百分比；「刪除後 Ctrl+Z 恢復箭頭」改為箭頭確實被刪除才判定。
+- 電腦閒置後依序執行三支煙霧腳本（期間不執行其他指令），證據複製到 `docs/evidence/`（Phase 2 的螢幕擷取截圖沿用首次執行的檔案，只更新文字結果）。
+- 文件：ACCEPTANCE（測試總數、AT-07、三個階段的煙霧結果、MT-07 註記、請使用者以實體鍵盤確認 Delete）、CHANGELOG、KNOWN_LIMITATIONS、handoff `handoffs/phase-04-image-io.md` 完成；Phase 4 → complete。
+
+### Test Results（Phase 4 收尾）
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet test --filter Render_CroppedOutput_EqualsSameRegionOfUncroppedOutput -c Debug`（修正前） | 失敗（紅燈） | 4 failed（118～136 個像素不同） | PASS（紅燈） |
+| `dotnet test`（ImageRenderer、Clipboard、PngFileService、DirtyTracking，Debug，修正後） | 全數通過 | 68 passed | PASS |
+| `dotnet build ScreenshotApp.sln -c Release` | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test ScreenshotApp.sln -c Release` | 全數通過 | 880 passed | PASS |
+| `pwsh -File tools/smoke/Invoke-Phase3Smoke.ps1` | 全數通過 | 35 PASS／2 FAIL（Delete 與其復原，待辦 P5-11） | PARTIAL |
+| `pwsh -File tools/smoke/Invoke-Phase4Smoke.ps1`（強化後） | 全數通過 | 22 PASS／0 FAIL | PASS |
+| `pwsh -File tools/smoke/Invoke-Phase2Smoke.ps1`（P4-11 更新後） | 全數通過 | 38 PASS／0 FAIL | PASS |

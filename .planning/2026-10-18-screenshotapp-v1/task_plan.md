@@ -15,11 +15,11 @@
 
 ## Next Step
 
-P2-15（十字游標修正）經使用者同意已單獨 commit 並合併回 `main`。下一步：從 `main` 建立 `feature/phase-04-image-io`，將 Phase 4 標記 `in_progress`，先撰寫 ADR-0014～0016（剪貼簿 ADR 前先徵詢 advisor）。仍待處理：Phase 3 煙霧驗證後半段與新增的覆蓋層游標檢查（需電腦閒置）；MT-04、MT-05、MT-07 尚未回報；Phase 4 控制點請使用者重新確認十字游標與 MT-08。
+Phase 4 控制點：暫停等待使用者指令。向使用者回報並請其確認：十字游標修正、MT-08（剪貼簿加入 PNG 後貼入 PowerPoint／Word／Teams）、Delete 鍵以實體鍵盤是否有效（P5-11 的判別依據）、「未修改的截圖不詢問」的決策；告知第一次 Phase 4 煙霧驗證造成使用者原本的剪貼簿內容遺失。MT-04、MT-05、MT-07、MT-09 尚未回報。使用者授權後從 `main` 建立 `feature/phase-05-release` 開始 Phase 5，第一項處理 P5-11。
 
 ## Current Phase
 
-Phase 3（圖片編輯核心）已完成（2026-10-18，handoff：`handoffs/phase-03-editor-core.md`；實機煙霧驗證部分完成）。使用者以「繼續開發」授權 Phase 4（Key Question 7）；MT 回饋修正 P2-15 已合併回 `main`，Phase 4 即將開始。
+Phase 4（圖片輸入輸出）已完成（2026-10-18，handoff：`handoffs/phase-04-image-io.md`），等待使用者指令；Phase 5（完整驗證與發佈）維持 pending。Phase 3 收尾時未執行的煙霧驗證已在 Phase 4 補完。
 
 ## 執行規範（本任務專用）
 
@@ -199,24 +199,25 @@ Checklist
 **分支**：`feature/phase-04-image-io`。
 
 Checklist
-- [ ] P4-00 ADR-0014～0016（剪貼簿格式策略、檔案寫入與背景編碼、未匯出變更保護流程）｜無｜medium｜否｜三份 ADR Accepted
-- [ ] P4-01 `ImageRenderer` 完整化：像素精確（寬高嚴格 = CropRect）、裁切外標註不出現、顯示縮放不影響、執行緒親和（UI 執行緒渲染後 Freeze）｜P3-12｜high｜可（含 AT-07 測試）｜AT-07：不同畫布縮放輸出尺寸與像素雜湊一致；裁切外圖形不出現
-- [ ] P4-02 `ClipboardService` 強化：`DataObject` 同時放 Bitmap(DIB) 與 PNG 串流；`CLIPBRD_E_CANT_OPEN` 重試 5 次 × 100ms；失敗回傳錯誤並保留文件；成功後狀態列輕量提示並更新 `ExportedVersion`｜P4-01｜high｜否｜AT-09（注入失敗）；實機：PowerShell 讀取剪貼簿尺寸與 PNG 一致
-- [ ] P4-03 `PngFileService`：預設檔名 `Screenshot_yyyyMMdd_HHmmss_fff.png`、初始目錄 = 上次成功位置或圖片資料夾、覆寫確認、背景執行緒 `PngBitmapEncoder`、temp→`File.Move(overwrite)`、失敗提示保留文件、成功更新 `LastSaveDirectory` 與 `ExportedVersion`｜P4-01、P1-10｜high｜否｜AT-09（唯讀目錄）；實機另存尺寸 = CropRect
-- [ ] P4-04 開啟既有圖片：`Export/ImageFileLoader`（PNG/JPEG/BMP → Bgra32 凍結；尺寸上限 1 億像素；格式錯誤／損壞友善提示）、Tray 選單新增「開啟圖片」與編輯器「開啟」按鈕、另存預設不同名避免覆寫來源｜P3-13｜medium｜可（含 AT-10 測試）｜AT-10：有效 PNG/JPEG/BMP、格式錯誤、損壞、超大尺寸
-- [ ] P4-05 未匯出變更保護：`IsDirty = HistoryVersion != ExportedVersion`；`UnsavedChangesDialog`（複製／儲存／捨棄／取消）；套用於新截圖、開啟圖片、關閉編輯器、Tray 結束｜P4-02、P4-03｜high｜否｜實機四種路徑皆提示；取消時文件不變
-- [ ] P4-06 文件切換與視窗行為：單一文件；複製／儲存後留在編輯；取消新截圖恢復原文件；關閉編輯器回常駐｜P4-05｜medium｜否｜實機流程驗證
-- [ ] P4-07 自動化測試：`ImageRendererTests`（AT-07）、`ClipboardFailureTests`／`PngSaveFailureTests`（AT-09）、`ImageFileLoaderTests`（AT-10）、`DirtyTrackingTests`｜P4-01～P4-05｜medium｜可｜全數通過
-- [ ] P4-08 Agent 端實機驗證：複製→PowerShell 讀取剪貼簿影像→與另存 PNG 逐像素比對；開啟 JPEG/BMP；唯讀資料夾另存失敗後文件仍在；剪貼簿被占用模擬（另一程序 OpenClipboard）後提示｜P4-06｜high｜否｜證據記錄
-- [ ] P4-09 使用者實機驗證請求：MT-08（PowerPoint 貼上與 PNG 一致；Word／Teams 可接收）、MT-09（磁碟不可寫、剪貼簿占用、顯示器拔除）｜P4-08｜low｜否｜於控制點提出
-- [ ] P4-10 Phase 收尾儀式（handoff `handoffs/phase-04-image-io.md`）｜全部｜low｜否｜handoff 存在並註記
+- [x] P4-00 ADR-0014～0016（剪貼簿格式策略、檔案寫入與背景編碼、未匯出變更保護流程）｜無｜medium｜否｜三份 ADR Accepted
+- [x] P4-01 `ImageRenderer` 完整化：像素精確（寬高嚴格 = CropRect）、裁切外標註不出現、顯示縮放不影響、執行緒親和（UI 執行緒渲染後 Freeze）｜P3-12｜high｜可（含 AT-07 測試）｜AT-07：不同畫布縮放輸出尺寸與像素雜湊一致；裁切外圖形不出現
+- [x] P4-02 `ClipboardService` 強化：`DataObject` 同時放 24 位元 DIB 與 `PNG` 串流（PNG 與存檔共用編碼函式）；DIB／PNG 位元組在背景執行緒由凍結的合成結果產生；重試沿用 .NET 10 內建（`OleSetClipboard`／`OleFlushClipboard` 各 10 次 × 100 ms），不加外層重試；`CLIPBRD_E_CANT_OPEN` 顯示專屬訊息；寫入剪貼簿的步驟可注入；失敗回傳錯誤並保留文件；成功後狀態列輕量提示並以合成當時的版本更新 `ExportedVersion`｜P4-01｜high｜否｜AT-09（注入失敗）；以 COM `IDataObject.GetData` 驗證兩種格式轉成 HGLOBAL 且像素一致（不碰使用者剪貼簿）；實機：讀取剪貼簿兩種格式與另存 PNG 一致、另一程序占用時的耗時與錯誤碼
+- [x] P4-03 `PngFileService`：預設檔名 `Screenshot_yyyyMMdd_HHmmss_fff.png`（開啟的圖片也相同，不預設來源檔名）、初始目錄 = 上次成功位置（仍存在時）或圖片資料夾、覆寫確認、背景執行緒 `PngBitmapEncoder`、temp→`File.Move(overwrite)`、失敗提示保留文件、成功更新 `LastSaveDirectory` 與 `ExportedVersion`（合成當時的版本）；複製與儲存進行中停用兩個命令｜P4-01、P1-10｜high｜否｜AT-09（唯讀目錄）；實機另存尺寸 = CropRect
+- [x] P4-04 開啟既有圖片：`Export/ImageFileLoader`（PNG/JPEG/BMP；先讀取影格標頭的尺寸、超過 1 億像素在解碼前拒絕；`IgnoreColorProfile`；透明度以白色背景合成為凍結的 `Bgr32`，與截圖相同全不透明；不套用 EXIF 方向；格式錯誤／損壞友善提示）、Tray 選單新增「開啟圖片」與編輯器「開啟」按鈕（`Ctrl+O`）、另存預設不同名避免覆寫來源｜P3-13｜medium｜可（含 AT-10 測試）｜AT-10：有效 PNG/JPEG/BMP、格式錯誤、損壞、超大尺寸
+- [x] P4-05 未匯出變更保護：`UndoRedoStack.Version`（每個狀態一個版本，復原／重做回到相鄰狀態的版本，捨棄最舊一筆時更新底層版本）、`ImageDocument.ExportedVersion`／`IsDirty`（新文件沒有未匯出的變更）；`UnsavedChangesDialog`（複製／儲存／捨棄／取消）；套用於新截圖（擷取前）、開啟圖片（開檔對話框前）、關閉編輯器、Tray 結束（確認後才 `Shutdown`）、登出或關機（拒絕結束工作階段後詢問）；詢問前先完成文字輸入；對話框期間忽略新的截圖、開啟與結束要求｜P4-02、P4-03｜high｜否｜版本與 IsDirty 單元測試；實機四種路徑皆提示；取消時文件不變；登出或關機需實際登出（未驗證時標示）
+- [x] P4-06 文件切換與視窗行為：單一文件；複製／儲存後留在編輯；取消新截圖恢復原文件；關閉編輯器回常駐｜P4-05｜medium｜否｜實機流程驗證
+- [x] P4-07 自動化測試：`ImageRendererTests`（AT-07）、`ClipboardFailureTests`／`PngSaveFailureTests`（AT-09）、`ImageFileLoaderTests`（AT-10）、`DirtyTrackingTests`｜P4-01～P4-05｜medium｜可｜全數通過
+- [x] P4-08 Agent 端實機驗證：複製→PowerShell 讀取剪貼簿影像→與另存 PNG 逐像素比對；開啟 JPEG/BMP；唯讀資料夾另存失敗後文件仍在；剪貼簿被占用模擬（另一程序 OpenClipboard）後提示｜P4-06｜high｜否｜證據記錄
+- [x] P4-09 使用者實機驗證請求：MT-08（PowerPoint 貼上與 PNG 一致；Word／Teams 可接收）、MT-09（磁碟不可寫、剪貼簿占用、顯示器拔除）｜P4-08｜low｜否｜於控制點提出
+- [x] P4-11 更新 `tools/smoke/Invoke-Phase2Smoke.ps1` 為 Phase 3 之後的行為（以編輯器 `Ctrl+C` 取得選取結果，比對後關閉編輯器），P5-07 以發佈版重跑各階段腳本前必須完成｜P4-06｜medium｜否｜腳本語法剖析通過；電腦閒置時實際執行
+- [x] P4-10 Phase 收尾儀式（handoff `handoffs/phase-04-image-io.md`）｜全部｜low｜否｜handoff 存在並註記
 
 **Acceptance Criteria（Phase 門檻）**
 1. FR-24、FR-26～FR-32 可操作；AT-07、AT-09、AT-10 通過。
 2. 剪貼簿與 PNG 可視像素一致（Agent 逐像素比對 + 使用者 PowerPoint 回報）。
 
-**Handoff**：尚未建立。
-- **Status:** pending
+**Handoff**：`handoffs/phase-04-image-io.md`（2026-10-18；880 個自動化測試通過；煙霧驗證 Phase 4 22／22、Phase 3 35／37（失敗的 2 項為待辦 P5-11 的 Delete 鍵）、Phase 2 重跑 38／38）。
+- **Status:** complete
 
 ### Phase 5: 完整驗證與發佈
 
@@ -235,6 +236,7 @@ Checklist
 - [ ] P5-07 Agent 端最終煙霧驗證（以發佈版 exe 執行 Phase 1～4 的煙霧腳本）｜P5-05｜medium｜否｜證據記錄
 - [ ] P5-08 使用者實機驗收總表：MT-01～MT-11 清單、證據欄位、未驗證標示（MT-11 需乾淨機器）｜P5-04｜low｜否｜`docs/ACCEPTANCE.md` 完整
 - [ ] P5-09 最終報告：需求完成情況（FR-01～FR-35）、未完成／未驗證項目、測試結果、發佈檔案位置、已知限制｜全部｜medium｜否｜報告交付使用者
+- [ ] P5-11 待辦（使用者指示先列待辦、繼續後續工作）：選取標註後按 Delete 沒有刪除——Phase 3 煙霧驗證與診斷腳本以 `SendInput` 送出 Delete 皆無效，同樣送法的 `Ctrl+Z`、`Ctrl+Y`、Enter 有效；先確認實體鍵盤是否有效，再查路由或可執行條件，寫能重現的測試後修正（調查紀錄見 `findings.md`「待辦：Delete 鍵」）｜無｜xhigh｜否｜重現測試先紅後綠；Phase 3 煙霧腳本「選取箭頭後按 Delete 刪除」與「刪除後 Ctrl+Z 恢復箭頭」通過
 - [ ] P5-10 Phase 收尾儀式（handoff `handoffs/phase-05-release.md`、版本標記 `v1.0.0`）｜全部｜low｜否｜handoff 存在並註記
 
 **Acceptance Criteria（Phase 門檻）**
@@ -331,6 +333,7 @@ Checklist
 5. Phase 3 授權？→ 2026-10-18 使用者以「使用 planning-with-files 載入專案狀態，繼續開發」授權（與 Phase 1、2 授權句式相同）。Phase 1、2 的 MT 尚未回報，維持「尚未驗證」，於 Phase 3 控制點與 MT-03（編輯器部分）、MT-06、MT-07 一併請使用者回報。
 6. Phase 3 收尾時機？→ 2026-10-18 使用者以「完成 phase 3」要求收尾。煙霧驗證後半段需要電腦閒置，使用者正在使用電腦而無法執行，列為「尚未驗證」並保留腳本供之後補完。
 7. Phase 4 授權與 MT 回報？→ 2026-10-18 使用者以「使用 planning-with-files 載入專案狀態，繼續開發，完成 MT-01, MT-02, MT-03, MT-06, MT-08 驗證，問題：若擷取畫面時，背景全白，則十字準星看不清」回覆：「繼續開發」與先前授權句式相同，視為授權 Phase 4；詢問後使用者確認五項全數通過、十字游標是唯一問題，已登錄於 `docs/ACCEPTANCE.md`；十字游標問題列為 P2-15 先行修正，使用者同意先單獨 commit 並合併回 `main`，並自行結束執行中的程式以便建置 Release。MT-08 是以 Phase 3 版本（剪貼簿只有 24 位元 DIB）驗證，Phase 4 加入 PNG 格式後需再確認；使用者已安裝 Office（回答 Key Question 2）。
+8. Delete 鍵沒有刪除選取標註的問題如何處理？→ 2026-10-18 使用者指示「Delete 鍵失敗原因，整理目前資訊後，先列為待辦，先繼續處理後續問題」：調查紀錄寫入 `findings.md`，列為 P5-11，Phase 4 其餘工作繼續。
 
 ## Decisions Made
 
@@ -383,8 +386,15 @@ Checklist
 | 測試的 GDI 物件量測等連續兩次讀數相同才回傳 | WPF 繪製資源在終結器之後才由繪製執行緒刪除，立即讀取會被其他測試遺留的物件干擾 |
 | 煙霧腳本：每次模擬輸入前偵測使用者輸入並檢查前景與目標視窗，編輯視窗以 PrintWindow 擷取，剪貼簿以序號判斷是否還原 | 第一次試跑時使用者回到電腦前，滑鼠操作落到其他程式、證據截到其他程式；保護必須在每一步而不只在開始前 |
 | Phase 3 在煙霧驗證部分完成時收尾，未執行的項目標示「尚未驗證」 | 使用者要求收尾，而後半段驗證需要電腦閒置；邏輯已由 774 個自動化測試涵蓋，腳本保留供補完 |
+| 剪貼簿重試沿用 .NET 10 內建（`OleSetClipboard`／`OleFlushClipboard` 各 10 次 × 100 ms），不加外層重試；取代 P4-02 原本的「重試 5 次 × 100ms」 | 外層重試會與內建重試相乘，剪貼簿被占用時 UI 執行緒可能阻塞約 10 秒；內建重試已是「有限次短暫重試」 |
+| 剪貼簿同時放 24 位元 DIB 與 `PNG`，PNG 與存檔共用同一個編碼函式；位元組在背景執行緒產生 | 支援 PNG 的程式拿到與 PNG 檔相同的位元組，不經接收端轉換；耗時的編碼不阻塞 UI |
+| 剛截取或剛開啟的圖片沒有未匯出的變更；以編輯歷史的狀態版本判斷 | 明確需求以「自最後一次成功匯出後曾修改」為條件，優先於流程描述的「未匯出內容」；重截不必多一次確認；修改後復原回原狀不詢問。於控制點告知使用者，可改為新文件一律詢問 |
+| 開啟的圖片以白色背景合成透明度，轉為全不透明的 `Bgr32` | 24 位元 DIB 沒有 alpha，若保留透明度，剪貼簿 DIB 的透明處會變黑、與 PNG 不一致 |
+| 登出或關機時若有未匯出的變更，拒絕結束工作階段並詢問 | 「關閉或結束時不得無聲丟棄資料」；`Application.Shutdown` 關閉視窗時不能取消，只能在工作階段結束前攔截 |
 | MT 回饋修正在獨立分支 `fix/crosshair-contrast` 完成，經使用者同意先單獨 commit 並 fast-forward 合併回 `main`，之後才開始 Phase 4 | 使用者可以立即以新版重新確認；`main` 因此在控制點之外多了一個已測試的修正（Release 825 個測試通過），但不含任何未完成的 Phase 4 工作 |
 | 選取覆蓋層改用自繪的黑芯白邊十字游標（單色 AND／XOR、不使用反相），尺寸取系統游標在該 DPI 的標準尺寸，比例與系統十字相同；每種尺寸只建立一次並沿用到程式結束 | 系統十字游標全為反相像素，在暗化成 50% 灰的白色畫面上與底色只差 1 個色階；黑芯白邊對任何底色都有 ≥127 的對比。游標是 USER 物件，快取讓數量不隨截圖次數增加，也不會銷毀仍在顯示中的游標；不調整遮罩透明度，因為那只會把問題移到另一種底色 |
+| `ImageRenderer` 改為一律以原始圖片尺寸合成，再取出裁切範圍（整張時直接回傳） | WPF 的平滑像素會隨繪製位置改變：平移到裁切原點再繪製時，小字級文字與斜線在範圍內有幾十到上百個像素與未裁切時不同；整張合成後再取出，裁切只去掉範圍外的像素。代價是每次匯出合成整張圖片（最壞情況與未裁切相同），記錄於 ADR-0011 修訂與已知限制 |
+| Delete 鍵問題列為待辦 P5-11，不阻擋 Phase 4 收尾 | 使用者指示「整理目前資訊後，先列為待辦，先繼續處理後續問題」，並要求修正超過 3 次仍失敗的項目列入待辦、不拖累進度 |
 
 ## Errors Encountered
 
@@ -419,6 +429,15 @@ Checklist
 | Release 建置失敗：使用者執行中的 ScreenshotApp 占用 `bin\Release` 的執行檔 | 1 | 不結束使用者的程式；先以 Debug 組態建置與測試，使用者自行結束程式後 Release 建置 0 警告、825 個測試通過 |
 | 測試的 LibraryImport 使用應用程式組件的 `BITMAPINFOHEADER` 出現 SYSLIB1051 | 1 | 測試內宣告同名結構 |
 | 對照圖腳本在非 PMv2 執行緒建立游標，PMv2 繪製時被放大 1.5 倍 | 1 | 先切換執行緒 DPI 感知再建立游標（與應用程式相同情境） |
+| AT-07 新測試輸出出現純綠像素：文字提交後仍為選取狀態，`SetColor` 套用到文字而非預設值 | 1 | 測試在變更顏色前取消選取（測試寫法問題，非產品缺陷） |
+| Phase 4 煙霧驗證：`Invoke-Button` 的 `$condition` 與 `Wait-Until` 參數同名，腳本區塊取到參數本身而例外 | 1 | 改名 `$byId`；Phase 2 腳本同樣修正 |
+| Phase 4 煙霧驗證：腳本寫入剪貼簿後未更新序號，中途失敗時誤判為使用者寫入而沒有還原使用者原本的剪貼簿 | 1 | 三支腳本都在自己寫入後立即更新序號；使用者原本的剪貼簿內容已遺失，於 Phase 4 控制點告知 |
+| Phase 4 煙霧驗證：另存到唯讀檔時沒有出現程式的錯誤訊息，存檔對話框一直開著，後續步驟被「忙碌」保護擋下 | 2 | 實測為 Windows 存檔對話框自行拒絕唯讀檔；腳本改為記錄並回答每個提示、最後取消存檔，檢查目標檔不變與編輯器恢復可用 |
+| Phase 4 煙霧驗證：新截圖前的詢問沒有出現（原因未確定），之後偵測到使用者操作而停止 | 2 | 腳本加入診斷（可見視窗與啟用狀態、編輯器截圖），錯誤訊息框改為先送 `IDOK` 再送 `WM_CLOSE` 關閉；第 4 次執行 22／22 通過。推測先前是上一步的錯誤訊息框沒有關閉、編輯器仍被停用而由忙碌保護擋下（未證實） |
+| Phase 3 煙霧驗證：縮放與文字輸入的檢查在動作沒有發生時仍判定通過（按鍵因 Windows Terminal 取走前景沒有送達） | 1 | 縮放比較前要求狀態列顯示目標百分比；文字以 UI Automation 填入並先確認畫布出現文字；工具與複製改用 UI Automation；更正 `findings.md` 先前的通過紀錄 |
+| Phase 3 煙霧驗證：以 `SendInput` 送 Ctrl+滾輪，編輯器維持 100% | 2 | 診斷確認產品正常：先按住 Ctrl 再 `PostMessage(WM_MOUSEWHEEL)` 可縮放；腳本改用此方式 |
+| Phase 3 煙霧驗證：選取箭頭後按 Delete 沒有刪除（同樣送法的 Ctrl+Z、Enter 有效） | 2 | 兩支診斷腳本排除送鍵與前景問題，程式碼中找不到攔截 Delete 的處理；原因未查明，依使用者指示列為待辦 P5-11 |
+| Phase 3 煙霧驗證：裁切後輸出與裁切前同一範圍有 58 個像素不同（都在文字範圍） | 1 | 以測試重現為合成器問題（平移後繪製改變平滑像素）；改為整張合成後再取出裁切範圍，第 1 次修正即通過，煙霧驗證重跑通過 |
 
 ## Notes
 

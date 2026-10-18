@@ -9,7 +9,8 @@
     腳本在主螢幕中央顯示一個已知圖樣的置頂視窗（Show-TestPattern.ps1），所有選取都在圖樣範圍內進行，
     證據截圖也只裁切圖樣範圍，不保存其他桌面內容。
     Esc 只在覆蓋層位於前景時送出；快捷鍵只在確認由 ScreenshotApp 註冊時送出，避免按鍵落到其他應用程式。
-    每次截圖成功 ScreenshotApp 都會顯示系統通知，執行後通知中心會留下多則通知。
+    選取完成後 ScreenshotApp 會開啟編輯器：腳本以 UI Automation 按下編輯器的「複製」按鈕取得截圖結果，比對前先關閉編輯器
+    （剛截取、沒有修改的圖片關閉時不會詢問），所以每次截圖都從常駐狀態開始。
     既有的 settings.json 與故障日誌在結束時還原；剪貼簿的各種格式先盡力備份、結束時放回（無法讀取的格式會在結果中列出）。
 
 .PARAMETER ExePath
@@ -244,6 +245,7 @@ $ModNoRepeat = 0x4000
 $ErrorHotkeyAlreadyRegistered = 1409
 $OverlayTitle = 'ScreenshotApp 區域選取'
 $SettingsTitle = 'ScreenshotApp 設定'
+$EditorTitle = 'ScreenshotApp 編輯器'
 $Sentinel = 'ScreenshotApp 煙霧驗證：剪貼簿不應被取消的截圖改變'
 $DataDirectory = Join-Path $env:LOCALAPPDATA 'ScreenshotApp'
 $SettingsPath = Join-Path $DataDirectory 'settings.json'
@@ -378,8 +380,33 @@ function Test-ClipboardIsSentinel {
     }
 }
 
-# 等剪貼簿出現指定尺寸的圖片，並與圖樣比對；(PatternX, PatternY) 為選取範圍左上角在圖樣中的座標。
+# 選取完成後開啟的編輯器：以 UI Automation 按下「複製」按鈕把截圖放入剪貼簿，再關閉編輯器。回傳是否順利。
+function Copy-FromEditorAndClose([int]$ProcessId) {
+    $editor = Wait-Until {
+        foreach ($hWnd in [Phase2Native]::TopLevelWindows([uint32]$ProcessId)) {
+            if ([Phase2Native]::IsWindowVisible($hWnd) -and [Phase2Native]::TextOf($hWnd) -eq $EditorTitle) { return $hWnd }
+        }
+    } 5000
+    if (-not $editor) { return $false }
+    # 變數不可命名為 $condition：Wait-Until 的參數同名，腳本區塊內會取到參數本身。
+    $byId = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'CopyButton')
+    $button = Wait-Until {
+        $found = [System.Windows.Automation.AutomationElement]::FromHandle($editor).FindFirst([System.Windows.Automation.TreeScope]::Descendants, $byId)
+        if ($found -and $found.Current.IsEnabled) { $found }
+    } 5000
+    $copied = $false
+    if ($button) {
+        $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+        $copied = [bool](Wait-Until { Invoke-Clipboard { [System.Windows.Forms.Clipboard]::ContainsImage() } } 8000)
+    }
+    [void][Phase2Native]::PostMessage($editor, [Phase2Native]::WM_CLOSE, [IntPtr]::Zero, [IntPtr]::Zero)
+    $closed = [bool](Wait-Until { -not [Phase2Native]::IsWindowVisible($editor) } 5000)
+    return $copied -and $closed
+}
+
+# 從編輯器取得截圖後與圖樣比對；(PatternX, PatternY) 為選取範圍左上角在圖樣中的座標。
 function Test-ClipboardMatchesPattern([int]$Width, [int]$Height, [int]$PatternX, [int]$PatternY) {
+    if (-not (Copy-FromEditorAndClose $appId)) { return [pscustomobject]@{ Passed = $false; Detail = '編輯器沒有開啟，或無法從編輯器複製截圖' } }
     $image = Wait-Until { Invoke-Clipboard { if ([System.Windows.Forms.Clipboard]::ContainsImage()) { [System.Windows.Forms.Clipboard]::GetImage() } } } 5000
     if (-not $image) { return [pscustomobject]@{ Passed = $false; Detail = '剪貼簿沒有圖片' } }
     try {

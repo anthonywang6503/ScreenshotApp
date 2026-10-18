@@ -244,14 +244,24 @@ public static class Phase3Native
     public static uint LeftUp() { return Send(MouseInput(0x0004, 0)); }
     public static uint LeftClick() { return Send(MouseInput(0x0002, 0), MouseInput(0x0004, 0)); }
 
-    // 按住 Ctrl 轉動滾輪 notches 格（正值向上）。
-    public static uint ControlWheel(int notches)
+    // Ctrl+滾輪一格（direction 正值向上）：本機以 SendInput 送出的滾輪到不了編輯器，改為以 SendInput 按住 Ctrl、
+    // 把 WM_MOUSEWHEEL 直接送給游標下的頂層視窗，再放開 Ctrl。張貼的訊息比輸入訊息先被取出，按下 Ctrl 後要先等編輯器處理；
+    // WPF 依鍵盤狀態判斷 Ctrl，不看 wParam 的 MK_CONTROL。無論如何都會放開 Ctrl。
+    public static void ControlWheelNotch(IntPtr window, int x, int y, int direction)
     {
-        var inputs = new List<INPUT>();
-        inputs.Add(KeyInput(VK_CONTROL, 0, 0));
-        for (var i = 0; i < Math.Abs(notches); i++) inputs.Add(MouseInput(0x0800, unchecked((uint)(notches > 0 ? 120 : -120))));
-        inputs.Add(KeyInput(VK_CONTROL, 0, 2));
-        return Send(inputs.ToArray());
+        Send(KeyInput(VK_CONTROL, 0, 0));
+        try
+        {
+            System.Threading.Thread.Sleep(120);
+            var wParam = (IntPtr)(((direction > 0 ? 120 : -120) << 16) | 0x0008);
+            var lParam = (IntPtr)((y << 16) | (x & 0xFFFF));
+            PostMessage(window, 0x020A, wParam, lParam);
+            System.Threading.Thread.Sleep(200);
+        }
+        finally
+        {
+            Send(KeyInput(VK_CONTROL, 0, 2));
+        }
     }
 
     public static List<IntPtr> TopLevelWindows(uint processId)
@@ -471,6 +481,7 @@ function Restore-EditorForeground([IntPtr]$Editor) {
         [void][Phase3Native]::LeftClick()
         if (Wait-Until { [Phase3Native]::GetForegroundWindow() -eq $Editor } 2000) {
             $script:foregroundRestores++
+            Write-Host ("[INFO] {0:HH:mm:ss} 前景被其他視窗取走，已點編輯視窗帶回" -f (Get-Date))
             return $true
         }
     }
@@ -530,11 +541,50 @@ function Send-KeysTo([IntPtr]$Window, [uint16[]]$Keys) {
     Start-Sleep -Milliseconds 150
 }
 
-function Send-TextTo([IntPtr]$Window, [string]$Text) {
+# 以 UI Automation 取得編輯視窗中的元素（AutomationId 即 XAML 的 x:Name）；找不到時回傳 $null。
+function Find-EditorElement([IntPtr]$Editor, [string]$AutomationId, [int]$TimeoutMilliseconds = 3000) {
+    # 變數不可命名為 $condition：Wait-Until 的參數同名，腳本區塊內會取到參數本身。
+    $byId = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::AutomationIdProperty, $AutomationId)
+    Wait-Until { [System.Windows.Automation.AutomationElement]::FromHandle($Editor).FindFirst([System.Windows.Automation.TreeScope]::Descendants, $byId) } $TimeoutMilliseconds
+}
+
+# 以 UI Automation 選擇工具按鈕，不送出按鍵（前景可能在檢查之後才被終端機取走）；回傳是否已選取。
+function Select-Tool([IntPtr]$Editor, [string]$AutomationId) {
     Assert-NoUserInput
-    if (-not (Restore-EditorForeground $Window)) { Stop-Simulation 'ScreenshotApp 的視窗不在前景，停止輸入文字' }
-    [void][Phase3Native]::TypeUnicode($Text)
+    $button = Find-EditorElement $Editor $AutomationId
+    if (-not $button) { return $false }
+    $pattern = $button.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
+    $pattern.Select()
+    return [bool](Wait-Until { $pattern.Current.IsSelected } 2000)
+}
+
+# 在畫布上的文字輸入框填入文字：以 UI Automation 設定內容，不模擬打字，以免前景被取走時字元落到其他視窗。
+# 輸入框沒有出現時回傳 $false，不做任何輸入。
+function Set-EditorText([IntPtr]$Editor, [string]$Text) {
+    Assert-NoUserInput
+    $box = Find-EditorElement $Editor 'TextEditor' 2000
+    if (-not $box -or $box.Current.IsOffscreen) { return $false }
+    $box.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($Text)
     Start-Sleep -Milliseconds 300
+    return $true
+}
+
+# 狀態列顯示的縮放百分比，例如「400%」。
+function Get-ZoomText([IntPtr]$Editor) {
+    $text = Find-EditorElement $Editor 'ZoomPercentText'
+    if ($text) { return $text.Current.Name }
+    return ''
+}
+
+# 以 UI Automation 選擇屬性列的第 Index 個常用色（0 起算），不送出按鍵。
+function Select-ColorItem([IntPtr]$Editor, [int]$Index) {
+    Assert-NoUserInput
+    $list = Find-EditorElement $Editor 'ColorList'
+    if (-not $list) { return $false }
+    $items = $list.FindAll([System.Windows.Automation.TreeScope]::Children, [System.Windows.Automation.Condition]::TrueCondition)
+    if ($items.Count -le $Index) { return $false }
+    $items[$Index].GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    return $true
 }
 
 function Send-EscapeToOverlay([int]$ProcessId) {
@@ -567,12 +617,15 @@ function Invoke-Click([int]$X, [int]$Y, [IntPtr[]]$Allowed) {
     Start-Sleep -Milliseconds 150
 }
 
-function Invoke-ControlWheel([int]$X, [int]$Y, [int]$Notches, [IntPtr[]]$Allowed) {
-    Assert-Target $X $Y $Allowed
-    [Phase3Native]::MoveCursor($X, $Y)
-    Start-Sleep -Milliseconds 100
-    [void][Phase3Native]::ControlWheel($Notches)
-    Start-Sleep -Milliseconds 500
+# 在 (X, Y) 一格一格以 Ctrl+滾輪縮放，直到狀態列顯示目標百分比（最多 12 格）；每一格之前都檢查使用者輸入與目標視窗。
+function Invoke-ControlWheel([int]$X, [int]$Y, [int]$Direction, [string]$Target, [IntPtr]$Editor, [IntPtr[]]$Allowed) {
+    for ($i = 0; $i -lt 12 -and (Get-ZoomText $Editor) -ne $Target; $i++) {
+        Assert-Target $X $Y $Allowed
+        [Phase3Native]::MoveCursor($X, $Y)
+        Start-Sleep -Milliseconds 50
+        [Phase3Native]::ControlWheelNotch([Phase3Native]::RootWindowAt($X, $Y), $X, $Y, $Direction)
+        Start-Sleep -Milliseconds 250
+    }
 }
 
 function Get-Pixels([System.Drawing.Bitmap]$Bitmap) {
@@ -641,11 +694,16 @@ function Invoke-Clipboard([scriptblock]$Action) {
     throw '無法存取剪貼簿。'
 }
 
-# 先放入文字，再按 Ctrl+C，之後讀到的圖片一定是這次複製的結果。回傳像素或 $null。
-function Copy-EditorImage([IntPtr]$Editor) {
+# 先放入文字，再複製，之後讀到的圖片一定是這次複製的結果。回傳像素或 $null。
+# 預設以 UI Automation 按下「複製」按鈕：前景可能在檢查之後才被終端機取走，以按鍵複製時 Ctrl+C 會落到終端機；
+# 只有驗證快捷鍵本身時才指定 -UseShortcut。
+function Copy-EditorImage([IntPtr]$Editor, [switch]$UseShortcut) {
     Assert-NoUserInput
     Invoke-Clipboard { [System.Windows.Forms.Clipboard]::SetText($Sentinel) }
-    Send-KeysTo $Editor @([Phase3Native]::VK_CONTROL, [uint16][char]'C')
+    # 腳本自己寫入剪貼簿後立即記錄序號：之後即使在受測程式複製前停止，結束時仍會還原驗證前的備份。
+    $script:ownClipboardSequence = [Phase3Native]::GetClipboardSequenceNumber()
+    if ($UseShortcut) { Send-KeysTo $Editor @([Phase3Native]::VK_CONTROL, [uint16][char]'C') }
+    else { Invoke-CopyButton $Editor }
     $image = Wait-Until { Invoke-Clipboard { if ([System.Windows.Forms.Clipboard]::ContainsImage()) { [System.Windows.Forms.Clipboard]::GetImage() } } } 5000
     # 受測程式放入剪貼簿後還會再提交一次內容，稍等再記錄序號。
     Start-Sleep -Milliseconds 200
@@ -656,6 +714,18 @@ function Copy-EditorImage([IntPtr]$Editor) {
         try { return Get-Pixels $bitmap } finally { $bitmap.Dispose() }
     }
     finally { $image.Dispose() }
+}
+
+# 以 UI Automation 按下編輯器的「複製」按鈕（AutomationId 即 XAML 的 x:Name），不送出按鍵、不需要前景。
+function Invoke-CopyButton([IntPtr]$Editor) {
+    # 變數不可命名為 $condition：Wait-Until 的參數同名，腳本區塊內會取到參數本身。
+    $byId = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'CopyButton')
+    $button = Wait-Until {
+        $found = [System.Windows.Automation.AutomationElement]::FromHandle($Editor).FindFirst([System.Windows.Automation.TreeScope]::Descendants, $byId)
+        if ($found -and $found.Current.IsEnabled) { $found }
+    } 5000
+    if (-not $button) { Stop-Simulation '找不到可按下的「複製」按鈕' }
+    $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
 }
 
 function Test-SameImage($A, $B) {
@@ -827,13 +897,17 @@ try {
         if (-not $origin) { Stop-Simulation '找不到畫布位置' }
         function Screen([int]$ImageX, [int]$ImageY) { @(($origin.X + $ImageX), ($origin.Y + $ImageY)) }
 
-        $plain = Copy-EditorImage $editor
+        $plain = Copy-EditorImage $editor -UseShortcut
         $first = ''
         $plainMismatch = if ($plain) { [Phase3Native]::CountPatternMismatches($plain.Bytes, $plain.Stride, 0, 0, $plain.Width, $plain.Height, $Selection.X, $Selection.Y, [ref]$first) } else { -1 }
-        Add-Result '未加標註時複製結果與截圖一致' ([bool]$plain -and $plain.Width -eq $Selection.Width -and $plain.Height -eq $Selection.Height -and $plainMismatch -eq 0) $(if ($plain) { '{0}×{1}，與圖樣不一致 {2} 個 {3}' -f $plain.Width, $plain.Height, $plainMismatch, $first } else { '剪貼簿沒有圖片' })
+        Add-Result '未加標註時以 Ctrl+C 複製，結果與截圖一致' ([bool]$plain -and $plain.Width -eq $Selection.Width -and $plain.Height -eq $Selection.Height -and $plainMismatch -eq 0) $(if ($plain) { '{0}×{1}，與圖樣不一致 {2} 個 {3}' -f $plain.Width, $plain.Height, $plainMismatch, $first } else { '剪貼簿沒有圖片' })
 
-        # 2. 矩形：筆劃畫在範圍內側且為純紅色，其餘像素不變
+        # 2. 矩形：以存取鍵 Alt+R 切換工具（其餘步驟以 UI Automation 切換），筆劃畫在範圍內側且為純紅色，其餘像素不變
         Send-KeysTo $editor @([Phase3Native]::VK_MENU, [uint16][char]'R')
+        $rectangleTool = Find-EditorElement $editor 'RectangleToolButton'
+        $accessKey = [bool]$rectangleTool -and [bool](Wait-Until { $rectangleTool.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected } 1000)
+        Add-Result '存取鍵 Alt+R 切換到矩形工具' $accessKey ''
+        if (-not $accessKey -and -not (Select-Tool $editor 'RectangleToolButton')) { Stop-Simulation '無法切換到矩形工具' }
         $a = Screen 40 40; $b = Screen 239 139
         Invoke-Drag $a[0] $a[1] $b[0] $b[1] $mine
         $withRectangle = Copy-EditorImage $editor
@@ -852,10 +926,10 @@ try {
         else { Add-Result '矩形：筆劃在範圍內側且為純紅色、其餘像素不變' $false '剪貼簿沒有圖片' }
 
         # 3. 箭頭與步驟編號
-        Send-KeysTo $editor @([Phase3Native]::VK_MENU, [uint16][char]'A')
+        if (-not (Select-Tool $editor 'ArrowToolButton')) { Stop-Simulation '無法切換到箭頭工具' }
         $a = Screen 300 60; $b = Screen 450 180
         Invoke-Drag $a[0] $a[1] $b[0] $b[1] $mine
-        Send-KeysTo $editor @([Phase3Native]::VK_MENU, [uint16][char]'N')
+        if (-not (Select-Tool $editor 'StepToolButton')) { Stop-Simulation '無法切換到步驟編號工具' }
         foreach ($x in 480, 525, 570) { $p = Screen $x 60; Invoke-Click $p[0] $p[1] $mine }
         $withSteps = Copy-EditorImage $editor
         if ($withSteps) {
@@ -875,11 +949,13 @@ try {
         Add-Result 'Ctrl+Y 重做後與復原前完全相同' (Test-SameImage (Copy-EditorImage $editor) $withSteps) ''
 
         # 5. 文字：輸入中與完成後的文字位置一致（比對範圍在文字左上角內側，不含輸入框外框、選取外框與插入點）
-        Send-KeysTo $editor @([Phase3Native]::VK_MENU, [uint16][char]'T')
+        if (-not (Select-Tool $editor 'TextToolButton')) { Stop-Simulation '無法切換到文字工具' }
         $p = Screen 60 220
         Invoke-Click $p[0] $p[1] $mine
         Start-Sleep -Milliseconds 300
-        Send-TextTo $editor 'Hello 測試'
+        $typed = Set-EditorText $editor 'Hello 測試'
+        Add-Result '文字工具點一下出現輸入框' $typed ''
+        if (-not $typed) { Stop-Simulation '文字輸入框沒有出現，不輸入文字' }
         $editing = Get-EditorPixels $editor 'phase3-text-editing.png'
         Send-KeysTo $editor @([Phase3Native]::VK_CONTROL, [Phase3Native]::VK_RETURN)
         Start-Sleep -Milliseconds 300
@@ -894,15 +970,17 @@ try {
         Add-Result '文字出現在複製結果' ($exportedText -gt 100) "紅色像素 $exportedText"
 
         # 6. 選取並刪除箭頭，再復原
-        Send-KeysTo $editor @([Phase3Native]::VK_MENU, [uint16][char]'V')
+        if (-not (Select-Tool $editor 'SelectToolButton')) { Stop-Simulation '無法切換到選取工具' }
         $p = Screen 375 120
         Invoke-Click $p[0] $p[1] $mine
         Send-KeysTo $editor @([Phase3Native]::VK_DELETE)
         $deleted = Copy-EditorImage $editor
-        $arrowGone = [bool]$deleted -and [Phase3Native]::CountReddish($deleted.Bytes, $deleted.Stride, 296, 90, 120, 96) -eq 0
-        Add-Result '選取箭頭後按 Delete 刪除' $arrowGone '箭頭範圍沒有紅色像素'
+        $arrowRed = if ($deleted) { [Phase3Native]::CountReddish($deleted.Bytes, $deleted.Stride, 296, 90, 120, 96) } else { -1 }
+        Add-Result '選取箭頭後按 Delete 刪除' ($arrowRed -eq 0) $(if ($deleted) { "箭頭範圍紅色像素 $arrowRed 個" } else { '剪貼簿沒有圖片' })
         Send-KeysTo $editor @([Phase3Native]::VK_CONTROL, [uint16][char]'Z')
-        Add-Result '刪除後 Ctrl+Z 恢復箭頭' (Test-SameImage (Copy-EditorImage $editor) $withText) ''
+        # 箭頭確實被刪除時才能驗證復原；沒有刪除時復原前後本來就相同，不能算通過。
+        $restored = Test-SameImage (Copy-EditorImage $editor) $withText
+        Add-Result '刪除後 Ctrl+Z 恢復箭頭' ($arrowRed -eq 0 -and $restored) $(if ($arrowRed -ne 0) { '箭頭沒有被刪除，無法驗證復原' } else { '' })
 
         # 7. 拖曳矩形的邊框移動 (20, 20)：一次拖曳一筆，Ctrl+Z 回到原位
         $a = Screen 41 90; $b = Screen 61 110
@@ -916,14 +994,16 @@ try {
         # 8. 縮放 400% 與 25% 後複製，結果與 100% 完全相同
         Send-KeysTo $editor @([Phase3Native]::VK_ESCAPE)
         $center = Screen 300 200
-        Invoke-ControlWheel $center[0] $center[1] 4 $mine
+        Invoke-ControlWheel $center[0] $center[1] 1 '400%' $editor $mine
+        $zoomInText = Get-ZoomText $editor
         $null = Get-EditorPixels $editor 'phase3-zoom-400.png'
         $zoomed = Copy-EditorImage $editor
-        Invoke-ControlWheel $center[0] $center[1] -8 $mine
+        Invoke-ControlWheel $center[0] $center[1] -1 '25%' $editor $mine
+        $zoomOutText = Get-ZoomText $editor
         $null = Get-EditorPixels $editor 'phase3-zoom-25.png'
         $shrunk = Copy-EditorImage $editor
-        Add-Result '縮放 400% 後複製結果與 100% 相同' (Test-SameImage $zoomed $withText) ''
-        Add-Result '縮放 25% 後複製結果與 100% 相同' (Test-SameImage $shrunk $withText) ''
+        Add-Result '縮放 400% 後複製結果與 100% 相同' ($zoomInText -eq '400%' -and (Test-SameImage $zoomed $withText)) "狀態列 $zoomInText"
+        Add-Result '縮放 25% 後複製結果與 100% 相同' ($zoomOutText -eq '25%' -and (Test-SameImage $shrunk $withText)) "狀態列 $zoomOutText"
         Send-KeysTo $editor @([Phase3Native]::VK_CONTROL, [Phase3Native]::VK_0)
         Start-Sleep -Milliseconds 400
         $origin = Find-ImageOrigin $editor 300 300 200 80
@@ -931,7 +1011,7 @@ try {
 
         # 9. 裁切：輸出尺寸等於裁切範圍，內容為裁切前的對應區域；Ctrl+Z／Ctrl+Y
         if ($origin) {
-            Send-KeysTo $editor @([Phase3Native]::VK_MENU, [uint16][char]'C')
+            if (-not (Select-Tool $editor 'CropToolButton')) { Stop-Simulation '無法切換到裁切工具' }
             Start-Sleep -Milliseconds 300
             $origin = Find-ImageOrigin $editor 300 300 200 80
             $a = Screen 20 20; $b = Screen 419 299
@@ -953,12 +1033,11 @@ try {
 
         # 10. 沒有選取時變更顏色，寫入設定檔成為預設值；再改回紅色
         Send-KeysTo $editor @([Phase3Native]::VK_ESCAPE)
-        Send-KeysTo $editor @([Phase3Native]::VK_MENU, [uint16][char]'O')
-        Send-KeysTo $editor @([Phase3Native]::VK_RIGHT)
+        $picked = Select-ColorItem $editor 1
         Start-Sleep -Milliseconds 400
         $saved = if (Test-Path $SettingsPath) { (Get-Content $SettingsPath -Raw | ConvertFrom-Json).DefaultColor } else { '' }
-        Add-Result '未選取時變更顏色寫入設定檔' ($saved -eq '#FF8C00') "DefaultColor = $saved"
-        Send-KeysTo $editor @([Phase3Native]::VK_LEFT)
+        Add-Result '未選取時變更顏色寫入設定檔' ($picked -and $saved -eq '#FF8C00') "DefaultColor = $saved"
+        [void](Select-ColorItem $editor 0)
         Start-Sleep -Milliseconds 300
 
         # 11. 編輯中取消新截圖：恢復原文件與視窗；完成新截圖：以新文件取代
@@ -1000,7 +1079,7 @@ try {
             if ($cycleEditor) {
                 $cycleOrigin = Find-ImageOrigin $cycleEditor 0 0 $Selection.Width $Selection.Height
                 if ($cycleOrigin) {
-                    Send-KeysTo $cycleEditor @([Phase3Native]::VK_MENU, [uint16][char]'R')
+                    [void](Select-Tool $cycleEditor 'RectangleToolButton')
                     Invoke-Drag ($cycleOrigin.X + 30 + $cycle) ($cycleOrigin.Y + 30) ($cycleOrigin.X + 200 + $cycle) ($cycleOrigin.Y + 150) @($cycleEditor)
                     $copied = Copy-EditorImage $cycleEditor
                     $ok = [bool]$copied -and $copied.Width -eq $Selection.Width -and [Phase3Native]::CountColor($copied.Bytes, $copied.Stride, 30 + $cycle, 30, 100, 3, $Red) -eq 300

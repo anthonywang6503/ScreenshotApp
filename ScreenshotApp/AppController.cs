@@ -1,9 +1,12 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Media;
+using Microsoft.Win32;
 using ScreenshotApp.Capture;
 using ScreenshotApp.Editor;
 using ScreenshotApp.Editor.Model;
+using ScreenshotApp.Export;
 using ScreenshotApp.Platform;
 using ScreenshotApp.Resources;
 using ScreenshotApp.Settings;
@@ -29,6 +32,9 @@ internal sealed class AppController : IDisposable
     private SettingsWindow? _settingsWindow;
     private EditorWindow? _editor;
 
+    // 詢問未匯出的變更或顯示開啟檔案對話框期間（含等待複製、儲存或載入完成），不處理新的截圖、開啟圖片與結束要求。
+    private bool _prompting;
+
     public AppController(SettingsStore store, StartupService startup, ErrorLog log)
     {
         _store = store;
@@ -38,9 +44,10 @@ internal sealed class AppController : IDisposable
         _hotkey = new HotkeyService();
         _hotkey.Pressed += (_, _) => StartCapture();
         _tray = new TrayService();
-        _tray.CaptureRequested += (_, _) => StartCaptureAfterMenuCloses();
+        _tray.CaptureRequested += (_, _) => RunAfterMenuCloses(StartCapture);
+        _tray.OpenRequested += (_, _) => RunAfterMenuCloses(OpenImage);
         _tray.SettingsRequested += (_, _) => ShowSettings();
-        _tray.ExitRequested += (_, _) => RequestExit();
+        _tray.ExitRequested += (_, _) => RunAfterMenuCloses(RequestExit);
     }
 
     public AppSettings Settings => _settings;
@@ -50,6 +57,11 @@ internal sealed class AppController : IDisposable
 
     /// <summary>設定中的快捷鍵最近一次註冊失敗的原因。</summary>
     public string HotkeyFailureReason => _hotkeyFailure.Describe();
+
+    // 正在詢問、編輯器正在背景匯出，或編輯器開著自己的對話框（存檔、色彩、錯誤訊息；Windows 會停用擁有者視窗）：
+    // 此時忽略新的截圖、開啟圖片與結束要求，避免對話框重疊或在途中更換文件。
+    private bool IsBusy =>
+        _prompting || (_editor is not null && (_editor.IsExporting || !NativeMethods.IsWindowEnabled(new WindowInteropHelper(_editor).Handle)));
 
     public void Start(SettingsLoadResult loaded)
     {
@@ -205,24 +217,153 @@ internal sealed class AppController : IDisposable
         return _store.Save(_settings);
     }
 
+    /// <summary>成功另存 PNG 後記住資料夾，下次另存時從那裡開始。</summary>
+    public SettingsSaveResult SaveLastSaveDirectory(string directory)
+    {
+        var updated = _settings with { LastSaveDirectory = directory };
+        if (updated == _settings)
+        {
+            return new SettingsSaveResult(true, null);
+        }
+
+        _settings = updated;
+        return _store.Save(_settings);
+    }
+
+    /// <summary>開啟 PNG、JPEG 或 BMP 圖片到編輯器；編輯中有未匯出的變更時先詢問，再顯示開啟檔案對話框。</summary>
+    public async void OpenImage()
+    {
+        if (IsBusy || _state.Current is AppState.Capturing or AppState.Selecting || !await ConfirmUnexportedChangesAsync())
+        {
+            return;
+        }
+
+        _prompting = true;
+        try
+        {
+            var owner = _state.Current == AppState.Editing ? _editor : null;
+            if (owner is not null)
+            {
+                ShowEditor(owner);
+            }
+
+            var dialog = new OpenFileDialog { Title = Strings.Get("Open_Title"), Filter = Strings.Get("Open_Filter") };
+            if ((owner is null ? dialog.ShowDialog() : dialog.ShowDialog(owner)) != true)
+            {
+                return;
+            }
+
+            // 大圖片的解碼在背景執行緒進行，結果是凍結的圖片；載入失敗時原本的文件不變。
+            var path = dialog.FileName;
+            var loaded = await Task.Run(() => ImageFileLoader.Load(path));
+            if (loaded.Image is null)
+            {
+                ShowError(owner, Strings.Format("Open_Failed", Path.GetFileName(path), loaded.Error));
+                return;
+            }
+
+            OpenEditor(new ImageDocument(loaded.Image));
+        }
+        finally
+        {
+            _prompting = false;
+        }
+    }
+
+    /// <summary>編輯器因有未匯出的變更而取消關閉後呼叫：詢問後再關閉。</summary>
+    public async void RequestCloseEditor()
+    {
+        if (IsBusy || _editor is not { } editor)
+        {
+            return;
+        }
+
+        if (await ConfirmUnexportedChangesAsync())
+        {
+            editor.CloseWithoutConfirmation();
+        }
+    }
+
+    /// <summary>
+    /// 登出或關機：有未匯出的變更時拒絕結束工作階段並詢問；使用者處理後需重新登出或關機。
+    /// 工作階段結束時 WPF 會關閉所有視窗且不能取消，只能在這裡攔截。
+    /// </summary>
+    public void OnSessionEnding(SessionEndingCancelEventArgs e)
+    {
+        if (_editor is null || !_editor.HasUnexportedChanges())
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        Application.Current.Dispatcher.BeginInvoke(new Action(RequestCloseEditor));
+    }
+
     public void Dispose()
     {
         _settingsWindow?.Close();
-        _editor?.Close();
+
+        // 結束前已處理未匯出的變更；此時無法再詢問。
+        _editor?.CloseWithoutConfirmation();
         _hotkey.Dispose();
         _tray.Dispose();
     }
 
-    // 延後到系統匣選單的事件處理結束後才關閉，避免在選單事件中途釋放系統匣圖示。
-    private static void RequestExit() =>
-        Application.Current.Dispatcher.BeginInvoke(new Action(Application.Current.Shutdown));
+    // 延後到系統匣選單的事件處理結束、選單從畫面移除之後才執行：選單才不會被截入，
+    // 也不會在選單事件中途顯示對話框或釋放系統匣圖示。
+    private static void RunAfterMenuCloses(Action action) => Application.Current.Dispatcher.BeginInvoke(action);
 
-    // 延後到選單事件處理結束、選單從畫面移除之後才開始，選單才不會被截入。
-    private void StartCaptureAfterMenuCloses() =>
-        Application.Current.Dispatcher.BeginInvoke(new Action(StartCapture));
+    private static void ShowError(Window? owner, string message)
+    {
+        if (owner is not null)
+        {
+            MessageBox.Show(owner, message, Strings.Get("Error_Title"), MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        else
+        {
+            MessageBox.Show(message, Strings.Get("Error_Title"), MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    // 結束前先處理未匯出的變更：Application.Shutdown 關閉視窗時不能取消，必須在呼叫之前詢問。
+    private async void RequestExit()
+    {
+        if (IsBusy || !await ConfirmUnexportedChangesAsync())
+        {
+            return;
+        }
+
+        _editor?.CloseWithoutConfirmation();
+        Application.Current.Shutdown();
+    }
+
+    // 編輯中且有未匯出的變更時詢問；回傳 true 表示可以繼續。
+    private async Task<bool> ConfirmUnexportedChangesAsync()
+    {
+        if (_state.Current != AppState.Editing || _editor is null)
+        {
+            return true;
+        }
+
+        _prompting = true;
+        try
+        {
+            return await _editor.ConfirmDiscardAsync();
+        }
+        finally
+        {
+            _prompting = false;
+        }
+    }
 
     private async void StartCapture()
     {
+        // 新截圖可能取代編輯中的文件：先詢問未匯出的變更，再隱藏視窗擷取畫面，對話框不會被截入。
+        if (IsBusy || !await ConfirmUnexportedChangesAsync())
+        {
+            return;
+        }
+
         var outcome = await _captureFlow.RunAsync();
         switch (outcome.Status)
         {

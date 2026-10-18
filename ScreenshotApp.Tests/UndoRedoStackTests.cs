@@ -164,6 +164,86 @@ public class UndoRedoStackTests
         Assert.Equal(new[] { "b.Undo" }, log);
     }
 
+    [Fact]
+    public void Version_StartsAtInitialStateAndEachExecuteCreatesANewOne()
+    {
+        var stack = new UndoRedoStack();
+        var versions = new List<int> { stack.Version };
+
+        for (var i = 0; i < 5; i++)
+        {
+            stack.Execute(new RecordingCommand($"c{i}", []));
+            versions.Add(stack.Version);
+        }
+
+        Assert.Equal(0, versions[0]);
+        Assert.Equal(versions.Count, versions.Distinct().Count());
+    }
+
+    [Fact]
+    public void Version_UndoAndRedo_ReturnToTheVersionOfThatState()
+    {
+        var stack = new UndoRedoStack();
+        stack.Execute(new RecordingCommand("a", []));
+        var afterA = stack.Version;
+        stack.Execute(new RecordingCommand("b", []));
+        var afterB = stack.Version;
+
+        stack.Undo();
+        Assert.Equal(afterA, stack.Version);
+        stack.Undo();
+        Assert.Equal(0, stack.Version);
+        stack.Redo();
+        Assert.Equal(afterA, stack.Version);
+        stack.Redo();
+        Assert.Equal(afterB, stack.Version);
+    }
+
+    [Fact]
+    public void Version_NewCommandAfterUndo_DiffersFromTheDiscardedRedoState()
+    {
+        var stack = new UndoRedoStack();
+        stack.Execute(new RecordingCommand("a", []));
+        stack.Execute(new RecordingCommand("b", []));
+        var afterB = stack.Version;
+        stack.Undo();
+
+        stack.Execute(new RecordingCommand("c", []));
+
+        Assert.NotEqual(afterB, stack.Version);
+        Assert.NotEqual(0, stack.Version);
+    }
+
+    [Fact]
+    public void Version_FailedCommand_KeepsTheCurrentVersion()
+    {
+        var stack = new UndoRedoStack();
+        stack.Execute(new RecordingCommand("a", []));
+        var before = stack.Version;
+
+        Assert.Throws<InvalidOperationException>(() => stack.Execute(new FailingCommand()));
+
+        Assert.Equal(before, stack.Version);
+    }
+
+    [Fact]
+    public void Version_AfterDroppingTheOldest_UndoAllStopsAtTheStateAfterTheDroppedCommand()
+    {
+        var stack = new UndoRedoStack(capacity: 2);
+        stack.Execute(new RecordingCommand("a", []));
+        var afterA = stack.Version;
+        stack.Execute(new RecordingCommand("b", []));
+        stack.Execute(new RecordingCommand("c", []));
+
+        while (stack.Undo())
+        {
+        }
+
+        // 「a」已被捨棄，最底層的狀態是執行 a 之後的狀態，版本不再是初始狀態的版本。
+        Assert.Equal(afterA, stack.Version);
+        Assert.NotEqual(0, stack.Version);
+    }
+
     // 把每次呼叫記錄到共用的清單，用來驗證命令被執行與復原的先後順序。
     private sealed class RecordingCommand(string name, List<string> log) : IEditCommand
     {

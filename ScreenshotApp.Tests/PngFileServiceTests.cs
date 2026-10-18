@@ -50,6 +50,20 @@ public sealed class PngFileServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Save_OnAThreadPoolThread_WritesTheSamePixels()
+    {
+        // 編輯器在 UI 執行緒合成並凍結圖片，再由背景執行緒編碼與寫檔。
+        var image = CreateImage(29, 17, PixelFormats.Pbgra32);
+        var path = _temp.Combine("background.png");
+
+        await Task.Run(() => PngFileService.Save(image, path));
+
+        var decoded = Decode(File.ReadAllBytes(path));
+        Assert.Equal(ToPbgra32(image), ToPbgra32(decoded));
+        Assert.Equal([path], Directory.GetFiles(_temp.FullPath));
+    }
+
+    [Fact]
     public void Save_ExistingFile_IsReplacedCompletely()
     {
         StaRunner.Run(() =>

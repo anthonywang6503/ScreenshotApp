@@ -98,6 +98,10 @@ internal static partial class NativeMethods
     public static partial bool SetForegroundWindow(nint hWnd);
 
     [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool IsWindowEnabled(nint hWnd);
+
+    [LibraryImport("user32.dll")]
     public static partial int GetSystemMetricsForDpi(int nIndex, uint dpi);
 
     [LibraryImport("user32.dll", SetLastError = true)]

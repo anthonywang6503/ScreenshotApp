@@ -58,6 +58,12 @@ public partial class App : Application
         }
     }
 
+    protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
+    {
+        base.OnSessionEnding(e);
+        _controller?.OnSessionEnding(e);
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
         _controller?.Dispose();
