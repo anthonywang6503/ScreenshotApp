@@ -44,7 +44,7 @@ Phase 0 已完成（規劃與環境確認）。Phase 1 等待授權，尚未開�
 - 文件內引用專案內檔案一律使用相對路徑。
 - 不得以占位按鈕、假成功訊息或關鍵 TODO 充數；無法在 GUI 驗證的項目標示「尚未驗證」。
 
-### Phase 收尾儀式（每個 Phase 的最後一個 Checklist 項目）
+### 收尾儀式（每個 Phase 的最後一個 Checklist 項目）
 1. 該 Phase 所有 Item 完成，`dotnet build -c Release` 與 `dotnet test` 通過（0 error）。
 2. 建立 `handoffs/phase-<NN>-<slug>.md`（完成內容、設計原因、驗證結果與證據、風險、後續工作、未驗證項目）。
 3. 更新 `task_plan.md`（含 handoff 註記）、`progress.md`、`findings.md`、`CHANGELOG.md`，重新 attest。
