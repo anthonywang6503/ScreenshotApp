@@ -197,6 +197,40 @@ public class EditorSessionTests
         Assert.Equal(undoCount, session.Document.History.UndoCount);
     }
 
+    // 依實機驗證的操作順序：矩形、箭頭、三個步驟編號、復原與重做、完成一段文字後，以選取工具點一下箭頭（沒有移動）。
+    [Fact]
+    public void SelectTool_ClickOnAnnotationWithoutMoving_EndsDragSoDeleteAndUndoWork()
+    {
+        var session = CreateSession(600, 400);
+        session.SetTool(EditorTool.Rectangle);
+        Drag(session, new Point(40.5, 40.5), new Point(239.5, 139.5));
+        session.SetTool(EditorTool.Arrow);
+        Drag(session, new Point(300.5, 60.5), new Point(450.5, 180.5));
+        var arrow = Assert.IsType<ArrowAnnotation>(session.Document.Annotations[^1]);
+        session.SetTool(EditorTool.StepNumber);
+        foreach (var x in new[] { 480.5, 525.5, 570.5 })
+        {
+            Click(session, new Point(x, 60.5));
+        }
+
+        Assert.True(session.Undo());
+        Assert.True(session.Redo());
+        session.SetTool(EditorTool.Text);
+        Click(session, new Point(60.5, 220.5));
+        session.CommitTextEdit("Hello 測試");
+        var annotations = session.Document.Annotations.ToList();
+        session.SetTool(EditorTool.Select);
+
+        Click(session, new Point(375.5, 120.5));
+
+        Assert.False(session.IsDragging);
+        Assert.Same(arrow, session.Selected);
+        Assert.True(session.DeleteSelected());
+        Assert.DoesNotContain(arrow, session.Document.Annotations);
+        Assert.True(session.Undo());
+        Assert.Equal(annotations, session.Document.Annotations);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

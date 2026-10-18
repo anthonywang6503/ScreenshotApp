@@ -299,3 +299,50 @@
 | `pwsh -File tools/smoke/Invoke-Phase3Smoke.ps1` | 全數通過 | 35 PASS／2 FAIL（Delete 與其復原，待辦 P5-11） | PARTIAL |
 | `pwsh -File tools/smoke/Invoke-Phase4Smoke.ps1`（強化後） | 全數通過 | 22 PASS／0 FAIL | PASS |
 | `pwsh -File tools/smoke/Invoke-Phase2Smoke.ps1`（P4-11 更新後） | 全數通過 | 38 PASS／0 FAIL | PASS |
+
+## Session: 2026-10-18（Phase 5 完整驗證與發佈）
+
+### Current Status
+- **Phase:** Phase 5 in_progress（Key Question 9）
+- **Branch:** `feature/phase-05-release`（自 `main` 40762cc 建立）
+
+### Actions Taken
+- 以 planning-with-files 載入狀態：Phase 4 complete、停在控制點；使用者回覆「使用 planning-with-files 載入專案狀態，繼續」，與先前授權句式相同，視為授權 Phase 5。控制點問題沒有回報，維持「尚未驗證」，於本輪結尾一次提出。
+- 本專案沒有 CodeGraph 與 codebase-memory 索引，直接讀程式碼。advisor 逾時，依自己的判斷進行。
+- P5-11 閱讀結果：`EditorSession.PointerUp` 不論有無移動都會清除拖曳；Phase 3 煙霧腳本中箭頭由 (300,60) 拖到 (450,180)，點選位置 (375,120) 正好在線上；同一次執行中第 7 步以選取工具拖曳矩形成功（若第 6 步的拖曳未結束，第 7 步按下會被忙碌保護擋下），與「點選後一直處於拖曳狀態」的推測不符，需要實證。
+- P5-11 判別測試 `SelectTool_ClickOnAnnotationWithoutMoving_EndsDragSoDeleteAndUndoWork`（依煙霧腳本的操作順序）直接通過：session 層點選不移動後不在拖曳中、Delete 與復原有效，問題在視窗輸入層或模擬輸入。
+- P5-11 診斷準備：分離的 git worktree（scratchpad）中暫時加上按鍵、滑鼠、Delete 可執行判斷的狀態紀錄（寫入視窗的 UI Automation HelpText），建置成功；由 Phase 3 腳本產生只跑到 Delete 的診斷腳本（SendInput、延伸鍵、PostMessage、右鍵選單四種刪除方式），語法與內嵌 C# 編譯通過。使用者正在使用電腦，背景等待閒置 90 秒。
+- P5-05 試發佈（scratchpad）：資料夾版 473 檔／173 MB（12 種非繁中語系 204 檔／17 MB）；單檔版預設在 exe 旁留 5 個 WPF 原生 DLL，加 `IncludeNativeLibrariesForSelfExtract` 才是單一檔案（173 MB）。
+- P5-00：ADR-0017（資料夾版為主、單檔版經煙霧驗證後才提供、只保留 zh-Hant 附屬組件、Version 1.0.0、授權檔、不簽章）；csproj 加入 `Version`、`SatelliteResourceLanguages`；`tools/Publish-Release.ps1`；`THIRD-PARTY-NOTICES.md`。
+- P5-01 靜態檢查：程式碼中的中文字串只有故障日誌內容與程式錯誤的例外訊息；各視窗存取鍵不重複、按鈕皆有工具提示。
+- P5-02：存檔、開檔讀取、設定檔讀寫與登入啟動設定失敗時原本直接顯示 .NET 例外訊息（拒絕存取、找不到路徑、檔案被占用等為英文）→ 新增 `Resources/ErrorText`（TDD：`ErrorTextTests` 13 個先紅後綠，含實際觸發的唯讀、資料夾不存在、檔案被占用），5 個呼叫點改用；`ImageFileLoaderTests`、`SettingsStoreTests` 的斷言改為繁中原因。
+- P5-04：`docs/USER_GUIDE.md`（新）、README 改寫（操作細節移到使用說明，加入發佈與文件索引）、ACCEPTANCE 中失效的 README 錨點改指向使用說明；`docs/ARCHITECTURE.md` 委派 subagent（只用讀寫檔工具）。
+- P5-05：`tools/Publish-Release.ps1` 實際執行成功（約 23 秒）：資料夾版 275 檔／155.9 MB、ZIP 67.3 MB；單檔版 8 檔／149.3 MB、ZIP 63.5 MB；ZIP 以發佈資料夾為根目錄；`publish/` 已被 gitignore 排除。發佈版的煙霧驗證待電腦閒置。
+- 腳本：Phase 4 腳本加入 `-Cycles`（預設 30）的完整循環（取消、截圖、畫矩形、複製、另存、關閉）與資源取樣、截圖延遲，以及 FHD 截圖與開啟 3840×2160 PNG 的開啟／複製／另存延遲；移除未使用的 `ControlWheel`；Phase 3 腳本加入 Tab 鍵盤巡覽檢查（P5-01 實機部分）。三者語法與內嵌 C# 編譯通過，尚未實機執行。
+- ACCEPTANCE：P5-02 錯誤恢復總檢表、Phase 5 使用者驗證步驟（發佈版、單檔版、MT-11、尚未回報的 MT）；Phase 4 腳本執行時間說明更新。KNOWN_LIMITATIONS：開頭改為 v1.0.0 清單並加入「發佈與執行環境」。
+- 完整測試（Release）：894 passed／0 failed（6 秒）。
+- 使用者整段時間都在使用電腦（閒置 0 秒），GUI 項目等待閒置；本輪結尾回報並提出問題。
+
+### P5-11 診斷與 P5-07 發佈版煙霧驗證（使用者閒置時以前景方式依序執行，期間不執行其他指令）
+- P5-11 診斷（診斷版建置）：按下 Delete 時焦點在畫布、沒有拖曳、選取為箭頭 → `CanDelete=True` → `DeleteExecuted result=True`，之後選取為 null；箭頭範圍「偏紅」像素仍為 560。計算確認這 560 個像素全部來自已知圖樣（R = x 低 8 位元 ≥ 200 的 56 欄 × G = y 低 8 位元 ≤ 60 的 10 列），箭頭其實每次都被刪除；先前「Delete 後 Ctrl+Z 沒有移除文字」是 Ctrl+Z 正確地復原了刪除。結論：不是產品缺陷，是煙霧腳本的判定錯誤。同樣的缺陷也讓文字的兩項檢查可能誤判通過（範圍內各有 680／952 個圖樣像素）。
+- Phase 3 腳本四項檢查改為「與原圖不同的像素」：箭頭出現（> 300）、文字出現在畫布與複製結果（> 100）、刪除後箭頭範圍恢復原圖（= 0）。
+- 資料夾版 Phase 1 31／31、Phase 2 38／38、Phase 3 38／38（Delete 刪除 0 個不同像素、Ctrl+Z 恢復、Tab 巡覽經過全部可用控制項）全數通過。
+- Phase 4 第 1 次：原 22 項通過，第 13 步一開始停止（右鍵取消前前景仍是編輯器關閉後被啟用的其他視窗「Window Class」，覆蓋層顯示與取得前景之間有時間差）→ 加入 `Wait-OverlayForeground`。第 2 次：30 次循環成功，GDI 判定失敗（前 5 次最大 132、後 5 次最大 134；逐次 126～134）。第 3 次（每次存檔驗證後刪除檔案，存檔對話框列出的內容固定）：GDI 126～132、19／30 次為 128，仍以最大值判定失敗。分析：+4 的尖峰都在下一次回落，量測結束後回到 126，基準沒有上升 → 改以前後各 10 次的中位數判定（說明列出最小、最大與線性趨勢）。第 4 次（最終）：25／25 通過，GDI 中位數 128→128（126～132，+0.00／次）、USER 92→93～94、Handle −0.20／次。延遲：600×400 按快捷鍵到覆蓋層中位數 154 ms、放開滑鼠到編輯器 91 ms；1920×1080 覆蓋層 155 ms、編輯器 93 ms、複製 94 ms、存檔 77 ms；開啟 3840×2160 PNG 285 ms、複製 342 ms、存檔 311 ms（各 3 次）。
+- 單檔版 Phase 1 31／31、Phase 2 38／38；原生程式庫解壓到 `%TEMP%\.net\ScreenshotApp\<識別碼>\`（5 個 DLL），與文件一致。
+- 證據（結果文字檔、CSV、P5-11 診斷紀錄）複製到 `docs/evidence/phase-05/`；診斷用 worktree 已移除。
+
+### Actions Taken（Phase 5 收尾）
+- 審閱 subagent 的 `docs/ARCHITECTURE.md`（392 行）：抽查狀態機、執行緒模型、合成與發佈設定與程式碼一致；修正使用說明連結、文字輸入中快捷鍵的機制描述、第 14 節腳本範圍。依 subagent 的比對，ADR-0002／0009／0010／0016 補上修訂說明；字型沿用範圍（只在編輯視窗開著時）更正程式註解與已知限制。
+- ACCEPTANCE：測試總數、Phase 3 Delete 失敗的查明經過、Phase 5 發佈版煙霧驗證與資源、延遲量測、MT-10 狀態；CHANGELOG 定為 `[1.0.0] - 2026-10-18`；handoff `handoffs/phase-05-release.md`；Phase 5 → complete（6／6）。
+
+### Test Results（Phase 5 收尾）
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet test --filter SelectTool_ClickOnAnnotationWithoutMoving`（P5-11 判別） | 失敗則為工作階段問題 | 1 passed（工作階段正常） | PASS（判別） |
+| `dotnet build ScreenshotApp.Tests -c Debug`（ErrorText 實作前） | 編譯失敗（紅燈） | CS0103 找不到 `ErrorText` | PASS（紅燈） |
+| `dotnet test --filter ErrorTextTests` | 全數通過 | 13 passed | PASS |
+| `dotnet build ScreenshotApp.sln -c Release` | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test ScreenshotApp.sln -c Release --no-build` | 全數通過 | 894 passed（4 秒） | PASS |
+| `pwsh -File tools/Publish-Release.ps1` | 兩種版本與 ZIP | 資料夾版 275 檔／155.9 MB（ZIP 67.3 MB）、單檔版 149.3 MB（ZIP 63.5 MB） | PASS |
+| 發佈版煙霧（資料夾版 Phase 1／2／3／4） | 全數通過 | 31／38／38／25 | PASS |
+| 發佈版煙霧（單檔版 Phase 1／2） | 全數通過 | 31／38 | PASS |

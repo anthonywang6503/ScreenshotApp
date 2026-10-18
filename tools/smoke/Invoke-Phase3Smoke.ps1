@@ -1,7 +1,7 @@
 #Requires -Version 7
 <#
 .SYNOPSIS
-    ScreenshotApp 圖片編輯器煙霧驗證：選取覆蓋層的十字游標、截圖後開啟編輯器、100% 時畫布與已知圖樣逐像素一致、繪製標註、文字輸入、
+    ScreenshotApp 圖片編輯器煙霧驗證：選取覆蓋層的十字游標、截圖後開啟編輯器、100% 時畫布與已知圖樣逐像素一致、以 Tab 巡覽控制項、繪製標註、文字輸入、
     復原與重做、選取刪除與移動、縮放後輸出不變、裁切、預設樣式回寫、文件取代與恢復、重複循環的資源量測。
 
 .DESCRIPTION
@@ -54,6 +54,7 @@ public static class Phase3Native
     public const int WM_CLOSE = 0x0010;
     public const int WM_RBUTTONUP = 0x0205;
     public const int WM_TRAYMOUSEMESSAGE = 0x0400 + 1024;
+    public const ushort VK_TAB = 0x09;
     public const ushort VK_RETURN = 0x0D;
     public const ushort VK_SHIFT = 0x10;
     public const ushort VK_CONTROL = 0x11;
@@ -902,6 +903,20 @@ try {
         $plainMismatch = if ($plain) { [Phase3Native]::CountPatternMismatches($plain.Bytes, $plain.Stride, 0, 0, $plain.Width, $plain.Height, $Selection.X, $Selection.Y, [ref]$first) } else { -1 }
         Add-Result '未加標註時以 Ctrl+C 複製，結果與截圖一致' ([bool]$plain -and $plain.Width -eq $Selection.Width -and $plain.Height -eq $Selection.Height -and $plainMismatch -eq 0) $(if ($plain) { '{0}×{1}，與圖樣不一致 {2} 個 {3}' -f $plain.Width, $plain.Height, $plainMismatch, $first } else { '剪貼簿沒有圖片' })
 
+        # 1b. 鍵盤巡覽：以 Tab 依序移動焦點，記錄 UI Automation 回報的焦點元素；工具列與屬性列中可用的控制項都要走得到。
+        # 此時沒有選取任何標註、沒有復原紀錄：復原、重做與編號值是停用狀態，Tab 會略過。
+        $visited = [System.Collections.Generic.List[string]]::new()
+        for ($press = 0; $press -lt 40; $press++) {
+            Send-KeysTo $editor @([Phase3Native]::VK_TAB)
+            $focused = [System.Windows.Automation.AutomationElement]::FocusedElement
+            $focusName = if (-not $focused) { '（無）' } elseif ($focused.Current.AutomationId) { $focused.Current.AutomationId } else { '{0}「{1}」' -f $focused.Current.ControlType.ProgrammaticName.Replace('ControlType.', ''), $focused.Current.Name }
+            if ($visited.Count -gt 1 -and $focusName -eq $visited[0]) { break }
+            $visited.Add($focusName)
+        }
+        $reachable = @('SelectToolButton', 'OpenButton', 'CopyButton', 'SaveButton', 'CustomColorButton', 'StrokeWidthBox', 'FontFamilyBox', 'FontSizeBox', 'ZoomBox')
+        $unreached = @($reachable | Where-Object { $visited -notcontains $_ })
+        Add-Result '以 Tab 巡覽可到達工具列、屬性列與縮放的控制項' ($unreached.Count -eq 0) ('焦點順序：{0}{1}' -f ($visited -join ' → '), $(if ($unreached) { '；未到達：' + ($unreached -join '、') } else { '' }))
+
         # 2. 矩形：以存取鍵 Alt+R 切換工具（其餘步驟以 UI Automation 切換），筆劃畫在範圍內側且為純紅色，其餘像素不變
         Send-KeysTo $editor @([Phase3Native]::VK_MENU, [uint16][char]'R')
         $rectangleTool = Find-EditorElement $editor 'RectangleToolButton'
@@ -933,9 +948,11 @@ try {
         foreach ($x in 480, 525, 570) { $p = Screen $x 60; Invoke-Click $p[0] $p[1] $mine }
         $withSteps = Copy-EditorImage $editor
         if ($withSteps) {
-            $arrowRed = [Phase3Native]::CountReddish($withSteps.Bytes, $withSteps.Stride, 296, 56, 160, 130)
+            # 已知圖樣在箭頭範圍內本來就有 560 個符合「偏紅」條件的像素，箭頭以「與原圖不同的像素」判斷；
+            # 步驟編號的範圍內圖樣沒有偏紅的像素，仍以紅色像素判斷。
+            $arrowChanged = [Phase3Native]::CountPatternMismatches($withSteps.Bytes, $withSteps.Stride, 296, 56, 160, 130, $Selection.X, $Selection.Y, [ref]$first)
             $stepRed = @(480, 525, 570 | ForEach-Object { [Phase3Native]::CountReddish($withSteps.Bytes, $withSteps.Stride, $_ - 15, 45, 31, 31) })
-            Add-Result '箭頭出現在拖曳範圍' ($arrowRed -gt 300) "紅色像素 $arrowRed"
+            Add-Result '箭頭出現在拖曳範圍' ($arrowChanged -gt 300) "與原圖不同的像素 $arrowChanged"
             Add-Result '步驟編號 1、2、3 依序放置' (@($stepRed | Where-Object { $_ -gt 300 }).Count -eq 3) ("各編號紅色像素 {0}" -f ($stepRed -join '、'))
         }
         $null = Get-EditorPixels $editor 'phase3-annotations.png'
@@ -961,13 +978,15 @@ try {
         Start-Sleep -Milliseconds 300
         $committed = Get-EditorPixels $editor $null
         $tx = $origin.X - $editing.Rect.X + 60; $ty = $origin.Y - $editing.Rect.Y + 220
-        $textPixels = [Phase3Native]::CountReddish($committed.Pixels.Bytes, $committed.Pixels.Stride, $tx, $ty, 80, 22)
+        # 文字範圍內的圖樣本身就有偏紅的像素，以「與原圖不同的像素」判斷文字是否出現（編輯視窗座標換算回圖樣座標）。
+        $textPixels = [Phase3Native]::CountPatternMismatches($committed.Pixels.Bytes, $committed.Pixels.Stride, $tx, $ty, 80, 22,
+            ($Selection.X - ($origin.X - $editing.Rect.X)), ($Selection.Y - ($origin.Y - $editing.Rect.Y)), [ref]$first)
         $moved = [Phase3Native]::CountDifferent($editing.Pixels.Bytes, $editing.Pixels.Stride, $tx, $ty, $committed.Pixels.Bytes, $committed.Pixels.Stride, $tx, $ty, 80, 22)
-        Add-Result '文字輸入後顯示於畫布' ($textPixels -gt 100) "紅色像素 $textPixels"
+        Add-Result '文字輸入後顯示於畫布' ($textPixels -gt 100) "與原圖不同的像素 $textPixels"
         Add-Result '文字輸入中與完成後位置一致' ($moved -le 80 * 22 * 0.02) ("80×22 範圍內不同的像素 {0} 個" -f $moved)
         $withText = Copy-EditorImage $editor
-        $exportedText = if ($withText) { [Phase3Native]::CountReddish($withText.Bytes, $withText.Stride, 60, 220, 120, 30) } else { 0 }
-        Add-Result '文字出現在複製結果' ($exportedText -gt 100) "紅色像素 $exportedText"
+        $exportedText = if ($withText) { [Phase3Native]::CountPatternMismatches($withText.Bytes, $withText.Stride, 60, 220, 120, 30, $Selection.X, $Selection.Y, [ref]$first) } else { 0 }
+        Add-Result '文字出現在複製結果' ($exportedText -gt 100) "與原圖不同的像素 $exportedText"
 
         # 6. 選取並刪除箭頭，再復原
         if (-not (Select-Tool $editor 'SelectToolButton')) { Stop-Simulation '無法切換到選取工具' }
@@ -975,12 +994,13 @@ try {
         Invoke-Click $p[0] $p[1] $mine
         Send-KeysTo $editor @([Phase3Native]::VK_DELETE)
         $deleted = Copy-EditorImage $editor
-        $arrowRed = if ($deleted) { [Phase3Native]::CountReddish($deleted.Bytes, $deleted.Stride, 296, 90, 120, 96) } else { -1 }
-        Add-Result '選取箭頭後按 Delete 刪除' ($arrowRed -eq 0) $(if ($deleted) { "箭頭範圍紅色像素 $arrowRed 個" } else { '剪貼簿沒有圖片' })
+        # 箭頭的範圍（不含右側的步驟編號）完全恢復為原圖才算刪除。
+        $arrowLeft = if ($deleted) { [Phase3Native]::CountPatternMismatches($deleted.Bytes, $deleted.Stride, 296, 56, 160, 130, $Selection.X, $Selection.Y, [ref]$first) } else { -1 }
+        Add-Result '選取箭頭後按 Delete 刪除' ($arrowLeft -eq 0) $(if ($deleted) { "箭頭範圍與原圖不同的像素 $arrowLeft 個" } else { '剪貼簿沒有圖片' })
         Send-KeysTo $editor @([Phase3Native]::VK_CONTROL, [uint16][char]'Z')
         # 箭頭確實被刪除時才能驗證復原；沒有刪除時復原前後本來就相同，不能算通過。
         $restored = Test-SameImage (Copy-EditorImage $editor) $withText
-        Add-Result '刪除後 Ctrl+Z 恢復箭頭' ($arrowRed -eq 0 -and $restored) $(if ($arrowRed -ne 0) { '箭頭沒有被刪除，無法驗證復原' } else { '' })
+        Add-Result '刪除後 Ctrl+Z 恢復箭頭' ($arrowLeft -eq 0 -and $restored) $(if ($arrowLeft -ne 0) { '箭頭沒有被刪除，無法驗證復原' } else { '' })
 
         # 7. 拖曳矩形的邊框移動 (20, 20)：一次拖曳一筆，Ctrl+Z 回到原位
         $a = Screen 41 90; $b = Screen 61 110

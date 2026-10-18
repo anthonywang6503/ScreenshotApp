@@ -2,10 +2,11 @@
 <#
 .SYNOPSIS
     ScreenshotApp 圖片輸入輸出煙霧驗證：剪貼簿的 PNG 與點陣圖兩種格式、另存 PNG 與剪貼簿逐位元組相同、記住儲存位置、
-    未匯出變更的詢問（新截圖、關閉編輯器、開啟圖片、系統匣結束）、開啟 BMP／JPEG 與損壞檔、另存失敗、剪貼簿被占用。
+    未匯出變更的詢問（新截圖、關閉編輯器、開啟圖片、系統匣結束）、開啟 BMP／JPEG 與損壞檔、另存失敗、剪貼簿被占用；
+    最後以連續完整循環量測資源是否成長，並量測截圖、開啟圖片、複製與另存的延遲。
 
 .DESCRIPTION
-    會在目前的桌面工作階段實際啟動 ScreenshotApp 並操作；執行期間（約 2～3 分鐘）請勿操作滑鼠與鍵盤。
+    會在目前的桌面工作階段實際啟動 ScreenshotApp 並操作；執行期間（預設 30 次循環約 8～10 分鐘）請勿操作滑鼠與鍵盤。
     截圖對象是腳本顯示的已知圖樣視窗（Show-TestPattern.ps1）；開啟圖片用的 BMP、JPEG 與損壞檔由腳本產生在證據資料夾。
 
     保護使用者的措施：
@@ -22,6 +23,10 @@
 .PARAMETER EvidenceDirectory
     存放截圖、測試檔與結果清單的資料夾。
 
+.PARAMETER Cycles
+    連續完整循環的次數：每次取消一次截圖、截圖開啟編輯器、畫矩形、複製並驗證、另存 PNG、關閉編輯器，之後量測 GDI 與 USER 物件、
+    Handle 與記憶體。0 表示不執行循環。
+
 .PARAMETER IdleSeconds
     開始前需要的鍵盤與滑鼠閒置秒數；有人正在使用電腦時先等待，避免模擬輸入干擾使用者。
 
@@ -31,6 +36,7 @@
 param(
     [string]$ExePath = (Join-Path $PSScriptRoot '..\..\ScreenshotApp\bin\Release\net10.0-windows\ScreenshotApp.exe'),
     [string]$EvidenceDirectory = (Join-Path ([IO.Path]::GetTempPath()) 'ScreenshotApp.Smoke4'),
+    [int]$Cycles = 30,
     [int]$IdleSeconds = 60,
     [int]$MaxIdleWaitMinutes = 30
 )
@@ -240,16 +246,6 @@ public static class Phase4Native
     public static uint LeftDown() { return Send(MouseInput(0x0002, 0)); }
     public static uint LeftUp() { return Send(MouseInput(0x0004, 0)); }
     public static uint LeftClick() { return Send(MouseInput(0x0002, 0), MouseInput(0x0004, 0)); }
-
-    // 按住 Ctrl 轉動滾輪 notches 格（正值向上）。
-    public static uint ControlWheel(int notches)
-    {
-        var inputs = new List<INPUT>();
-        inputs.Add(KeyInput(VK_CONTROL, 0, 0));
-        for (var i = 0; i < Math.Abs(notches); i++) inputs.Add(MouseInput(0x0800, unchecked((uint)(notches > 0 ? 120 : -120))));
-        inputs.Add(KeyInput(VK_CONTROL, 0, 2));
-        return Send(inputs.ToArray());
-    }
 
     public static List<IntPtr> TopLevelWindows(uint processId)
     {
@@ -985,6 +981,140 @@ function Get-ErrorLogSince([long]$Length) {
     finally { $stream.Dispose() }
 }
 
+# 受測程式目前的資源用量：GDI 與 USER 物件數、Handle 數、私有記憶體與工作集。
+function Get-ProcessSample([System.Diagnostics.Process]$Process, [int]$Cycle) {
+    $Process.Refresh()
+    [pscustomobject]@{
+        Cycle = $Cycle
+        Gdi = [Phase4Native]::GetGuiResources($Process.Handle, 0)
+        User = [Phase4Native]::GetGuiResources($Process.Handle, 1)
+        Handles = $Process.HandleCount
+        PrivateMB = [math]::Round($Process.PrivateMemorySize64 / 1MB, 1)
+        WorkingSetMB = [math]::Round($Process.WorkingSet64 / 1MB, 1)
+    }
+}
+
+# 以 10 ms 間隔輪詢直到條件成立，回傳經過的毫秒數；逾時回傳 -1。量測值包含輪詢間隔與計時器解析度（約 16 ms）的誤差。
+# 傳入的腳本區塊不可引用名為 $Probe、$Limit、$measureWatch 的變數（與本函式的變數同名時會取到本函式的值）。
+function Measure-Until([scriptblock]$Probe, [int]$Limit = 10000) {
+    $measureWatch = [Diagnostics.Stopwatch]::StartNew()
+    while ($measureWatch.ElapsedMilliseconds -lt $Limit) {
+        if (& $Probe) { return [int]$measureWatch.ElapsedMilliseconds }
+        Start-Sleep -Milliseconds 10
+    }
+    return -1
+}
+
+# 編輯視窗中文字元素目前的內容（例如狀態列的圖片尺寸）；找不到時回傳空字串。
+function Get-EditorText([IntPtr]$Editor, [string]$AutomationId) {
+    $byId = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::AutomationIdProperty, $AutomationId)
+    $element = [System.Windows.Automation.AutomationElement]::FromHandle($Editor).FindFirst([System.Windows.Automation.TreeScope]::Descendants, $byId)
+    if ($element) { return $element.Current.Name }
+    return ''
+}
+
+# 覆蓋層出現後等它取得前景：前景原本屬於其他程式（例如編輯器關閉後被啟用的視窗）時，覆蓋層顯示與取得前景之間有短暫的時間差。
+function Wait-OverlayForeground([int]$ProcessId) {
+    [bool](Wait-Until { (Find-Windows $ProcessId $OverlayTitle) -contains [Phase4Native]::GetForegroundWindow() } 3000)
+}
+
+# 截取圖樣上 (X, Y) 起 Width × Height 的範圍並量測：按下快捷鍵到所有覆蓋層出現、放開滑鼠到編輯器位於前景。
+# 任一步驟逾時時 Editor 為 $null。
+function Measure-CaptureToEditor([int]$ProcessId, [int]$X, [int]$Y, [int]$Width, [int]$Height) {
+    $result = [pscustomobject]@{ OverlayMs = -1; EditorMs = -1; Editor = $null }
+    if (-not (Show-Pattern)) { return $result }
+    Send-Hotkey
+    $result.OverlayMs = Measure-Until { @(Find-Windows $ProcessId $OverlayTitle).Count -eq $monitors.Count } 5000
+    if ($result.OverlayMs -lt 0 -or -not (Wait-OverlayForeground $ProcessId)) { return $result }
+    $overlays = @(Find-Windows $ProcessId $OverlayTitle)
+    $toX = $X + $Width - 1
+    $toY = $Y + $Height - 1
+    Assert-Target $X $Y $overlays
+    Assert-Target $toX $toY $overlays
+    [Phase4Native]::MoveCursor($X, $Y)
+    Start-Sleep -Milliseconds 60
+    [void][Phase4Native]::LeftDown()
+    Start-Sleep -Milliseconds 60
+    foreach ($index in 1..4) {
+        [Phase4Native]::MoveCursor([int]($X + ($toX - $X) * $index / 4), [int]($Y + ($toY - $Y) * $index / 4))
+        Start-Sleep -Milliseconds 40
+    }
+    [void][Phase4Native]::LeftUp()
+    $result.EditorMs = Measure-Until { $found = Find-Editor $ProcessId; [bool]$found -and [Phase4Native]::GetForegroundWindow() -eq $found } 8000
+    if ($result.EditorMs -ge 0) { $result.Editor = Find-Editor $ProcessId }
+    Hide-Pattern
+    Start-Sleep -Milliseconds 400
+    return $result
+}
+
+# 按下「複製」到剪貼簿更新的毫秒數：先放入文字並記錄序號，序號改變代表受測程式已寫入。
+function Measure-Copy([IntPtr]$Editor) {
+    Invoke-Clipboard { [System.Windows.Forms.Clipboard]::SetText($Sentinel) }
+    $script:ownClipboardSequence = [Phase4Native]::GetClipboardSequenceNumber()
+    $before = $script:ownClipboardSequence
+    $button = Find-EditorElement $Editor 'CopyButton'
+    if (-not $button) { return -1 }
+    Assert-NoUserInput
+    $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $elapsed = Measure-Until { [Phase4Native]::GetClipboardSequenceNumber() -ne $before } 10000
+    Start-Sleep -Milliseconds 300
+    $script:ownClipboardSequence = [Phase4Native]::GetClipboardSequenceNumber()
+    return $elapsed
+}
+
+# 存檔對話框關閉後到 PNG 檔案出現的毫秒數（合成在 UI 執行緒，編碼與寫檔在背景執行緒，暫存檔完成後才改名為目標檔）。
+function Measure-Save([int]$ProcessId, [IntPtr]$Editor, [string]$Path) {
+    Invoke-Button $Editor 'SaveButton'
+    if (-not (Complete-FileDialog $ProcessId $SaveDialogTitle $Path)) { return -1 }
+    return Measure-Until { Test-Path -LiteralPath $Path } 15000
+}
+
+# PNG 檔頭記錄的寬高。
+function Get-PngSize([string]$Path) {
+    $bytes = [IO.File]::ReadAllBytes($Path)
+    $width = ([int]$bytes[16] -shl 24) -bor ([int]$bytes[17] -shl 16) -bor ([int]$bytes[18] -shl 8) -bor [int]$bytes[19]
+    $height = ([int]$bytes[20] -shl 24) -bor ([int]$bytes[21] -shl 16) -bor ([int]$bytes[22] -shl 8) -bor [int]$bytes[23]
+    return '{0}×{1}' -f $width, $height
+}
+
+# 產生 Width × Height、與圖樣相同編碼的 PNG（開啟大圖片的延遲量測用）。
+function New-PatternPng([string]$Path, [int]$Width, [int]$Height) {
+    $stride = 0
+    $pixels = [Phase4Native]::PatternBgr24($Width, $Height, [ref]$stride)
+    $bitmap = [System.Drawing.Bitmap]::new($Width, $Height, [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
+    try {
+        $data = $bitmap.LockBits([System.Drawing.Rectangle]::new(0, 0, $Width, $Height), [System.Drawing.Imaging.ImageLockMode]::WriteOnly, $bitmap.PixelFormat)
+        try {
+            for ($row = 0; $row -lt $Height; $row++) {
+                [System.Runtime.InteropServices.Marshal]::Copy($pixels, $row * $stride, [IntPtr]($data.Scan0.ToInt64() + $row * $data.Stride), $Width * 3)
+            }
+        }
+        finally { $bitmap.UnlockBits($data) }
+        $bitmap.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
+    }
+    finally { $bitmap.Dispose() }
+}
+
+# 延遲量測值的摘要：中位數、最小、最大與有效次數。
+function Format-Latency([int[]]$Values) {
+    $valid = @($Values | Where-Object { $_ -ge 0 } | Sort-Object)
+    if ($valid.Count -eq 0) { return '沒有量測值' }
+    '中位數 {0} ms（最小 {1}、最大 {2}，{3} 次）' -f $valid[[math]::Floor(($valid.Count - 1) / 2)], $valid[0], $valid[-1], $valid.Count
+}
+
+# 關閉編輯器並等它消失；出現未匯出變更的詢問時選擇捨棄並回傳 'asked'。回傳 'closed'、'asked' 或 'open'。
+function Close-EditorWindow([int]$ProcessId, [IntPtr]$Editor) {
+    [void][Phase4Native]::PostMessage($Editor, [Phase4Native]::WM_CLOSE, [IntPtr]::Zero, [IntPtr]::Zero)
+    $state = Wait-Until { if (-not (Find-Editor $ProcessId)) { 'closed' } elseif (Find-AppWindow $ProcessId $AppName) { 'asked' } } 3000
+    if ($state -eq 'asked') {
+        [void](Resolve-UnsavedDialog (Find-AppWindow $ProcessId $AppName) 'DiscardButton')
+        [void](Wait-Until { -not (Find-Editor $ProcessId) } 3000)
+        return 'asked'
+    }
+    if ($state) { return $state }
+    return 'open'
+}
+
 New-Item -ItemType Directory -Force -Path $EvidenceDirectory | Out-Null
 $ExePath = (Resolve-Path $ExePath).Path
 if (@(Get-AppProcesses).Count -gt 0) { throw '請先結束正在執行的 ScreenshotApp。' }
@@ -1207,6 +1337,157 @@ try {
             $closed = [bool](Wait-Until { -not (Find-Editor $appId) } 3000)
             Add-Result '沒有變更時關閉編輯器不詢問' ($closed -and -not (Find-AppWindow $appId $AppName)) ''
         }
+
+        # 13. 連續完整循環：取消一次截圖、截圖開啟編輯器（量測延遲）、畫矩形、複製並驗證、另存 PNG、關閉編輯器；每次之後量測資源
+        if ($Cycles -gt 0) {
+            $cycleDirectory = Join-Path $files 'cycles'
+            New-Item -ItemType Directory -Force -Path $cycleDirectory | Out-Null
+            $samples = [System.Collections.Generic.List[object]]::new()
+            $overlayTimes = [System.Collections.Generic.List[int]]::new()
+            $editorTimes = [System.Collections.Generic.List[int]]::new()
+            $failureNotes = [System.Collections.Generic.List[string]]::new()
+            Start-Sleep -Milliseconds 500
+            $samples.Add((Get-ProcessSample $app.Process 0))
+            $cycleWatch = [Diagnostics.Stopwatch]::StartNew()
+            for ($cycle = 1; $cycle -le $Cycles; $cycle++) {
+                $stage = '取消截圖'
+                $ok = Show-Pattern
+                if ($ok) {
+                    Send-Hotkey
+                    $ok = [bool](Wait-Overlays $appId $monitors.Count) -and (Wait-OverlayForeground $appId) -and (Stop-OverlayByRightClick $appId) -and (Wait-NoOverlays $appId)
+                }
+                $cycleEditor = $null
+                if ($ok) {
+                    $stage = '截圖開啟編輯器'
+                    $capture = Measure-CaptureToEditor $appId ($Pattern.X + $Selection.X) ($Pattern.Y + $Selection.Y) $Selection.Width $Selection.Height
+                    $overlayTimes.Add($capture.OverlayMs)
+                    $editorTimes.Add($capture.EditorMs)
+                    $cycleEditor = $capture.Editor
+                    $ok = [bool]$cycleEditor
+                }
+                $cycleOrigin = $null
+                if ($ok) {
+                    $stage = '尋找畫布'
+                    $cycleOrigin = Find-ImageOrigin $cycleEditor 0 0 $Selection.Width $Selection.Height
+                    $ok = [bool]$cycleOrigin
+                }
+                if ($ok) {
+                    $stage = '複製'
+                    $left = 30 + $cycle
+                    Add-Rectangle $cycleEditor $cycleOrigin $left 30 ($left + 170) 150
+                    $copiedCycle = Copy-ViaButton $cycleEditor
+                    $ok = [bool]$copiedCycle -and $copiedCycle.Png.Width -eq $Selection.Width -and $copiedCycle.Png.Height -eq $Selection.Height -and
+                        [Phase4Native]::CountColor($copiedCycle.Png.Bytes, $copiedCycle.Png.Stride, $left, 30, 100, 3, $Red) -eq 300
+                }
+                if ($ok) {
+                    $stage = '另存'
+                    $cyclePath = Join-Path $cycleDirectory ('cycle_{0:D2}.png' -f $cycle)
+                    Invoke-Button $cycleEditor 'SaveButton'
+                    $ok = (Complete-FileDialog $appId $SaveDialogTitle $cyclePath) -and [bool](Wait-Until { Test-Path -LiteralPath $cyclePath } 8000)
+                    # 確認寫入後刪除，存檔資料夾的檔案數維持不變：存檔對話框列出的檔案（以及 Windows 為它們建立的圖示）
+                    # 不隨循環次數增加，量到的才是 ScreenshotApp 自己的資源變化。
+                    if ($ok) {
+                        try { Remove-Item -LiteralPath $cyclePath -ErrorAction Stop }
+                        catch { Start-Sleep -Milliseconds 500; Remove-Item -LiteralPath $cyclePath -ErrorAction SilentlyContinue }
+                    }
+                }
+                if ($cycleEditor) {
+                    Start-Sleep -Milliseconds 300
+                    $closing = Close-EditorWindow $appId $cycleEditor
+                    if ($ok -and $closing -ne 'closed') { $stage = "關閉編輯器（$closing）" }
+                    $ok = $ok -and $closing -eq 'closed'
+                }
+                if (-not $ok) { $failureNotes.Add("第 $cycle 次：$stage") }
+                Start-Sleep -Milliseconds 300
+                $samples.Add((Get-ProcessSample $app.Process $cycle))
+            }
+            $samples | Export-Csv (Join-Path $EvidenceDirectory 'phase4-resources.csv') -NoTypeInformation -Encoding utf8
+            Add-Result "連續 $Cycles 次完整循環皆成功" ($failureNotes.Count -eq 0) ("失敗 {0} 次{1}；共 {2:N0} 秒；每次 = 取消一次截圖、截圖開啟編輯器、畫矩形、複製並驗證、另存 PNG、關閉編輯器" -f $failureNotes.Count, $(if ($failureNotes.Count) { '（' + ($failureNotes -join '、') + '）' } else { '' }), $cycleWatch.Elapsed.TotalSeconds)
+            $measured = @($samples | Where-Object Cycle -ge 1)
+            $window = [math]::Max(1, [math]::Min(5, [math]::Floor($measured.Count / 2)))
+            $head = @($measured | Select-Object -First $window)
+            $tail = @($measured | Select-Object -Last $window)
+            $describe = { param($name) '{0}：前 {1} 次 {2}～{3}，後 {1} 次 {4}～{5}' -f $name, $window,
+                ($head | Measure-Object $name -Minimum).Minimum, ($head | Measure-Object $name -Maximum).Maximum,
+                ($tail | Measure-Object $name -Minimum).Minimum, ($tail | Measure-Object $name -Maximum).Maximum }
+            # 最小平方法的斜率：每次循環平均增加多少。
+            $trend = { param($name)
+                $meanCycle = ($measured | Measure-Object Cycle -Average).Average
+                $meanValue = ($measured | Measure-Object $name -Average).Average
+                $numerator = 0.0
+                $denominator = 0.0
+                foreach ($sample in $measured) {
+                    $numerator += ($sample.Cycle - $meanCycle) * ($sample.$name - $meanValue)
+                    $denominator += ($sample.Cycle - $meanCycle) * ($sample.Cycle - $meanCycle)
+                }
+                if ($denominator -eq 0) { 0.0 } else { $numerator / $denominator } }
+            # 每次循環都開啟 Windows 存檔對話框，GDI 物件會因延後釋放出現單次的尖峰（下一次就回落），以前後各 10 次的中位數
+            # 判斷基準是否上升；持續的洩漏會讓整體（含中位數）逐次增加。最小與最大值列於說明。
+            $gdiWindow = [math]::Max(1, [math]::Min(10, [math]::Floor($measured.Count / 2)))
+            $gdiHead = @($measured | Select-Object -First $gdiWindow | ForEach-Object Gdi | Sort-Object)
+            $gdiTail = @($measured | Select-Object -Last $gdiWindow | ForEach-Object Gdi | Sort-Object)
+            $gdiHeadMedian = $gdiHead[[math]::Floor(($gdiHead.Count - 1) / 2)]
+            $gdiTailMedian = $gdiTail[[math]::Floor(($gdiTail.Count - 1) / 2)]
+            Add-Result 'GDI 物件數沒有持續成長' ($gdiTailMedian -le $gdiHeadMedian + 2) ('Gdi：前 {0} 次中位數 {1}、後 {0} 次中位數 {2}（全部 {3}～{4}，每次 {5:+0.00;-0.00}）' -f
+                $gdiWindow, $gdiHeadMedian, $gdiTailMedian, ($measured | Measure-Object Gdi -Minimum).Minimum, ($measured | Measure-Object Gdi -Maximum).Maximum, (& $trend 'Gdi'))
+            Add-Result 'USER 物件數沒有成長' (($tail | Measure-Object User -Maximum).Maximum -le ($head | Measure-Object User -Maximum).Maximum + 2) (& $describe 'User')
+            Add-Info 'Handle 與記憶體' ('{0}（每次 {1:+0.00;-0.00}）；{2} MB（每次 {3:+0.00;-0.00} MB）；{4} MB（每次 {5:+0.00;-0.00} MB）' -f
+                (& $describe 'Handles'), (& $trend 'Handles'), (& $describe 'PrivateMB'), (& $trend 'PrivateMB'), (& $describe 'WorkingSetMB'), (& $trend 'WorkingSetMB'))
+            Add-Info ('截圖延遲（選取 {0}×{1}）' -f $Selection.Width, $Selection.Height) ('按下快捷鍵到覆蓋層出現：{0}；放開滑鼠到編輯器位於前景：{1}' -f (Format-Latency $overlayTimes), (Format-Latency $editorTimes))
+        }
+
+        # 14. 延遲量測：FHD（1920×1080）截圖開啟編輯器、複製、另存；開啟 3840×2160 PNG、複製、另存。各 3 次。
+        if ($primary[2] -ge 2000 -and $primary[3] -ge 1160) {
+            if ($patternProcess -and -not $patternProcess.HasExited) {
+                [void]$patternProcess.CloseMainWindow()
+                if (-not $patternProcess.WaitForExit(3000)) { $patternProcess.Kill() }
+            }
+            $Pattern = [pscustomobject]@{ X = [int](($primary[2] - 1920) / 2); Y = [int](($primary[3] - 1080) / 2); Width = 1920; Height = 1080 }
+            $patternProcess = Start-Process pwsh -PassThru -WindowStyle Hidden -ArgumentList @(
+                '-NoProfile', '-File', (Join-Path $PSScriptRoot 'Show-TestPattern.ps1'),
+                '-X', $Pattern.X, '-Y', $Pattern.Y, '-Width', $Pattern.Width, '-Height', $Pattern.Height)
+            $fhdOverlay = [System.Collections.Generic.List[int]]::new()
+            $fhdEditor = [System.Collections.Generic.List[int]]::new()
+            $fhdCopy = [System.Collections.Generic.List[int]]::new()
+            $fhdSave = [System.Collections.Generic.List[int]]::new()
+            $fhdSize = ''
+            foreach ($round in 1..3) {
+                $capture = Measure-CaptureToEditor $appId $Pattern.X $Pattern.Y $Pattern.Width $Pattern.Height
+                if (-not $capture.Editor) { Stop-Simulation 'FHD 截圖沒有開啟編輯器' }
+                $fhdOverlay.Add($capture.OverlayMs)
+                $fhdEditor.Add($capture.EditorMs)
+                $fhdCopy.Add((Measure-Copy $capture.Editor))
+                $fhdPath = Join-Path $files ('fhd_{0}.png' -f $round)
+                $fhdSave.Add((Measure-Save $appId $capture.Editor $fhdPath))
+                if (Test-Path -LiteralPath $fhdPath) { $fhdSize = Get-PngSize $fhdPath }
+                [void](Close-EditorWindow $appId $capture.Editor)
+            }
+            Add-Info '截圖延遲（選取 1920×1080）' ('按下快捷鍵到覆蓋層出現：{0}；放開滑鼠到編輯器位於前景：{1}；按下複製到剪貼簿更新：{2}；存檔對話框關閉到檔案寫入完成：{3}；另存的 PNG {4}' -f
+                (Format-Latency $fhdOverlay), (Format-Latency $fhdEditor), (Format-Latency $fhdCopy), (Format-Latency $fhdSave), $fhdSize)
+        }
+        else { Add-Info '截圖延遲（選取 1920×1080）' '主螢幕小於 2000×1160，未量測' }
+
+        $largePath = Join-Path $files 'open_3840x2160.png'
+        New-PatternPng $largePath 3840 2160
+        $largeOpen = [System.Collections.Generic.List[int]]::new()
+        $largeCopy = [System.Collections.Generic.List[int]]::new()
+        $largeSave = [System.Collections.Generic.List[int]]::new()
+        $largeSize = ''
+        foreach ($round in 1..3) {
+            if (-not (Invoke-TrayMenuItem $app.Process '開啟圖片*') -or -not (Complete-FileDialog $appId $OpenDialogTitle $largePath)) { Stop-Simulation '無法開啟 3840×2160 的圖片' }
+            $largeOpen.Add((Measure-Until { $found = Find-Editor $appId; [bool]$found -and [Phase4Native]::GetForegroundWindow() -eq $found -and (Get-EditorText $found 'ImageSizeText') -eq '圖片：3840 × 2160' } 15000))
+            $largeEditor = Find-Editor $appId
+            if (-not $largeEditor) { Stop-Simulation '開啟 3840×2160 的圖片後沒有編輯器' }
+            $largeCopy.Add((Measure-Copy $largeEditor))
+            $largePathSaved = Join-Path $files ('large_{0}.png' -f $round)
+            $largeSave.Add((Measure-Save $appId $largeEditor $largePathSaved))
+            if (Test-Path -LiteralPath $largePathSaved) { $largeSize = Get-PngSize $largePathSaved }
+            [void](Close-EditorWindow $appId $largeEditor)
+        }
+        Add-Info '開啟 3840×2160 PNG' ('開檔對話框關閉到編輯器顯示圖片：{0}；按下複製到剪貼簿更新：{1}；存檔對話框關閉到檔案寫入完成：{2}；另存的 PNG {3}' -f
+            (Format-Latency $largeOpen), (Format-Latency $largeCopy), (Format-Latency $largeSave), $largeSize)
+        $after = Get-ProcessSample $app.Process 0
+        Add-Info '量測後資源' ('GDI {0}、USER {1}、Handle {2}、私有記憶體 {3} MB、工作集 {4} MB' -f $after.Gdi, $after.User, $after.Handles, $after.PrivateMB, $after.WorkingSetMB)
     }
     catch [System.OperationCanceledException] {
         Add-Result '驗證期間沒有使用者操作，模擬輸入完整執行' $false ("已停止模擬輸入：{0}" -f $_.Exception.Message)

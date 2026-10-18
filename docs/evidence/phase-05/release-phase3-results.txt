@@ -1,0 +1,43 @@
+[INFO] 顯示器 — (0,0) 3456×2160 175%
+[INFO] 執行檔 — publish\ScreenshotApp-1.0.0-win-x64\ScreenshotApp.exe
+[INFO] 剪貼簿備份 — 格式 8 種
+[PASS] 圖樣視窗與螢幕像素一致 — (1128,680) 1200×800
+[PASS] 啟動後常駐 — PID 49192
+[PASS] 覆蓋層游標為黑芯白邊十字（沒有反相像素、與系統游標同尺寸、熱點在中心） — 48×48，熱點 (23,23)，黑 165、白 120、反相 0 個像素；系統游標尺寸 48
+[PASS] 選取完成後開啟編輯器並位於前景 — ScreenshotApp 編輯器
+[PASS] 開啟時以 100% 顯示且畫布與截圖逐像素一致 — 圖片 600×400 位於螢幕 (1428,902)，每個像素與圖樣相同
+[PASS] 未加標註時以 Ctrl+C 複製，結果與截圖一致 — 600×400，與圖樣不一致 0 個 
+[PASS] 以 Tab 巡覽可到達工具列、屬性列與縮放的控制項 — 焦點順序：SelectToolButton → CropToolButton → RectangleToolButton → EllipseToolButton → LineToolButton → ArrowToolButton → TextToolButton → StepToolButton → OpenButton → CopyButton → SaveButton → ListItem「紅色」 → CustomColorButton → StrokeWidthBox → FontFamilyBox → FontSizeBox → ZoomBox → Window「ScreenshotApp 編輯器」
+[PASS] 存取鍵 Alt+R 切換到矩形工具 — 
+[PASS] 矩形：筆劃在範圍內側且為純紅色、其餘像素不變 — 筆劃純紅 1764/1764；內側不同 0；外側不同 0
+[PASS] 箭頭出現在拖曳範圍 — 與原圖不同的像素 858
+[PASS] 步驟編號 1、2、3 依序放置 — 各編號紅色像素 621、614、619
+[PASS] Ctrl+Z 復原最後一個步驟編號 — 第三個編號所在範圍恢復為原圖
+[PASS] Ctrl+Y 重做後與復原前完全相同 — 
+[PASS] 文字工具點一下出現輸入框 — 
+[PASS] 文字輸入後顯示於畫布 — 與原圖不同的像素 473
+[PASS] 文字輸入中與完成後位置一致 — 80×22 範圍內不同的像素 0 個
+[PASS] 文字出現在複製結果 — 與原圖不同的像素 606
+[PASS] 選取箭頭後按 Delete 刪除 — 箭頭範圍與原圖不同的像素 0 個
+[PASS] 刪除後 Ctrl+Z 恢復箭頭 — 
+[PASS] 拖曳邊框移動矩形 — 新位置上緣純紅像素 600/600
+[PASS] 移動只形成一筆操作（一次 Ctrl+Z 即回到原位） — 
+[PASS] 縮放 400% 後複製結果與 100% 相同 — 狀態列 400%
+[PASS] 縮放 25% 後複製結果與 100% 相同 — 狀態列 25%
+[PASS] Ctrl+0 回到符合視窗（100%）且位置可再次定位 — 圖片原點 (1428,902)
+[PASS] 裁切後輸出尺寸等於裁切範圍且內容一致 — 400×280（預期 400×280）
+[PASS] 裁切後 Ctrl+Z 恢復原尺寸 — 600×400
+[PASS] 再以 Ctrl+Y 重做裁切 — 
+[PASS] 未選取時變更顏色寫入設定檔 — DefaultColor = #FF8C00
+[PASS] 編輯中按快捷鍵：編輯器隱藏並開啟覆蓋層 — 
+[PASS] 取消新截圖後恢復原編輯視窗與文件 — 
+[PASS] 完成新截圖後以新文件取代（同一個編輯視窗） — 與圖樣不一致 0 個
+[PASS] 編輯中再次啟動：第二個執行個體結束且編輯視窗在前景 — ExitCode=0
+[PASS] 關閉編輯器後程式仍常駐 — 
+[PASS] 連續 10 次編輯循環皆成功 — 失敗 0 次；每次 = 截圖開啟編輯器、畫矩形、複製並驗證、取消一次新截圖、關閉編輯器
+[PASS] GDI 物件數沒有成長 — Gdi：前 5 次 40～42，後 5 次 40～40
+[PASS] USER 物件數沒有成長 — User：前 5 次 54～54，後 5 次 54～54
+[INFO] Handle 與私有記憶體 — Handles：前 5 次 635～635，後 5 次 633～635；PrivateMB：前 5 次 284～390.6，後 5 次 282.7～369.6 MB
+[INFO] 前景恢復 — 沒有使用者操作時被其他視窗取走前景、點編輯視窗標題列或狀態列帶回 0 次
+[PASS] 系統匣「結束」後處理程序結束 — ExitCode=0
+[PASS] 過程中沒有新的錯誤記錄 — 

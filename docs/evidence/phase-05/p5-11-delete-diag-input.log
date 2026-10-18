@@ -1,0 +1,54 @@
+38671 PKD key=LeftCtrl sys=None ime=None mods=Control focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+38671 KD key=LeftCtrl handled=False src=EditorWindow mods=Control focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+38671 PKD key=C sys=None ime=None mods=Control focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+38687 KD key=C handled=True src=EditorWindow mods=Control focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+39093 PKD key=System sys=LeftAlt ime=None mods=Alt focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+39109 KD key=System handled=False src=EditorWindow mods=Alt focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+39125 PKD key=System sys=R ime=None mods=Alt focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+39125 KD key=System handled=False src=EditorWindow mods=Alt focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+39484 PMD Left clicks=1 src=Image mods=None focus=RadioButton#RectangleToolButton captured=null drag=False sel=null textEdit=False tool=Rectangle active=True
+39734 PMU Left src=Grid mods=None focus=Grid#ContentRoot captured=ContentRoot drag=True sel=null textEdit=False tool=Rectangle active=True
+39750 MU Left handled=False mods=None focus=Grid#ContentRoot captured=null drag=False sel=RectangleAnnotation textEdit=False tool=Rectangle active=True
+40375 PMD Left clicks=1 src=Image mods=None focus=RadioButton#ArrowToolButton captured=null drag=False sel=RectangleAnnotation textEdit=False tool=Arrow active=True
+40640 PMU Left src=Grid mods=None focus=Grid#ContentRoot captured=ContentRoot drag=True sel=null textEdit=False tool=Arrow active=True
+40640 MU Left handled=False mods=None focus=Grid#ContentRoot captured=null drag=False sel=ArrowAnnotation textEdit=False tool=Arrow active=True
+40890 PMD Left clicks=1 src=Image mods=None focus=RadioButton#StepToolButton captured=null drag=False sel=ArrowAnnotation textEdit=False tool=StepNumber active=True
+40921 PMU Left src=Grid mods=None focus=Grid#ContentRoot captured=ContentRoot drag=True sel=null textEdit=False tool=StepNumber active=True
+40921 MU Left handled=False mods=None focus=Grid#ContentRoot captured=null drag=False sel=StepNumberAnnotation textEdit=False tool=StepNumber active=True
+41125 PMD Left clicks=1 src=Image mods=None focus=Grid#ContentRoot captured=null drag=False sel=StepNumberAnnotation textEdit=False tool=StepNumber active=True
+41140 PMU Left src=Grid mods=None focus=Grid#ContentRoot captured=ContentRoot drag=True sel=null textEdit=False tool=StepNumber active=True
+41140 MU Left handled=False mods=None focus=Grid#ContentRoot captured=null drag=False sel=StepNumberAnnotation textEdit=False tool=StepNumber active=True
+41359 PMD Left clicks=1 src=Image mods=None focus=Grid#ContentRoot captured=null drag=False sel=StepNumberAnnotation textEdit=False tool=StepNumber active=True
+41375 PMU Left src=Grid mods=None focus=Grid#ContentRoot captured=ContentRoot drag=True sel=null textEdit=False tool=StepNumber active=True
+41375 MU Left handled=False mods=None focus=Grid#ContentRoot captured=null drag=False sel=StepNumberAnnotation textEdit=False tool=StepNumber active=True
+42156 PKD key=LeftCtrl sys=None ime=None mods=Control focus=EditorWindow# captured=null drag=False sel=StepNumberAnnotation textEdit=False tool=StepNumber active=True
+42156 KD key=LeftCtrl handled=False src=EditorWindow mods=Control focus=EditorWindow# captured=null drag=False sel=StepNumberAnnotation textEdit=False tool=StepNumber active=True
+42171 PKD key=Z sys=None ime=None mods=Control focus=EditorWindow# captured=null drag=False sel=StepNumberAnnotation textEdit=False tool=StepNumber active=True
+42171 KD key=Z handled=True src=EditorWindow mods=Control focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=StepNumber active=True
+42625 PKD key=LeftCtrl sys=None ime=None mods=Control focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=StepNumber active=True
+42625 KD key=LeftCtrl handled=False src=EditorWindow mods=Control focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=StepNumber active=True
+42625 PKD key=Y sys=None ime=None mods=Control focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=StepNumber active=True
+42625 KD key=Y handled=True src=EditorWindow mods=Control focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=StepNumber active=True
+43281 PMD Left clicks=1 src=Image mods=None focus=RadioButton#TextToolButton captured=null drag=False sel=null textEdit=False tool=Text active=True
+43312 PMU Left src=Image mods=None focus=TextBox#TextEditor captured=null drag=False sel=null textEdit=True tool=Text active=True
+43312 MU Left handled=False mods=None focus=TextBox#TextEditor captured=null drag=False sel=null textEdit=True tool=Text active=True
+44296 PKD key=LeftCtrl sys=None ime=None mods=Control focus=TextBox#TextEditor captured=null drag=False sel=null textEdit=True tool=Text active=True
+44296 KD key=LeftCtrl handled=False src=TextBox mods=Control focus=TextBox#TextEditor captured=null drag=False sel=null textEdit=True tool=Text active=True
+44296 PKD key=Return sys=None ime=None mods=Control focus=TextBox#TextEditor captured=null drag=False sel=null textEdit=True tool=Text active=True
+45390 PMD Left clicks=1 src=Image mods=None focus=RadioButton#SelectToolButton captured=null drag=False sel=TextAnnotation textEdit=False tool=Select active=True
+45406 PMU Left src=Grid mods=None focus=Grid#ContentRoot captured=ContentRoot drag=True sel=ArrowAnnotation textEdit=False tool=Select active=True
+45406 MU Left handled=False mods=None focus=Grid#ContentRoot captured=null drag=False sel=ArrowAnnotation textEdit=False tool=Select active=True
+46125 PKD key=Delete sys=None ime=None mods=None focus=Grid#ContentRoot captured=null drag=False sel=ArrowAnnotation textEdit=False tool=Select active=True
+46125 CanDelete=True mods=None focus=Grid#ContentRoot captured=null drag=False sel=ArrowAnnotation textEdit=False tool=Select active=True
+46125 CanDelete=True mods=None focus=Grid#ContentRoot captured=null drag=False sel=ArrowAnnotation textEdit=False tool=Select active=True
+46125 DeleteExecuted result=True
+46125 KD key=Delete handled=True src=Grid mods=None focus=Grid#ContentRoot captured=null drag=False sel=null textEdit=False tool=Select active=True
+47015 PKD key=Delete sys=None ime=None mods=None focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+47015 CanDelete=False mods=None focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+47015 KD key=Delete handled=True src=EditorWindow mods=None focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+47656 PKD key=Delete sys=None ime=None mods=None focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+47656 CanDelete=False mods=None focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+47656 KD key=Delete handled=True src=EditorWindow mods=None focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+48375 PMD Right clicks=1 src=Image mods=None focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+48375 PMU Right src=Image mods=None focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True
+48375 MU Right handled=False mods=None focus=EditorWindow# captured=null drag=False sel=null textEdit=False tool=Select active=True

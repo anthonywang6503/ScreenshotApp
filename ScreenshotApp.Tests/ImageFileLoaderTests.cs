@@ -269,16 +269,14 @@ public sealed class ImageFileLoaderTests : IDisposable
     }
 
     [Fact]
-    public void Load_FileLockedExclusivelyByAnotherHandle_ReturnsReadFailedWithSystemMessage()
+    public void Load_FileLockedExclusivelyByAnotherHandle_ReturnsReadFailedWithFileInUseReason()
     {
         StaRunner.Run(() =>
         {
             var path = Write("locked.png", Encode(new PngBitmapEncoder(), CreatePattern(8, 8)));
             using var locker = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            var systemMessage = Assert.Throws<IOException>(
-                () => new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)).Message;
 
-            AssertFailed(ImageFileLoader.Load(path), Strings.Format("ImageLoad_ReadFailed", systemMessage));
+            AssertFailed(ImageFileLoader.Load(path), Strings.Format("ImageLoad_ReadFailed", Strings.Get("Error_FileInUse")));
         });
     }
 

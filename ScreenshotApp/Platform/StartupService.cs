@@ -1,6 +1,7 @@
 using System.IO;
 using System.Security;
 using Microsoft.Win32;
+using ScreenshotApp.Resources;
 
 namespace ScreenshotApp.Platform;
 
@@ -58,7 +59,7 @@ internal sealed class StartupService
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or SecurityException or IOException)
         {
-            errorMessage = ex.Message;
+            errorMessage = ErrorText.Describe(ex);
             return false;
         }
     }

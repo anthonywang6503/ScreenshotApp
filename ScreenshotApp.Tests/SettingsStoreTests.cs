@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using System.Windows.Input;
 using System.Windows.Media;
+using ScreenshotApp.Resources;
 using ScreenshotApp.Settings;
 using ScreenshotApp.Tests.TestSupport;
 
@@ -172,7 +173,7 @@ public sealed class SettingsStoreTests : IDisposable
 
             Assert.Equal(SettingsLoadStatus.ReadFailed, result.Status);
             Assert.Equal(new AppSettings(), result.Settings);
-            Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
+            Assert.Equal(Strings.Get("Error_FileInUse"), result.ErrorMessage);
         }
     }
 
@@ -187,7 +188,7 @@ public sealed class SettingsStoreTests : IDisposable
         var result = store.Save(new AppSettings { DefaultFontSize = 64 });
 
         Assert.False(result.Succeeded);
-        Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
+        Assert.Equal(Strings.Get("Error_AccessDenied"), result.ErrorMessage);
         Assert.Equal(original, File.ReadAllText(store.FilePath));
         Assert.False(File.Exists(store.FilePath + ".tmp"));
     }

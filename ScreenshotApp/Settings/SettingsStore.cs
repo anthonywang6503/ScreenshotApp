@@ -92,7 +92,7 @@ internal sealed class SettingsStore
         }
         catch (Exception ex) when (IsFileSystemFailure(ex))
         {
-            return new SettingsLoadResult(new AppSettings(), SettingsLoadStatus.ReadFailed, [], ex.Message);
+            return new SettingsLoadResult(new AppSettings(), SettingsLoadStatus.ReadFailed, [], ErrorText.Describe(ex));
         }
 
         try
@@ -135,7 +135,7 @@ internal sealed class SettingsStore
         catch (Exception ex) when (IsFileSystemFailure(ex))
         {
             TryDelete(tempPath);
-            return new SettingsSaveResult(false, ex.Message);
+            return new SettingsSaveResult(false, ErrorText.Describe(ex));
         }
     }
 

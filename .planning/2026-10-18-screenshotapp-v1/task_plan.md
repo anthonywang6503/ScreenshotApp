@@ -15,11 +15,11 @@
 
 ## Next Step
 
-Phase 4 控制點：暫停等待使用者指令。向使用者回報並請其確認：十字游標修正、MT-08（剪貼簿加入 PNG 後貼入 PowerPoint／Word／Teams）、Delete 鍵以實體鍵盤是否有效（P5-11 的判別依據）、「未修改的截圖不詢問」的決策；告知第一次 Phase 4 煙霧驗證造成使用者原本的剪貼簿內容遺失。MT-04、MT-05、MT-07、MT-09 尚未回報。使用者授權後從 `main` 建立 `feature/phase-05-release` 開始 Phase 5，第一項處理 P5-11。
+Phase 5 控制點（v1.0.0 已完成）：暫停等待使用者指令。向使用者回報最終結果並請其確認：MT-08 重新確認（剪貼簿加入 PNG 後貼入 PowerPoint／Word／Teams）、十字游標修正、MT-04、MT-05、MT-07、MT-09、MT-10（Agent 已量測）、MT-11（乾淨機器）、Delete 實體鍵盤（已查明正常，可選）、「未修改的截圖不詢問」的決策；告知第一次 Phase 4 煙霧驗證造成使用者原本的剪貼簿內容遺失。使用者回報問題時在 `main` 開修正分支處理。
 
 ## Current Phase
 
-Phase 4（圖片輸入輸出）已完成（2026-10-18，handoff：`handoffs/phase-04-image-io.md`），等待使用者指令；Phase 5（完整驗證與發佈）維持 pending。Phase 3 收尾時未執行的煙霧驗證已在 Phase 4 補完。
+Phase 5（完整驗證與發佈）已完成（2026-10-18，handoff：`handoffs/phase-05-release.md`），v1.0.0；全部 Phase 完成，等待使用者的 MT 回報。
 
 ## 執行規範（本任務專用）
 
@@ -226,25 +226,25 @@ Checklist
 **分支**：`feature/phase-05-release`。
 
 Checklist
-- [ ] P5-00 ADR-0017（發佈與封裝策略：自包含、可選單檔、不簽章）｜無｜low｜否｜ADR Accepted
-- [ ] P5-01 繁中介面與操作性總檢：所有 UI 文字在 `Strings.resx`、ToolTip、AccessKey、Tab 順序、焦點樣式、圖示附文字｜Phase 4｜medium｜否｜掃描 XAML/程式碼無硬編碼文字；實機鍵盤導覽
-- [ ] P5-02 錯誤恢復總檢：顯示器變更、剪貼簿、檔案、設定損毀、超大圖片、快捷鍵衝突；訊息統一繁中｜Phase 4｜medium｜否｜各情境有測試或實機證據
-- [ ] P5-03 資源與效能量測：30 次「截圖→取消→編輯→複製→儲存→關閉」循環的 GDI 物件數、Handle、Working Set 趨勢；FHD／4K 擷取與開啟編輯器延遲（附量測條件）｜Phase 4｜high｜否｜數據記錄於 `docs/ACCEPTANCE.md`，無持續成長趨勢
-- [ ] P5-04 文件：`README.md`、`docs/ARCHITECTURE.md`（模組關係、資料模型、座標系統、狀態機）、`docs/USER_GUIDE.md`、`docs/ACCEPTANCE.md`（AT 結果 + MT 記錄與證據）、`docs/KNOWN_LIMITATIONS.md` 完整版、第三方 NOTICE（若有）｜Phase 4｜medium｜可（USER_GUIDE、KNOWN_LIMITATIONS）｜文件存在、相對路徑、與程式一致
-- [ ] P5-05 發佈：`dotnet publish -c Release -r win-x64 --self-contained true -o publish/win-x64` + ZIP；可選 `PublishSingleFile=true` 版本並驗證圖示、資源與截圖功能｜P5-01～P5-03｜medium｜否｜發佈目錄可執行；ZIP 存在；單檔版通過煙霧驗證或明確標示未提供
-- [ ] P5-06 完整自動化測試執行與報告（AT-01～AT-10 對應測試全數通過，記錄數量與時間）｜Phase 4｜low｜否｜`dotnet test` 輸出記錄
-- [ ] P5-07 Agent 端最終煙霧驗證（以發佈版 exe 執行 Phase 1～4 的煙霧腳本）｜P5-05｜medium｜否｜證據記錄
-- [ ] P5-08 使用者實機驗收總表：MT-01～MT-11 清單、證據欄位、未驗證標示（MT-11 需乾淨機器）｜P5-04｜low｜否｜`docs/ACCEPTANCE.md` 完整
-- [ ] P5-09 最終報告：需求完成情況（FR-01～FR-35）、未完成／未驗證項目、測試結果、發佈檔案位置、已知限制｜全部｜medium｜否｜報告交付使用者
-- [ ] P5-11 待辦（使用者指示先列待辦、繼續後續工作）：選取標註後按 Delete 沒有刪除——Phase 3 煙霧驗證與診斷腳本以 `SendInput` 送出 Delete 皆無效，同樣送法的 `Ctrl+Z`、`Ctrl+Y`、Enter 有效；先確認實體鍵盤是否有效，再查路由或可執行條件，寫能重現的測試後修正（調查紀錄見 `findings.md`「待辦：Delete 鍵」）｜無｜xhigh｜否｜重現測試先紅後綠；Phase 3 煙霧腳本「選取箭頭後按 Delete 刪除」與「刪除後 Ctrl+Z 恢復箭頭」通過
-- [ ] P5-10 Phase 收尾儀式（handoff `handoffs/phase-05-release.md`、版本標記 `v1.0.0`）｜全部｜low｜否｜handoff 存在並註記
+- [x] P5-00 ADR-0017（發佈與封裝策略：自包含、可選單檔、不簽章）｜無｜low｜否｜ADR Accepted（依試發佈的事實決定：資料夾版為主、單檔版經煙霧驗證後才提供、只保留 zh-Hant 附屬組件、Version 1.0.0、授權檔）
+- [x] P5-01 繁中介面與操作性總檢：所有 UI 文字在 `Strings.resx`、ToolTip、AccessKey、Tab 順序、焦點樣式、圖示附文字｜Phase 4｜medium｜否｜掃描 XAML/程式碼無硬編碼文字；實機鍵盤導覽
+- [x] P5-02 錯誤恢復總檢：顯示器變更、剪貼簿、檔案、設定損毀、超大圖片、快捷鍵衝突；訊息統一繁中｜Phase 4｜medium｜否｜各情境有測試或實機證據
+- [x] P5-03 資源與效能量測：30 次「截圖→取消→編輯→複製→儲存→關閉」循環的 GDI 物件數、Handle、Working Set 趨勢；FHD／4K 擷取與開啟編輯器延遲（附量測條件）｜Phase 4｜high｜否｜數據記錄於 `docs/ACCEPTANCE.md`，無持續成長趨勢
+- [x] P5-04 文件：`README.md`、`docs/ARCHITECTURE.md`（模組關係、資料模型、座標系統、狀態機）、`docs/USER_GUIDE.md`、`docs/ACCEPTANCE.md`（AT 結果 + MT 記錄與證據）、`docs/KNOWN_LIMITATIONS.md` 完整版、第三方 NOTICE（若有）｜Phase 4｜medium｜可（USER_GUIDE、KNOWN_LIMITATIONS）｜文件存在、相對路徑、與程式一致
+- [x] P5-05 發佈：`tools/Publish-Release.ps1`（`dotnet publish -c Release -r win-x64 --self-contained true`）產生 `publish/ScreenshotApp-1.0.0-win-x64/` + ZIP；單檔版 `publish/ScreenshotApp-1.0.0-win-x64-singlefile/`（`PublishSingleFile` + `IncludeNativeLibrariesForSelfExtract`）並驗證圖示、資源與截圖功能｜P5-01～P5-03｜medium｜否｜發佈目錄可執行；ZIP 存在；單檔版通過煙霧驗證或明確標示未提供
+- [x] P5-06 完整自動化測試執行與報告（AT-01～AT-10 對應測試全數通過，記錄數量與時間）｜Phase 4｜low｜否｜`dotnet test` 輸出記錄
+- [x] P5-07 Agent 端最終煙霧驗證（以發佈版 exe 執行 Phase 1～4 的煙霧腳本）｜P5-05｜medium｜否｜證據記錄
+- [x] P5-08 使用者實機驗收總表：MT-01～MT-11 清單、證據欄位、未驗證標示（MT-11 需乾淨機器）｜P5-04｜low｜否｜`docs/ACCEPTANCE.md` 完整
+- [x] P5-09 最終報告：需求完成情況（FR-01～FR-35）、未完成／未驗證項目、測試結果、發佈檔案位置、已知限制｜全部｜medium｜否｜報告交付使用者
+- [x] P5-11 待辦（使用者指示先列待辦、繼續後續工作）：選取標註後按 Delete 沒有刪除——Phase 3 煙霧驗證與診斷腳本以 `SendInput` 送出 Delete 皆無效，同樣送法的 `Ctrl+Z`、`Ctrl+Y`、Enter 有效；先確認實體鍵盤是否有效，再查路由或可執行條件，寫能重現的測試後修正（調查紀錄見 `findings.md`「待辦：Delete 鍵」）｜無｜xhigh｜否｜重現測試先紅後綠；Phase 3 煙霧腳本「選取箭頭後按 Delete 刪除」與「刪除後 Ctrl+Z 恢復箭頭」通過（結案：不是產品缺陷。診斷版的輸入紀錄顯示 Delete 確實刪除了箭頭；腳本以「偏紅」像素判斷，已知圖樣在該範圍本來就有 560 個符合條件的像素。腳本改為比較與原圖不同的像素，發佈版重跑兩項皆通過。判別測試 `SelectTool_ClickOnAnnotationWithoutMoving_EndsDragSoDeleteAndUndoWork` 直接通過，保留為回歸測試）
+- [x] P5-10 Phase 收尾儀式（handoff `handoffs/phase-05-release.md`、版本標記 `v1.0.0`）｜全部｜low｜否｜handoff 存在並註記
 
 **Acceptance Criteria（Phase 門檻）**
 1. 規格第 10 節交付物齊全；所有 AT 通過；MT 有證據或明確標示「尚未驗證」。
 2. 發佈目錄在本機可執行完整流程。
 
-**Handoff**：尚未建立。
-- **Status:** pending
+**Handoff**：`handoffs/phase-05-release.md`（2026-10-18；894 個自動化測試通過；發佈版煙霧驗證資料夾版 Phase 1～4 為 31／38／38／25、單檔版 Phase 1～2 為 31／38，全數通過；30 次完整循環 GDI 中位數 128→128；最終 ZIP 於 v1.0.0 的 commit 重新產生）。
+- **Status:** complete
 
 ## 追蹤矩陣：FR → 模組 → 測試 → 驗收證據
 
@@ -334,6 +334,7 @@ Checklist
 6. Phase 3 收尾時機？→ 2026-10-18 使用者以「完成 phase 3」要求收尾。煙霧驗證後半段需要電腦閒置，使用者正在使用電腦而無法執行，列為「尚未驗證」並保留腳本供之後補完。
 7. Phase 4 授權與 MT 回報？→ 2026-10-18 使用者以「使用 planning-with-files 載入專案狀態，繼續開發，完成 MT-01, MT-02, MT-03, MT-06, MT-08 驗證，問題：若擷取畫面時，背景全白，則十字準星看不清」回覆：「繼續開發」與先前授權句式相同，視為授權 Phase 4；詢問後使用者確認五項全數通過、十字游標是唯一問題，已登錄於 `docs/ACCEPTANCE.md`；十字游標問題列為 P2-15 先行修正，使用者同意先單獨 commit 並合併回 `main`，並自行結束執行中的程式以便建置 Release。MT-08 是以 Phase 3 版本（剪貼簿只有 24 位元 DIB）驗證，Phase 4 加入 PNG 格式後需再確認；使用者已安裝 Office（回答 Key Question 2）。
 8. Delete 鍵沒有刪除選取標註的問題如何處理？→ 2026-10-18 使用者指示「Delete 鍵失敗原因，整理目前資訊後，先列為待辦，先繼續處理後續問題」：調查紀錄寫入 `findings.md`，列為 P5-11，Phase 4 其餘工作繼續。
+9. Phase 5 授權？→ 2026-10-18 使用者以「使用 planning-with-files 載入專案狀態，繼續」回覆（與 Phase 3、4 授權句式相同），視為授權 Phase 5。Phase 4 控制點的問題（十字游標、MT-08 重新確認、Delete 實體鍵盤、未修改的截圖不詢問）與 MT-04、MT-05、MT-07、MT-09 沒有回報，維持「尚未驗證」，於下一次回報時一併提出，並再次告知剪貼簿內容遺失一事。
 
 ## Decisions Made
 
@@ -395,6 +396,15 @@ Checklist
 | 選取覆蓋層改用自繪的黑芯白邊十字游標（單色 AND／XOR、不使用反相），尺寸取系統游標在該 DPI 的標準尺寸，比例與系統十字相同；每種尺寸只建立一次並沿用到程式結束 | 系統十字游標全為反相像素，在暗化成 50% 灰的白色畫面上與底色只差 1 個色階；黑芯白邊對任何底色都有 ≥127 的對比。游標是 USER 物件，快取讓數量不隨截圖次數增加，也不會銷毀仍在顯示中的游標；不調整遮罩透明度，因為那只會把問題移到另一種底色 |
 | `ImageRenderer` 改為一律以原始圖片尺寸合成，再取出裁切範圍（整張時直接回傳） | WPF 的平滑像素會隨繪製位置改變：平移到裁切原點再繪製時，小字級文字與斜線在範圍內有幾十到上百個像素與未裁切時不同；整張合成後再取出，裁切只去掉範圍外的像素。代價是每次匯出合成整張圖片（最壞情況與未裁切相同），記錄於 ADR-0011 修訂與已知限制 |
 | Delete 鍵問題列為待辦 P5-11，不阻擋 Phase 4 收尾 | 使用者指示「整理目前資訊後，先列為待辦，先繼續處理後續問題」，並要求修正超過 3 次仍失敗的項目列入待辦、不拖累進度 |
+| 「使用 planning-with-files 載入專案狀態，繼續」視為授權 Phase 5；未回報的 MT 維持「尚未驗證」並於結尾一併提出 | 與 Phase 3、4 的授權句式相同；先做不依賴答案的工作，問題一次提出 |
+| 發佈：資料夾版為主、單檔版經煙霧驗證後才提供；框架附屬組件只保留 zh-Hant；`Version` 1.0.0；隨附 Runtime 授權檔；ZIP 在 v1.0.0 的 commit 之後產生（ADR-0017） | 試發佈實測：12 種非繁中語言 204 檔／17 MB 用不到；單檔版不加 `IncludeNativeLibrariesForSelfExtract` 會留下 5 個 DLL；產品版本內嵌建置當時的 commit |
+| 常見 I/O 與登錄錯誤以 `ErrorText` 轉成繁體中文，其他情況沿用原始訊息 | P5-02「訊息統一繁中」；.NET 對拒絕存取、找不到路徑、檔案被占用等的訊息是英文，其餘 Win32 錯誤訊息由 Windows 依系統語言提供 |
+| P5-11 以「判別測試 → 暫時的診斷版建置（輸入紀錄寫入 HelpText 與暫存檔）」查明，結論為腳本判定錯誤，不修改產品程式碼 | 一次閒置即取得決定性紀錄；判別測試保留為回歸測試；診斷版只在分離的 worktree 建置，用完移除 |
+| 資源與延遲量測加在 Phase 4 腳本（`-Cycles`），不另建 Phase 5 腳本 | Phase 4 腳本已有截圖、複製、另存、關閉與詢問處理的基礎設施；P5-07 以發佈版重跑時即取得發佈版的 MT-10 數據 |
+| Phase 4 循環的 GDI 判定改為比較前後各 10 次的中位數，並固定存檔資料夾的內容 | 每次開啟 Windows 存檔對話框時 GDI 約 126～134 且有下一次即回落的單次尖峰，最大值比較會誤判；三次執行的數據與判定修改都記錄於 ACCEPTANCE |
+| 字型沿用範圍依實際行為更正註解與已知限制（只在編輯視窗開著時沿用），不改行為 | 規格只要求可修改基本字型；更正文件是最小變更 |
+| `docs/ARCHITECTURE.md` 委派 subagent，限定只用讀寫檔工具 | 需要通讀整個程式碼庫；不開主控台以免干擾同時進行的 GUI 驗證；主 agent 抽查後修正三處 |
+| 收尾沿用既定儀式：commit、fast-forward 合併回 `main` 並加上本機標籤 `v1.0.0`（不推送） | 計畫 P5-10 已列入且隨 Phase 5 授權；標籤與合併都在本機、可移動；MT 回報有問題時另開修正分支 |
 
 ## Errors Encountered
 
@@ -438,6 +448,11 @@ Checklist
 | Phase 3 煙霧驗證：以 `SendInput` 送 Ctrl+滾輪，編輯器維持 100% | 2 | 診斷確認產品正常：先按住 Ctrl 再 `PostMessage(WM_MOUSEWHEEL)` 可縮放；腳本改用此方式 |
 | Phase 3 煙霧驗證：選取箭頭後按 Delete 沒有刪除（同樣送法的 Ctrl+Z、Enter 有效） | 2 | 兩支診斷腳本排除送鍵與前景問題，程式碼中找不到攔截 Delete 的處理；原因未查明，依使用者指示列為待辦 P5-11 |
 | Phase 3 煙霧驗證：裁切後輸出與裁切前同一範圍有 58 個像素不同（都在文字範圍） | 1 | 以測試重現為合成器問題（平移後繪製改變平滑像素）；改為整張合成後再取出裁切範圍，第 1 次修正即通過，煙霧驗證重跑通過 |
+| advisor 呼叫逾時 | 1 | 依自己的判斷繼續，之後第二次呼叫成功並採納建議（診斷版加檔案紀錄、停損原則、證據只抄小檔） |
+| Bash heredoc 內的 `\\` 變成 `\`（Python 正規表示式出錯、字串出現跳脫警告） | 1 | 含反斜線的腳本改用 Write 工具寫成檔案再執行 |
+| P5-11：Delete「沒有刪除」的判定（Phase 3、4 共三次） | 3 | 診斷版輸入紀錄證明 Delete 正常；腳本以偏紅像素判斷，已知圖樣在範圍內本來就有 560 個符合條件的像素 → 改為比較與原圖不同的像素 |
+| Phase 4 第 13 步：右鍵取消前前景仍是其他程式的視窗（覆蓋層剛顯示、尚未取得前景） | 1 | 加入 `Wait-OverlayForeground` |
+| Phase 4 第 13 步：GDI「後 5 次最大值 > 前 5 次最大值」判定失敗（132→134、128→132） | 2 | 逐次數據為單次尖峰、基準不變；每次刪除存檔、改以中位數判定，第 3 次執行通過 |
 
 ## Notes
 

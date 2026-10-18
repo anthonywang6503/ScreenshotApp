@@ -321,7 +321,7 @@ internal partial class EditorWindow : Window
             return;
         }
 
-        // 字型只在這次執行期間沿用；顏色、線寬與字級寫入設定檔，下次啟動仍是預設值。
+        // 字型不寫入設定檔，只在這個編輯視窗開著時沿用；顏色、線寬與字級寫入設定檔，下次啟動仍是預設值。
         var style = _session.Style;
         _fontFamily = style.FontFamily;
         var saved = _controller.SaveAnnotationDefaults(style.Color, style.StrokeWidth, style.FontSize);
@@ -1112,7 +1112,7 @@ internal partial class EditorWindow : Window
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or SecurityException)
         {
             // 寫入失敗時文件仍完整保留在編輯器中，使用者可改存到其他位置。
-            ShowError(Strings.Format("Editor_SaveFailed", ex.Message));
+            ShowError(Strings.Format("Editor_SaveFailed", ErrorText.Describe(ex)));
             return false;
         }
         finally

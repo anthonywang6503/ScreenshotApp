@@ -145,3 +145,15 @@
 - 下一步：以 Phase 3 煙霧腳本的基礎設施另寫診斷流程（畫完直接 Delete、以選取工具點選後 Delete、Esc 是否取消選取、右鍵選單的「刪除」——選單以「右鍵之後新出現的頂層視窗」尋找，WPF 快顯視窗的類別是 `HwndWrapper[…]`），在電腦閒置時執行；或在測試中建立真正的 `EditorWindow`，以 `InputManager` 送出 Delete 的 `KeyDown` 檢查路由與 `CanExecute`。查明後補測試再修正。
 - 線索（advisor 檢視診斷資料後指出）：診斷 1 中 Delete 失敗之後按的 `Ctrl+Z` 也沒有移除最後加入的文字（之後兩次複製的結果都有文字）；Enter 套用裁切是在以 UI Automation 切換到裁切工具（`SetTool` 會清除 `_drag`）之後才生效。因此可能不是 Delete 特有的問題，而是「選取工具點選標註但沒有移動」之後一直處於拖曳狀態（`IsDragging`／`IsBusy` 為真），連帶擋下 Delete 與復原。Phase 3 煙霧驗證的「刪除後 Ctrl+Z 恢復箭頭」通過不可採信（箭頭根本沒有被刪除）。
 - 最便宜的判別方式：在 `EditorSessionTests` 以選取工具對標註 `PointerDown` 後在同一點 `PointerUp`，檢查 `IsDragging` 為 false 且 `DeleteSelected()` 回傳 true。通過 → 問題在視窗與輸入層（檢查按鍵當下的 `Keyboard.Modifiers` 與焦點元素、滑鼠放開事件是否送到 `ContentRoot`）；失敗 → 沒有移動的拖曳完成邏輯。
+
+## Phase 5 研究發現（2026-10-18）
+- **P5-11 判別**：`EditorSession` 依 Phase 3 煙霧腳本的操作順序（矩形、箭頭、三個編號、復原重做、文字、選取工具點選箭頭不移動）點選後 `IsDragging` 為 false、`DeleteSelected` 與 `Undo` 有效（新測試直接通過）。`PointerUp` 無論有無移動都清除拖曳；同一次煙霧執行中第 7 步選取工具拖曳矩形成功，若第 6 步的拖曳沒有結束，第 7 步按下會被忙碌保護擋下。問題在視窗輸入層或模擬輸入本身。
+- **WPF 的 KeyBinding**：`CommandManager.TranslateInput` 在按鍵事件冒泡經過的每個元素上找 InputBindings，找到時以「綁定所在的元素」（本程式為視窗）為命令目標，`CanExecute` 的 `OriginalSource` 是視窗而不是焦點元素；文字輸入框中的 Delete 由 TextBox 自己的編輯命令先處理。
+- **發佈**：自包含資料夾版 473 檔／173 MB，其中 12 種非繁中語言的框架附屬組件 204 檔／17 MB；`SatelliteResourceLanguages=zh-Hant` 後 275 檔／156 MB（ZIP 67 MB）。單檔版預設在 exe 旁留下 5 個 WPF 原生 DLL（wpfgfx_cor3、PresentationNative_cor3、D3DCompiler_47_cor3、PenImc_cor3、vcruntime140_cor3），加 `IncludeNativeLibrariesForSelfExtract=true` 才是單一檔案（149 MB，ZIP 64 MB）。
+- `dotnet msbuild <proj> -restore -t:ResolveFrameworkReferences -getItem:ResolvedRuntimePack -p:RuntimeIdentifier=win-x64 -p:SelfContained=true` 輸出 JSON，`PackageDirectory` 即自包含發佈實際使用的 Runtime 套件資料夾；.NET Runtime 套件根目錄有 `LICENSE.TXT` 與 `THIRD-PARTY-NOTICES.TXT`，Windows Desktop Runtime 套件只有 `LICENSE`（皆 MIT）。
+- **.NET 檔案錯誤的例外**（以實際觸發的測試確認）：取代唯讀檔 → `UnauthorizedAccessException`；寫入不存在的資料夾 → `DirectoryNotFoundException`；檔案被其他控制代碼獨占 → `IOException`，`HResult` 0x80070020（ERROR_SHARING_VIOLATION）。拒絕存取、找不到路徑、檔案被占用、路徑太長的訊息是 .NET 的英文資源字串；其他 Win32 錯誤（例如磁碟已滿 0x80070070）的訊息由 FormatMessage 依系統語言提供。
+- 本機的 Bash 工具中，heredoc 內的 `\` 會變成 `\`（Python 正規表示式與字串常值因此出錯或出現跳脫警告）；含反斜線的腳本改用 Write 工具寫成檔案再執行。
+- Windows 沙箱（`WindowsSandbox.exe`）在本機沒有啟用；MT-11 需由使用者以乾淨的虛擬機器或啟用沙箱後驗證。
+- **P5-11 結案（不是產品缺陷）**：診斷版的輸入紀錄顯示 Delete 確實執行並刪除了箭頭。煙霧腳本以 `CountReddish`（R ≥ 200、G ≤ 60、B ≤ 60）判斷箭頭，但已知圖樣的編碼（紅 = x 低 8 位元、綠 = y 低 8 位元、藍 = x 與 y 的第 8～11 位元）在選取範圍內有兩塊「偏紅」區：圖片座標 x 100～155 或 356～411、y 176～236。箭頭判定範圍與其中一塊重疊 56×10 = 560 個像素，正是歷次失敗的數字。以已知圖樣比對時，判斷標註是否存在一律用「與原圖不同的像素」，不要用顏色條件。
+- 覆蓋層顯示（`IsWindowVisible`）與取得前景之間有時間差：前景原本屬於其他程式時，腳本要等覆蓋層成為前景再送滑鼠或按鍵。
+- 每次循環都開啟 Windows 存檔對話框時，ScreenshotApp 的 GDI 物件約 126～134（沒有開過檔案對話框時約 41），且有 +2～+4 的單次尖峰（延後釋放，下一次回落）；以最大值比較前後幾次會誤判成長，應比較基準（中位數）或趨勢。存到同一個資料夾的檔案越來越多時，對話框列出的檔案與圖示也會增加，量測時應固定資料夾內容。

@@ -40,7 +40,7 @@ internal static class ImageFileLoader
         catch (Exception ex) when (ex is IOException or ArgumentException)
         {
             // 檔案被其他程式獨占、路徑過長或格式無效等；找不到檔案的兩種 IOException 已在前面處理。
-            return Failure(Strings.Format("ImageLoad_ReadFailed", ex.Message));
+            return Failure(Strings.Format("ImageLoad_ReadFailed", ErrorText.Describe(ex)));
         }
 
         try
