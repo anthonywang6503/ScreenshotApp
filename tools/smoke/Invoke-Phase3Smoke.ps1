@@ -1,7 +1,7 @@
 #Requires -Version 7
 <#
 .SYNOPSIS
-    ScreenshotApp 圖片編輯器煙霧驗證：截圖後開啟編輯器、100% 時畫布與已知圖樣逐像素一致、繪製標註、文字輸入、
+    ScreenshotApp 圖片編輯器煙霧驗證：選取覆蓋層的十字游標、截圖後開啟編輯器、100% 時畫布與已知圖樣逐像素一致、繪製標註、文字輸入、
     復原與重做、選取刪除與移動、縮放後輸出不變、裁切、預設樣式回寫、文件取代與恢復、重複循環的資源量測。
 
 .DESCRIPTION
@@ -80,6 +80,15 @@ public static class Phase3Native
     struct LASTINPUTINFO { public uint cbSize; public uint dwTime; }
 
     [StructLayout(LayoutKind.Sequential)]
+    struct CURSORINFO { public uint cbSize; public uint flags; public IntPtr hCursor; public POINT ptScreenPos; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct ICONINFO { public int fIcon; public int xHotspot; public int yHotspot; public IntPtr hbmMask; public IntPtr hbmColor; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct BITMAPINFOHEADER { public uint biSize; public int biWidth; public int biHeight; public ushort biPlanes; public ushort biBitCount; public uint biCompression; public uint biSizeImage; public int biXPelsPerMeter; public int biYPelsPerMeter; public uint biClrUsed; public uint biClrImportant; }
+
+    [StructLayout(LayoutKind.Sequential)]
     struct MOUSEINPUT { public int dx, dy; public uint mouseData, dwFlags, time; public IntPtr dwExtraInfo; }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -117,6 +126,13 @@ public static class Phase3Native
     [DllImport("user32.dll")] static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr clip, MonitorEnumProc callback, IntPtr data);
     [DllImport("shcore.dll")] static extern int GetDpiForMonitor(IntPtr monitor, int type, out uint dpiX, out uint dpiY);
     [DllImport("user32.dll")] static extern bool GetLastInputInfo(ref LASTINPUTINFO info);
+    [DllImport("user32.dll")] static extern bool GetCursorInfo(ref CURSORINFO info);
+    [DllImport("user32.dll")] static extern bool GetIconInfo(IntPtr icon, out ICONINFO info);
+    [DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr hWnd);
+    [DllImport("user32.dll")] static extern int ReleaseDC(IntPtr hWnd, IntPtr hdc);
+    [DllImport("gdi32.dll")] static extern int GetDIBits(IntPtr hdc, IntPtr bitmap, uint start, uint lines, byte[] bits, ref BITMAPINFOHEADER info, uint usage);
+    [DllImport("gdi32.dll")] static extern bool DeleteObject(IntPtr obj);
+    [DllImport("user32.dll")] public static extern int GetSystemMetricsForDpi(int index, uint dpi);
 
     static int lastInjected = Environment.TickCount;
 
@@ -142,6 +158,42 @@ public static class Phase3Native
     }
 
     public static IntPtr RootWindowAt(int x, int y) { return GetAncestor(WindowFromPoint(new POINT { X = x, Y = y }), 2); }
+
+    // 目前顯示中的單色游標：{寬, 高, 熱點 X, 熱點 Y, 黑, 白, 反相} 像素數；彩色游標或取不到時回傳 null。
+    public static int[] CurrentCursor()
+    {
+        var info = new CURSORINFO { cbSize = (uint)Marshal.SizeOf(typeof(CURSORINFO)) };
+        ICONINFO icon;
+        if (!GetCursorInfo(ref info) || info.hCursor == IntPtr.Zero || !GetIconInfo(info.hCursor, out icon)) return null;
+        var dc = GetDC(IntPtr.Zero);
+        try
+        {
+            if (icon.hbmColor != IntPtr.Zero) return null;
+            // 先只取得遮罩尺寸，再以由上而下的 32 位元格式讀出：單色游標的上半是 AND 遮罩、下半是 XOR 遮罩。
+            var header = new BITMAPINFOHEADER { biSize = (uint)Marshal.SizeOf(typeof(BITMAPINFOHEADER)) };
+            if (GetDIBits(dc, icon.hbmMask, 0, 0, null, ref header, 0) == 0) return null;
+            int width = header.biWidth, height = Math.Abs(header.biHeight), half = height / 2;
+            header = new BITMAPINFOHEADER { biSize = header.biSize, biWidth = width, biHeight = -height, biPlanes = 1, biBitCount = 32 };
+            var bits = new byte[width * height * 4];
+            if (GetDIBits(dc, icon.hbmMask, 0, (uint)height, bits, ref header, 0) == 0) return null;
+            int black = 0, white = 0, invert = 0;
+            for (int y = 0; y < half; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    bool and = bits[(y * width + x) * 4] != 0, xor = bits[((y + half) * width + x) * 4] != 0;
+                    if (!and && !xor) black++; else if (!and) white++; else if (xor) invert++;
+                }
+            }
+            return new[] { width, half, icon.xHotspot, icon.yHotspot, black, white, invert };
+        }
+        finally
+        {
+            ReleaseDC(IntPtr.Zero, dc);
+            DeleteObject(icon.hbmMask);
+            if (icon.hbmColor != IntPtr.Zero) DeleteObject(icon.hbmColor);
+        }
+    }
 
     static INPUT KeyInput(ushort vk, ushort scan, uint flags)
     {
@@ -625,13 +677,30 @@ function Show-Pattern {
         } 8000)
 }
 
+# 覆蓋層上顯示的游標只有黑白兩色（系統十字游標的反相像素在暗化後的白色畫面上看不見）、與系統游標同尺寸、熱點在中心。
+function Test-OverlayCursor([int]$X, [int]$Y, [IntPtr[]]$Allowed) {
+    Assert-Target $X $Y $Allowed
+    [Phase3Native]::MoveCursor($X, $Y)
+    $size = [Phase3Native]::GetSystemMetricsForDpi(13, [uint32]($primary[4] * 96 / 100))
+    $cursor = Wait-Until { $current = [Phase3Native]::CurrentCursor(); if ($current -and $current[0] -eq $size) { , $current } } 2000
+    if (-not $cursor) { $cursor = [Phase3Native]::CurrentCursor() }
+    $center = [int]($size / 2) - 1
+    $passed = [bool]$cursor -and $cursor[0] -eq $size -and $cursor[1] -eq $size -and $cursor[2] -eq $center -and $cursor[3] -eq $center -and
+        $cursor[4] -gt 0 -and $cursor[5] -gt 0 -and $cursor[6] -eq 0
+    $detail = if ($cursor) { '{0}×{1}，熱點 ({2},{3})，黑 {4}、白 {5}、反相 {6} 個像素；系統游標尺寸 {7}' -f $cursor[0], $cursor[1], $cursor[2], $cursor[3], $cursor[4], $cursor[5], $cursor[6], $size } else { '取不到單色游標' }
+    Add-Result '覆蓋層游標為黑芯白邊十字（沒有反相像素、與系統游標同尺寸、熱點在中心）' $passed $detail
+}
+
 # 截取圖樣上 $Selection 的範圍並等待編輯器出現在前景；回傳編輯視窗或 $null。
-function Invoke-CaptureToEditor([int]$ProcessId) {
+function Invoke-CaptureToEditor([int]$ProcessId, [switch]$CheckCursor) {
     if (-not (Show-Pattern)) { return $null }
     Send-Hotkey
     $overlays = Wait-Overlays $ProcessId $monitors.Count
     if (-not $overlays) { return $null }
-    Invoke-Drag ($Pattern.X + $Selection.X) ($Pattern.Y + $Selection.Y) ($Pattern.X + $Selection.X + $Selection.Width - 1) ($Pattern.Y + $Selection.Y + $Selection.Height - 1) $overlays
+    $fromX = $Pattern.X + $Selection.X
+    $fromY = $Pattern.Y + $Selection.Y
+    if ($CheckCursor) { Test-OverlayCursor $fromX $fromY $overlays }
+    Invoke-Drag $fromX $fromY ($fromX + $Selection.Width - 1) ($fromY + $Selection.Height - 1) $overlays
     if (-not (Wait-NoOverlays $ProcessId)) { return $null }
     $editor = Wait-EditorForeground $ProcessId
     Hide-Pattern
@@ -748,7 +817,7 @@ try {
 
     try {
         # 1. 截圖完成後開啟編輯器，100% 時畫布與圖樣逐像素一致
-        $editor = Invoke-CaptureToEditor $appId
+        $editor = Invoke-CaptureToEditor $appId -CheckCursor
         Add-Result '選取完成後開啟編輯器並位於前景' ([bool]$editor) $EditorTitle
         if (-not $editor) { Stop-Simulation '編輯器沒有開啟' }
         $mine = @($editor)

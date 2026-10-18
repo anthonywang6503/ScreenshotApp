@@ -19,6 +19,8 @@ internal static partial class NativeMethods
 
     public const int DWMWA_TRANSITIONS_FORCEDISABLED = 3;
 
+    public const int SM_CXCURSOR = 13;
+
     public const uint SRCCOPY = 0x00CC0020;
     public const uint CAPTUREBLT = 0x40000000;
     public const uint BI_RGB = 0;
@@ -94,6 +96,17 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SetForegroundWindow(nint hWnd);
+
+    [LibraryImport("user32.dll")]
+    public static partial int GetSystemMetricsForDpi(int nIndex, uint dpi);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial SafeCursorHandle CreateCursor(
+        nint hInst, int xHotSpot, int yHotSpot, int nWidth, int nHeight, byte[] pvANDPlane, byte[] pvXORPlane);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DestroyCursor(nint hCursor);
 
     [LibraryImport("dwmapi.dll")]
     public static partial int DwmFlush();

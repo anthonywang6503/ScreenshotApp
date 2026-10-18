@@ -15,11 +15,11 @@
 
 ## Next Step
 
-Phase 3 已完成（人工控制點）。等待使用者回報 MT（Phase 1 的 MT-01、MT-02 占用提示；Phase 2 的 MT-02 觸發、MT-03 取消部分、MT-04、MT-05；Phase 3 的 MT-03 編輯器部分、MT-06、MT-07，步驟見 `docs/ACCEPTANCE.md`）並授權 Phase 4；Phase 3 煙霧驗證後半段待電腦閒置時執行 `tools/smoke/Invoke-Phase3Smoke.ps1` 補完。授權後從 `main` 建立 `feature/phase-04-image-io`，將 Phase 4 標記 `in_progress`，先撰寫 ADR-0014～0016。
+P2-15（十字游標修正）經使用者同意已單獨 commit 並合併回 `main`。下一步：從 `main` 建立 `feature/phase-04-image-io`，將 Phase 4 標記 `in_progress`，先撰寫 ADR-0014～0016（剪貼簿 ADR 前先徵詢 advisor）。仍待處理：Phase 3 煙霧驗證後半段與新增的覆蓋層游標檢查（需電腦閒置）；MT-04、MT-05、MT-07 尚未回報；Phase 4 控制點請使用者重新確認十字游標與 MT-08。
 
 ## Current Phase
 
-Phase 3（圖片編輯核心）已完成（2026-10-18，handoff：`handoffs/phase-03-editor-core.md`；實機煙霧驗證部分完成）。Phase 4 等待授權，尚未開始。
+Phase 3（圖片編輯核心）已完成（2026-10-18，handoff：`handoffs/phase-03-editor-core.md`；實機煙霧驗證部分完成）。使用者以「繼續開發」授權 Phase 4（Key Question 7）；MT 回饋修正 P2-15 已合併回 `main`，Phase 4 即將開始。
 
 ## 執行規範（本任務專用）
 
@@ -150,12 +150,13 @@ Checklist
 - [x] P2-12 已知限制文件初稿：游標不擷取、DRM／UAC 安全桌面、跨螢幕選取限制｜無｜low｜可｜`docs/KNOWN_LIMITATIONS.md` 初版
 - [x] P2-13 使用者實機驗證請求：MT-02（觸發）、MT-03（取消部分）、MT-04（100/125/150/200%）、MT-05（雙螢幕混合 DPI、負 X、上下排列）｜P2-11｜low｜否｜步驟寫入 `docs/ACCEPTANCE.md`，於控制點提出
 - [x] P2-14 Phase 收尾儀式（handoff `handoffs/phase-02-capture-selection.md`）｜全部｜low｜否｜handoff 存在並註記
+- [x] P2-15 MT 回饋修正（Phase 2 控制點之後，2026-10-18）：擷取全白畫面時選取覆蓋層的十字游標看不清 → `Capture/CrosshairCursor`（`CreateCursor` 單色黑芯白邊、不使用反相；尺寸取 `GetSystemMetricsForDpi(SM_CXCURSOR)`；每種尺寸建立一次沿用到結束）、覆蓋層改在程式中依 DPI 設定游標；`Invoke-Phase3Smoke.ps1` 加入顯示中游標檢查｜P2-06｜high｜否｜`CrosshairCursorTests`（51）與完整 825 個測試通過；`DrawIconEx` 對照圖；使用者以新版重新確認
 
 **Acceptance Criteria（Phase 門檻）**
 1. FR-07～FR-13 可操作；AT-01、AT-02 通過；覆蓋層無 DPI 偏移（Agent 截圖證據 + 使用者 MT-04/05 回報）。
 2. GDI 資源 30 次循環無成長趨勢（附量測數據）。
 
-**Handoff**：`handoffs/phase-02-capture-selection.md`（2026-10-18；314 個自動化測試通過、煙霧驗證 38 項全數通過、30 次循環 GDI 物件恆為 38）。
+**Handoff**：`handoffs/phase-02-capture-selection.md`（2026-10-18；314 個自動化測試通過、煙霧驗證 38 項全數通過、30 次循環 GDI 物件恆為 38）。MT 回饋修正 P2-15 記錄於 `progress.md` 與 `docs/ACCEPTANCE.md`。
 - **Status:** complete
 
 ### Phase 3: 圖片編輯核心（FR-14～FR-25）
@@ -329,6 +330,7 @@ Checklist
 4. Phase 2 授權？→ 2026-10-18 使用者以「載入專案狀態，開始開發」授權（與 Phase 1 授權句式相同）。MT-01、MT-02（占用提示）尚未回報，維持「尚未驗證」，於 Phase 2 控制點與 MT-02（觸發）、MT-04、MT-05 一併請使用者回報。
 5. Phase 3 授權？→ 2026-10-18 使用者以「使用 planning-with-files 載入專案狀態，繼續開發」授權（與 Phase 1、2 授權句式相同）。Phase 1、2 的 MT 尚未回報，維持「尚未驗證」，於 Phase 3 控制點與 MT-03（編輯器部分）、MT-06、MT-07 一併請使用者回報。
 6. Phase 3 收尾時機？→ 2026-10-18 使用者以「完成 phase 3」要求收尾。煙霧驗證後半段需要電腦閒置，使用者正在使用電腦而無法執行，列為「尚未驗證」並保留腳本供之後補完。
+7. Phase 4 授權與 MT 回報？→ 2026-10-18 使用者以「使用 planning-with-files 載入專案狀態，繼續開發，完成 MT-01, MT-02, MT-03, MT-06, MT-08 驗證，問題：若擷取畫面時，背景全白，則十字準星看不清」回覆：「繼續開發」與先前授權句式相同，視為授權 Phase 4；詢問後使用者確認五項全數通過、十字游標是唯一問題，已登錄於 `docs/ACCEPTANCE.md`；十字游標問題列為 P2-15 先行修正，使用者同意先單獨 commit 並合併回 `main`，並自行結束執行中的程式以便建置 Release。MT-08 是以 Phase 3 版本（剪貼簿只有 24 位元 DIB）驗證，Phase 4 加入 PNG 格式後需再確認；使用者已安裝 Office（回答 Key Question 2）。
 
 ## Decisions Made
 
@@ -381,6 +383,8 @@ Checklist
 | 測試的 GDI 物件量測等連續兩次讀數相同才回傳 | WPF 繪製資源在終結器之後才由繪製執行緒刪除，立即讀取會被其他測試遺留的物件干擾 |
 | 煙霧腳本：每次模擬輸入前偵測使用者輸入並檢查前景與目標視窗，編輯視窗以 PrintWindow 擷取，剪貼簿以序號判斷是否還原 | 第一次試跑時使用者回到電腦前，滑鼠操作落到其他程式、證據截到其他程式；保護必須在每一步而不只在開始前 |
 | Phase 3 在煙霧驗證部分完成時收尾，未執行的項目標示「尚未驗證」 | 使用者要求收尾，而後半段驗證需要電腦閒置；邏輯已由 774 個自動化測試涵蓋，腳本保留供補完 |
+| MT 回饋修正在獨立分支 `fix/crosshair-contrast` 完成，經使用者同意先單獨 commit 並 fast-forward 合併回 `main`，之後才開始 Phase 4 | 使用者可以立即以新版重新確認；`main` 因此在控制點之外多了一個已測試的修正（Release 825 個測試通過），但不含任何未完成的 Phase 4 工作 |
+| 選取覆蓋層改用自繪的黑芯白邊十字游標（單色 AND／XOR、不使用反相），尺寸取系統游標在該 DPI 的標準尺寸，比例與系統十字相同；每種尺寸只建立一次並沿用到程式結束 | 系統十字游標全為反相像素，在暗化成 50% 灰的白色畫面上與底色只差 1 個色階；黑芯白邊對任何底色都有 ≥127 的對比。游標是 USER 物件，快取讓數量不隨截圖次數增加，也不會銷毀仍在顯示中的游標；不調整遮罩透明度，因為那只會把問題移到另一種底色 |
 
 ## Errors Encountered
 
@@ -411,6 +415,10 @@ Checklist
 | CS9124：主要建構函式參數同時被擷取又用來初始化欄位 | 1 | 預覽改為可為 null 的欄位，未移動時回傳原標註 |
 | 完整測試時 `SafeHandleTests` 固定失敗、單獨執行通過 | 1 | GDI 量測輔助改為等數量穩定 |
 | Firecrawl 搜尋額度不足 | 1 | 改用 mysearch 擷取 WPF 原始碼，只讀需要的段落 |
+| MT 回報：擷取全白畫面時十字游標看不清 | 1 | 以腳本確認系統十字全為反相像素（灰 127 上對比 1）；改用自繪黑芯白邊游標（P2-15） |
+| Release 建置失敗：使用者執行中的 ScreenshotApp 占用 `bin\Release` 的執行檔 | 1 | 不結束使用者的程式；先以 Debug 組態建置與測試，使用者自行結束程式後 Release 建置 0 警告、825 個測試通過 |
+| 測試的 LibraryImport 使用應用程式組件的 `BITMAPINFOHEADER` 出現 SYSLIB1051 | 1 | 測試內宣告同名結構 |
+| 對照圖腳本在非 PMv2 執行緒建立游標，PMv2 繪製時被放大 1.5 倍 | 1 | 先切換執行緒 DPI 感知再建立游標（與應用程式相同情境） |
 
 ## Notes
 

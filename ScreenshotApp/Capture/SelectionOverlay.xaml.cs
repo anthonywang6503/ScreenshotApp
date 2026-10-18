@@ -43,6 +43,8 @@ internal sealed partial class SelectionOverlay : UserControl, IDisposable
         });
         _source.RootVisual = this;
 
+        // 游標尺寸依這個顯示器的 DPI，DPI 在 HwndSource 建立之後才確定。
+        Cursor = CrosshairCursor.For(DpiScale);
         _area = CoordinateMapper.MonitorLocalToViewDip(new PixelRect(0, 0, bounds.Width, bounds.Height), DpiScale);
         Mask.Data = new GeometryGroup
         {

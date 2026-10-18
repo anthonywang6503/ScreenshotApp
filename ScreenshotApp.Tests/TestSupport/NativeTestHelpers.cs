@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace ScreenshotApp.Tests.TestSupport;
 
 /// <summary>
-/// 量測 GDI 物件數量的測試集合。數量以整個處理程序計算，量測期間不能有其他測試並行建立或釋放 GDI 物件。
+/// 量測 GDI 與 USER 物件數量的測試集合。數量以整個處理程序計算，量測期間不能有其他測試並行建立或釋放這些物件。
 /// </summary>
 [CollectionDefinition(Name, DisableParallelization = true)]
 public sealed class GdiObjectCountCollection
@@ -14,20 +14,26 @@ public sealed class GdiObjectCountCollection
 internal static partial class NativeTestHelpers
 {
     private const uint GR_GDIOBJECTS = 0;
+    private const uint GR_USEROBJECTS = 1;
     private const nint PerMonitorAwareV2 = -4;
 
     /// <summary>
     /// 目前處理程序持有的 GDI 物件數。先讓終結器跑完，再等到連續兩次讀數相同才回傳：其他測試遺留的 WPF 繪製資源
     /// 由終結器交給繪製執行緒後才實際刪除，若立即讀取，這些物件可能在量測途中才被釋放。
     /// </summary>
-    public static int GdiObjectCount()
+    public static int GdiObjectCount() => StableGuiResourceCount(GR_GDIOBJECTS);
+
+    /// <summary>目前處理程序持有的 USER 物件數（視窗、游標、選單等），量測方式同 <see cref="GdiObjectCount"/>。</summary>
+    public static int UserObjectCount() => StableGuiResourceCount(GR_USEROBJECTS);
+
+    private static int StableGuiResourceCount(uint kind)
     {
         var previous = -1;
         for (var attempt = 0; attempt < 40; attempt++)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            var count = (int)GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
+            var count = (int)GetGuiResources(GetCurrentProcess(), kind);
             if (count == previous)
             {
                 return count;

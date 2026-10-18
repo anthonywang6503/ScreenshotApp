@@ -34,3 +34,14 @@ internal sealed class SafeGdiObjectHandle : SafeHandleZeroOrMinusOneIsInvalid
 
     protected override bool ReleaseHandle() => NativeMethods.DeleteObject(handle);
 }
+
+/// <summary>以 <c>CreateCursor</c> 建立的游標（USER 物件，不是 GDI 物件）；以 <c>DestroyCursor</c> 銷毀，不得銷毀仍在顯示中的游標。</summary>
+internal sealed class SafeCursorHandle : SafeHandleZeroOrMinusOneIsInvalid
+{
+    public SafeCursorHandle()
+        : base(ownsHandle: true)
+    {
+    }
+
+    protected override bool ReleaseHandle() => NativeMethods.DestroyCursor(handle);
+}

@@ -4,7 +4,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Focusable="True"
              FocusVisualStyle="{x:Null}"
-             Cursor="Cross"
              UseLayoutRounding="True">
     <Grid>
         <!-- 快照鋪滿用戶區：用戶區的 DIP 尺寸乘上 DPI 縮放正好是顯示器的實體像素，最近鄰取樣確保像素一對一。 -->

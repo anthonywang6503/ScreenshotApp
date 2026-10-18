@@ -212,3 +212,34 @@
 
 ### Next
 - Phase 3 已完成並合併回 `main`。等待使用者回報 MT 並授權 Phase 4；電腦閒置時可補跑 Phase 3 煙霧驗證後半段。
+
+
+## Session: 2026-10-18（MT 回報、十字游標修正、Phase 4 授權）
+
+### Current Status
+- **Phase:** Phase 3 complete；Phase 4 已授權、尚未開始（Key Question 7）
+- **Branch:** `fix/crosshair-contrast`（自 `main` 建立）
+
+### Actions Taken
+- 使用者回覆「繼續開發，完成 MT-01, MT-02, MT-03, MT-06, MT-08 驗證，問題：若擷取畫面時，背景全白，則十字準星看不清」。「繼續開發」視為授權 Phase 4；五項 MT 是否全數通過待確認後再登錄。
+- 根因（腳本實測）：系統十字游標 165 個墨水像素全為反相；以 `DrawIconEx` 畫在灰 127／128 上最大對比 1（白 255、黑 0 上為 255）。覆蓋層 50% 暗化把白色畫面變成灰 127。
+- 徵詢 advisor 後的做法：修正做成獨立單元（分支、測試），完成後一次詢問 MT 結果與是否先 commit 合併；不在使用者使用電腦時跑煙霧驗證。
+- 先寫 `CrosshairCursorTests`（紅燈：型別不存在），再實作 `Capture/CrosshairCursor`（`CreateCursor` 黑芯白邊單色游標、`GetSystemMetricsForDpi(SM_CXCURSOR)` 尺寸、每種尺寸快取）、`SafeCursorHandle`、`NativeMethods` 三個 API；覆蓋層移除 XAML 的 `Cursor="Cross"`，改在 `HwndSource` 建立後依 DPI 設定。測試輔助加入 `UserObjectCount`（與 GDI 量測共用穩定讀數迴圈）。
+- `Invoke-Phase3Smoke.ps1` 加入 `Test-OverlayCursor`：覆蓋層出現後把游標移到覆蓋層上，以 `GetCursorInfo` + `GetIconInfo` 檢查顯示中的游標沒有反相像素、尺寸等於系統游標、熱點在中心（腳本語法剖析與內嵌 C# 編譯通過；本次未執行，使用者正在使用電腦）。
+- 對照圖 `docs/evidence/phase-02/crosshair-contrast.png`（PMv2 情境下 `DrawIconEx` 繪製 48 像素游標、放大 4 倍）：系統十字在灰底消失，新十字在白、灰、黑底都清楚。
+- 文件：`CHANGELOG.md`（Fixed）、`docs/KNOWN_LIMITATIONS.md`（自繪游標不套用指標色彩設定；指標大小是否套用尚未驗證）、`docs/ACCEPTANCE.md`（測試類別、煙霧檢查項目、使用者回報的問題）。
+
+### Test Results
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build ScreenshotApp.Tests -c Debug`（實作前） | 編譯失敗（紅燈） | CS0246 找不到 `CursorShape`／`SafeCursorHandle` | PASS（紅燈） |
+| `dotnet test --filter CrosshairCursorTests -c Debug` | 全數通過 | 51 passed | PASS |
+| `dotnet build ScreenshotApp.sln -c Debug` | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test ScreenshotApp.sln -c Debug` | 全數通過 | 825 passed | PASS |
+| `dotnet build -c Release` | 0 error | 失敗：使用者執行中的 ScreenshotApp（PID 49264）占用 `bin\Release\ScreenshotApp.exe` | 待使用者結束程式 |
+| `dotnet build ScreenshotApp.sln -c Release`（使用者結束程式後） | 0 error, 0 warning | 0 error, 0 warning | PASS |
+| `dotnet test ScreenshotApp.sln -c Release` | 全數通過 | 825 passed | PASS |
+
+### Actions Taken（續）
+- 一次詢問使用者三件事，皆採建議：五項 MT 全數通過、十字游標是唯一問題（登錄於 `docs/ACCEPTANCE.md`，MT-08 註明以 Phase 3 版本驗證、Phase 4 加入 PNG 後再確認）；修正現在單獨 commit 並合併回 `main`；使用者自行從系統匣結束程式。
+- commit `phase-02: …`（分支 `fix/crosshair-contrast`）並 fast-forward 合併回 `main`；接著從 `main` 建立 `feature/phase-04-image-io` 開始 Phase 4。
