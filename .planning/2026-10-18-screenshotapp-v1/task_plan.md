@@ -15,7 +15,7 @@
 
 ## Next Step
 
-Phase 7 已完成並發佈 v1.1.0（Key Question 12）：`phase-07` commit 以 fast-forward 合併回 `main`，本機標籤 `v1.1.0`（不推送），`publish/` 有以該 commit 產生的資料夾版與單檔版 ZIP。電腦閒置時以發佈版執行煙霧驗證（資料夾版 Phase 3、單檔版 Phase 1、2），結果記入 ACCEPTANCE 第 2 節與 `docs/evidence/phase-07/`，以新的 `phase-07` commit 合併回 `main`（標籤不動）。待使用者：依 ACCEPTANCE 第 3 節「Phase 7 驗證步驟」確認右鍵選單與單檔版；回答命中判定是否限制在裁切範圍內（findings「既有行為」）。仍待回報的實機項目：MT-04、MT-05、MT-07、MT-08 重新確認、MT-09、MT-10 確認、十字游標修正、Delete 實體鍵盤（可選）；MT-11 依使用者選擇標示「尚未驗證」。
+Phase 7 已完成並發佈 v1.1.0（Key Question 12）：`phase-07` commit 以 fast-forward 合併回 `main`，本機標籤 `v1.1.0`（不推送），`publish/` 有以該 commit 產生的資料夾版與單檔版 ZIP。發佈版煙霧驗證已補跑並全數通過（資料夾版 Phase 3 43／43、單檔版 Phase 1 31／31、Phase 2 38／38），結果與證據以新的 `phase-07` commit 合併回 `main`（標籤不動）。暫停等待使用者指令。待使用者：依 ACCEPTANCE 第 3 節「Phase 7 驗證步驟」確認右鍵選單；回答命中判定是否限制在裁切範圍內（findings「既有行為」）與是否推送 `upstream`。仍待回報的實機項目：MT-04、MT-05、MT-07、MT-08 重新確認、MT-09、MT-10 確認、十字游標修正、Delete 實體鍵盤（可選）；MT-11 依使用者選擇標示「尚未驗證」。
 
 ## Current Phase
 
@@ -274,10 +274,10 @@ Checklist
 - [x] P7-06 驗證：Release 建置 0 警告、完整測試；電腦閒置時以 Phase 3 煙霧腳本（含新斷言）實機確認，否則標示「尚未驗證」｜P7-01～P7-05｜medium｜否｜證據記錄（Release 0 警告、933 passed；煙霧腳本語法與內嵌 C# 通過，實機執行等待使用者閒置，結果記錄於 ACCEPTANCE 第 2 節 Phase 7，未執行前為「尚未驗證」）
 - [x] P7-07 收尾：findings、progress、handoff；Phase 標記 complete 並重新 attest；使用者沒有要求提交，不 commit｜全部｜low｜否｜handoff 存在
 - [x] P7-08 版本與文件對齊（Key Question 12）：`Version` 1.1.0（新功能，語意化版本次版號）與 manifest；CHANGELOG `[Unreleased]` 改為 `[1.1.0] - 2026-10-19`；README、USER_GUIDE、KNOWN_LIMITATIONS 的版本與發佈檔名；ACCEPTANCE、AGENTS.md、ADR-0017、規格修訂紀錄與目前狀態一致｜P7-01～P7-07｜medium｜否｜以 `1.0.0`／`v1.0` 搜尋確認只剩歷史紀錄與規格範圍用語
-- [x] P7-09 發佈：Release 建置 0 警告、完整測試；commit 前試發佈確認兩種版本與 ZIP；電腦閒置時以發佈版執行 Phase 3 煙霧腳本，否則標示「尚未驗證」｜P7-08｜medium｜否｜`publish/ScreenshotApp-1.1.0-win-x64*`（Release 0 警告、933 passed；資料夾版 275 檔／155.9 MB、ZIP 67.3 MB，單檔版 8 檔／149.4 MB、ZIP 63.5 MB；使用者一直在使用電腦，發佈版煙霧驗證尚未驗證）
+- [x] P7-09 發佈：Release 建置 0 警告、完整測試；commit 前試發佈確認兩種版本與 ZIP；電腦閒置時以發佈版執行 Phase 3 煙霧腳本，否則標示「尚未驗證」｜P7-08｜medium｜否｜`publish/ScreenshotApp-1.1.0-win-x64*`（Release 0 警告、933 passed；資料夾版 275 檔／155.9 MB、ZIP 67.3 MB，單檔版 8 檔／149.4 MB、ZIP 63.5 MB；提交與合併時使用者在使用電腦，發佈版煙霧驗證於之後閒置時補跑：資料夾版 Phase 3 43／43、單檔版 Phase 1 31／31、Phase 2 38／38）
 - [x] P7-10 提交與合併：`phase-07` commit、本機標籤 `v1.1.0`（不推送），以該 commit 重新發佈（產品版本內嵌 commit），fast-forward 合併回 `main`｜P7-09｜low｜否｜`main` 與標籤指向同一個 commit
 
-**Handoff**：`handoffs/phase-07-context-menu-crop-fill.md`（2026-10-19；933 個自動化測試通過；v1.1.0，發佈版煙霧驗證尚未驗證）。
+**Handoff**：`handoffs/phase-07-context-menu-crop-fill.md`（2026-10-19；933 個自動化測試通過；v1.1.0，發佈版煙霧驗證資料夾版 Phase 3、單檔版 Phase 1、2 全數通過）。
 - **Status:** complete
 
 ## 追蹤矩陣：FR → 模組 → 測試 → 驗收證據

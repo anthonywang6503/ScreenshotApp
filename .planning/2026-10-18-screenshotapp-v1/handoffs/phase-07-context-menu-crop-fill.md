@@ -1,7 +1,7 @@
 # Handoff — Phase 7：右鍵選單與裁切後填滿畫布
 
 **日期**：2026-10-19
-**狀態**：完成（2026-10-19）；v1.1.0。實機煙霧驗證尚未執行（見第 3、6 節）
+**狀態**：完成（2026-10-19）；v1.1.0。發佈版實機煙霧驗證全數通過（資料夾版 Phase 3、單檔版 Phase 1、2，見第 3 節）
 **分支**：`feature/phase-07-context-menu-crop-fill`（自 `main` 51cd11c 建立）→ 使用者要求提交後 fast-forward 合併回 `main`，加上本機標籤 `v1.1.0`（不推送）
 
 ## 1. 完成內容
@@ -36,8 +36,9 @@
 | `dotnet build ScreenshotApp.sln -c Release` | 0 警告、0 錯誤 | 本機輸出 |
 | `dotnet test ScreenshotApp.sln -c Release --no-build` | 933 passed／0 failed（Phase 5 為 894，新增 39） | `docs/ACCEPTANCE.md` 第 1 節 |
 | 新測試先紅後綠 | 實作前建置失敗（CS0246／CS1061），實作後通過 | `progress.md` Phase 7 |
-| Phase 3 煙霧腳本 | 語法剖析與內嵌 C# 編譯通過；實機執行：尚未驗證（使用者一直在使用電腦，背景偵測沒有出現 90 秒閒置） | `docs/ACCEPTANCE.md` 第 2 節 Phase 7 |
-| v1.1.0 發佈（`tools/Publish-Release.ps1`） | 資料夾版與單檔版 ZIP；Release 建置 0 警告、933 passed；發佈版煙霧驗證尚未驗證 | `docs/ACCEPTANCE.md` 第 2 節「v1.1.0 發佈版」；`publish/`（不納入版本控制） |
+| Phase 3 煙霧腳本 | 語法剖析與內嵌 C# 編譯通過；以 v1.1.0 資料夾版實機執行 43／43 通過，第 9 步的五項新檢查：套用裁切後 400%、Ctrl+Z 後 100%、Ctrl+Y 後 400%、右鍵畫布選單「還原完整圖片」後輸出為整張圖片且 100%、Ctrl+Z 恢復裁切 | `docs/ACCEPTANCE.md` 第 2 節 Phase 7；`docs/evidence/phase-07/release-phase3-*` |
+| v1.1.0 發佈（`tools/Publish-Release.ps1`） | commit `6c7c103` 之後以該 commit 發佈，產品版本 `1.1.0+6c7c103…`；資料夾版 275 檔、155.9 MB（ZIP 67.3 MB），單檔版 8 檔、149.4 MB（ZIP 63.5 MB） | `docs/ACCEPTANCE.md` 第 2 節「v1.1.0 發佈版」；`publish/`（不納入版本控制） |
+| 發佈版煙霧驗證（單檔版） | Phase 1 31／31、Phase 2 38／38（30 次截圖循環 GDI 恆為 39）；依 ADR-0017 提供單檔版 | `docs/evidence/phase-07/singlefile-*` |
 
 ## 4. 風險與已知限制
 
@@ -47,11 +48,10 @@
 
 ## 5. 後續工作
 
-- 電腦閒置時以 v1.1.0 發佈版執行煙霧驗證：資料夾版 Phase 3（含第 9 步的五項新檢查），單檔版 Phase 1、2（ADR-0017 第 2 點）；結果記入 ACCEPTANCE 第 2 節，證據放在 `docs/evidence/phase-07/`，以新的 `phase-07` commit 合併回 `main`（`v1.1.0` 標籤維持在發佈的 commit）。
-- 使用者依 ACCEPTANCE 第 3 節「Phase 7 驗證步驟」確認標註選單、裁切選單、編輯文字與修改編號的焦點、`Ctrl+D`、單檔版。
-- 使用者決定命中判定是否限制在裁切範圍內（findings「既有行為」）。
+- 使用者依 ACCEPTANCE 第 3 節「Phase 7 驗證步驟」確認標註選單、裁切選單、編輯文字與修改編號的焦點、`Ctrl+D`。
+- 使用者決定命中判定是否限制在裁切範圍內（findings「既有行為」），以及是否推送到 `upstream`。
 
 ## 6. 未驗證項目
 
-- v1.1.0 發佈版的實機煙霧驗證（Phase 3 第 9 步的五項新檢查；單檔版 Phase 1、2）：尚未驗證。單檔版依 ADR-0017 須通過後才算提供，驗證前請優先使用資料夾版。
 - 標註選單與裁切選單的實際操作、編輯文字與修改編號在選單關閉後取得焦點、實體鍵盤的 `Ctrl+D`：尚未驗證（選單選擇與狀態、項目與快捷鍵的接線由 `EditorWindowTests` 涵蓋）。
+- v1.1.0 沒有重跑 Phase 4 煙霧腳本（剪貼簿格式、另存、開啟圖片、未匯出變更、資源與延遲量測）：Phase 7 沒有修改這些功能的程式碼，沿用 v1.0.0 發佈版的結果。

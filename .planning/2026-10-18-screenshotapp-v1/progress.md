@@ -404,4 +404,20 @@
 | `dotnet build ScreenshotApp.sln -c Release`（1.1.0） | 0 warning、0 error | 0 warning、0 error | PASS |
 | `dotnet test ScreenshotApp.sln -c Release --no-build` | 全數通過 | 933 passed | PASS |
 | `pwsh -File tools/Publish-Release.ps1`（試發佈） | 兩種版本與 ZIP | 資料夾版 275 檔／155.9 MB（ZIP 67.3 MB）、單檔版 8 檔／149.4 MB（ZIP 63.5 MB） | PASS |
-| 發佈版煙霧驗證（資料夾版 Phase 3、單檔版 Phase 1、2） | 全數通過 | 沒有閒置，未執行 | 尚未驗證 |
+| 發佈版煙霧驗證（資料夾版 Phase 3、單檔版 Phase 1、2） | 全數通過 | 提交與合併時沒有閒置，未執行（之後補跑，見下一段） | 尚未驗證 → 已補跑 |
+
+## Session: 2026-10-19（v1.1.0 發佈版煙霧驗證補跑）
+
+### Actions Taken
+- 提交 `6c7c103`、本機標籤 `v1.1.0`（annotated，比照 `v1.0.0`）、以該 commit 重新發佈（兩種版本的產品版本皆為 `1.1.0+6c7c103…`，ZIP 晚於 commit，ZIP 內的執行檔與文件為新版）、fast-forward 合併回 `main`；沒有推送。
+- 背景閒置偵測回報閒置後，以前景依序執行三支煙霧腳本，期間不執行其他指令：資料夾版 Phase 3、單檔版 Phase 1、單檔版 Phase 2，全數通過。
+- Phase 1 腳本會實際切換「登入時啟動」（寫入後移除 Run 值），結束時只還原 settings.json；確認使用者還原後的設定為不啟用、執行前也沒有 Run 值，沒有遺失使用者的設定。
+- 證據（結果文字檔改為 LF、CSV、填滿畫布的編輯視窗 PrintWindow 截圖）複製到 `docs/evidence/phase-07/`；覆蓋層與系統匣的螢幕截圖含使用者桌面，不放入儲存庫。
+- ACCEPTANCE（Phase 7 五項檢查改為通過並附縮放值、v1.1.0 發佈版煙霧驗證表、依 ADR-0017 提供單檔版、使用者步驟註明已自動驗證）、handoff 第 3、5、6 節、計畫的 Next Step；以新的 `phase-07` commit 合併回 `main`，`v1.1.0` 標籤維持在 `6c7c103`。
+
+### Test Results（v1.1.0 發佈版煙霧驗證）
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `Invoke-Phase3Smoke.ps1 -ExePath publish\ScreenshotApp-1.1.0-win-x64\ScreenshotApp.exe` | 全數通過 | 43 PASS／0 FAIL；套用裁切 400%、Ctrl+Z 100%、Ctrl+Y 400%、右鍵還原完整圖片 100%、Ctrl+Z 恢復裁切；10 次循環 GDI 38～40、USER 52～53 | PASS |
+| `Invoke-Phase1Smoke.ps1 -ExePath publish\ScreenshotApp-1.1.0-win-x64-singlefile\ScreenshotApp.exe` | 全數通過 | 31 PASS／0 FAIL | PASS |
+| `Invoke-Phase2Smoke.ps1 -ExePath publish\ScreenshotApp-1.1.0-win-x64-singlefile\ScreenshotApp.exe` | 全數通過 | 38 PASS／0 FAIL；30 次循環 GDI 恆為 39、USER 57～59 | PASS |
