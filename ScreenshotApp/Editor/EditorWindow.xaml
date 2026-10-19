@@ -39,13 +39,43 @@
             <Setter Property="Margin" Value="6,2,10,6" />
             <Setter Property="Fill" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" />
         </Style>
+        <!-- 右鍵選單依位置與工具三選一；具名項目的可用與顯示狀態在開啟前由程式依目前的文件設定。 -->
         <ContextMenu x:Key="AnnotationMenu">
+            <MenuItem x:Name="EditTextMenuItem" Header="{res:Str Editor_MenuEditText}" Click="EditSelected_Click" />
+            <MenuItem x:Name="EditStepNumberMenuItem" Header="{res:Str Editor_MenuEditStepNumber}" Click="EditSelected_Click" />
+            <MenuItem Header="{res:Str Editor_MenuDuplicate}" InputGestureText="{res:Str Editor_DuplicateGesture}" Click="Duplicate_Click" />
+            <MenuItem x:Name="ReverseArrowMenuItem" Header="{res:Str Editor_MenuReverseArrow}" Click="ReverseArrow_Click" />
+            <MenuItem x:Name="RenumberStepsMenuItem" Header="{res:Str Editor_MenuRenumberSteps}" Click="RenumberSteps_Click" />
+            <Separator />
             <MenuItem Header="{res:Str Editor_BringToFront}" InputGestureText="{res:Str Editor_BringToFrontGesture}" Click="BringToFront_Click" />
             <MenuItem Header="{res:Str Editor_BringForward}" InputGestureText="{res:Str Editor_BringForwardGesture}" Click="BringForward_Click" />
             <MenuItem Header="{res:Str Editor_SendBackward}" InputGestureText="{res:Str Editor_SendBackwardGesture}" Click="SendBackward_Click" />
             <MenuItem Header="{res:Str Editor_SendToBack}" InputGestureText="{res:Str Editor_SendToBackGesture}" Click="SendToBack_Click" />
             <Separator />
             <MenuItem Header="{res:Str Editor_Delete}" InputGestureText="{res:Str Editor_DeleteGesture}" Click="Delete_Click" />
+        </ContextMenu>
+        <ContextMenu x:Key="CanvasMenu">
+            <MenuItem x:Name="UndoMenuItem" Header="{res:Str Editor_Undo}" InputGestureText="{res:Str Editor_UndoGesture}" Click="Undo_Click" />
+            <MenuItem x:Name="RedoMenuItem" Header="{res:Str Editor_Redo}" InputGestureText="{res:Str Editor_RedoGesture}" Click="Redo_Click" />
+            <Separator />
+            <MenuItem x:Name="CopyMenuItem" Header="{res:Str Editor_Copy}" InputGestureText="{res:Str Editor_CopyGesture}" Click="Copy_Click" />
+            <MenuItem x:Name="SaveMenuItem" Header="{res:Str Editor_Save}" InputGestureText="{res:Str Editor_SaveGesture}" Click="Save_Click" />
+            <Separator />
+            <MenuItem Header="{res:Str Editor_MenuZoom}">
+                <MenuItem Header="{res:Str Editor_MenuZoomFit}" InputGestureText="{res:Str Editor_ZoomFitGesture}" Click="ZoomFit_Click" />
+                <MenuItem Header="{res:Str Editor_MenuZoomActual}" Click="ZoomActual_Click" />
+                <MenuItem Header="{res:Str Editor_MenuZoomIn}" InputGestureText="{res:Str Editor_ZoomInGesture}" Click="ZoomIn_Click" />
+                <MenuItem Header="{res:Str Editor_MenuZoomOut}" InputGestureText="{res:Str Editor_ZoomOutGesture}" Click="ZoomOut_Click" />
+            </MenuItem>
+            <Separator />
+            <MenuItem x:Name="CanvasResetCropMenuItem" Header="{res:Str Editor_MenuResetCrop}" Click="ResetCrop_Click" />
+            <MenuItem x:Name="ClearAnnotationsMenuItem" Header="{res:Str Editor_MenuClearAnnotations}" Click="ClearAnnotations_Click" />
+        </ContextMenu>
+        <ContextMenu x:Key="CropMenu">
+            <MenuItem Header="{res:Str Editor_MenuApplyCrop}" InputGestureText="{res:Str Editor_ApplyCropGesture}" Click="ApplyCrop_Click" />
+            <MenuItem Header="{res:Str Editor_MenuCancelCrop}" InputGestureText="{res:Str Editor_CancelCropGesture}" Click="CancelCrop_Click" />
+            <Separator />
+            <MenuItem x:Name="CropResetCropMenuItem" Header="{res:Str Editor_MenuResetCrop}" Click="ResetCrop_Click" />
         </ContextMenu>
     </Window.Resources>
 

@@ -33,6 +33,7 @@ internal partial class EditorWindow : Window
     private static readonly RoutedCommand SaveCommand = new();
     private static readonly RoutedCommand OpenCommand = new();
     private static readonly RoutedCommand DeleteCommand = new();
+    private static readonly RoutedCommand DuplicateCommand = new();
     private static readonly RoutedCommand CancelCommand = new();
     private static readonly RoutedCommand ApplyCropCommand = new();
     private static readonly RoutedCommand BringToFrontCommand = new();
@@ -52,6 +53,9 @@ internal partial class EditorWindow : Window
     private EditorSession? _session;
     private string _fontFamily = StyleChoices.DefaultFontFamily;
     private PixelRect? _shownRegion;
+
+    // 上次在裁切工具以外顯示的裁切範圍。回到一般狀態時若不同，代表裁切範圍改變了（套用、復原、重做或還原完整圖片）。
+    private PixelRect? _shownCrop;
     private double _zoom = 1;
     private bool _fitMode = true;
     private bool _syncing;
@@ -136,6 +140,7 @@ internal partial class EditorWindow : Window
         _messageTimer.Stop();
         _message = null;
         _shownRegion = null;
+        _shownCrop = null;
         _fitMode = true;
         Session_Changed(this, EventArgs.Empty);
     }
@@ -236,6 +241,11 @@ internal partial class EditorWindow : Window
             CopyCommand, async () => await CopyImageAsync(), () => _session is not null && !_exporting, new KeyGesture(Key.C, ModifierKeys.Control));
         RegisterShortcut(
             DeleteCommand, () => _session?.DeleteSelected(), () => _session is { Selected: not null, IsDragging: false }, new KeyGesture(Key.Delete));
+        RegisterShortcut(
+            DuplicateCommand,
+            () => _session?.Duplicate(),
+            () => _session is { Selected: not null, IsDragging: false },
+            new KeyGesture(Key.D, ModifierKeys.Control));
         RegisterShortcut(CancelCommand, CancelOperation, () => _session is not null, new KeyGesture(Key.Escape));
         RegisterShortcut(ApplyCropCommand, () => _session?.ApplyCrop(), () => _session?.Tool == EditorTool.Crop, new KeyGesture(Key.Return));
         RegisterShortcut(
@@ -351,7 +361,17 @@ internal partial class EditorWindow : Window
     private void UpdateDisplayedRegion()
     {
         var region = DisplayedRegion();
-        if (region == _shownRegion)
+
+        // 顯示的裁切範圍改變時（套用、復原、重做或還原完整圖片）回到符合視窗，讓新的範圍填滿畫布；
+        // 只是進出裁切工具而範圍沒有改變時，維持使用者原本的縮放。在裁切工具中復原裁切再離開時，
+        // 顯示的仍是整張圖片，但裁切範圍已不同，同樣要回到符合視窗。
+        var cropChanged = _session!.Tool != EditorTool.Crop && region != _shownCrop;
+        if (cropChanged)
+        {
+            _shownCrop = region;
+            _fitMode = true;
+        }
+        else if (region == _shownRegion)
         {
             return;
         }
@@ -395,6 +415,7 @@ internal partial class EditorWindow : Window
             return;
         }
 
+        // 只顯示裁切範圍時放大到填滿畫布；顯示整張圖片時（沒有裁切或在裁切工具中）不放大，小圖維持原尺寸。
         var region = DisplayedRegion();
         var margin = ZoomHost.Margin;
         var dpiScale = DpiScale;
@@ -402,7 +423,8 @@ internal partial class EditorWindow : Window
             (Viewport.ActualWidth - margin.Left - margin.Right) * dpiScale,
             (Viewport.ActualHeight - margin.Top - margin.Bottom) * dpiScale,
             region.Width,
-            region.Height);
+            region.Height,
+            enlarge: region != _session.Document.Bounds);
         SetZoom(zoom, fit: true);
     }
 
@@ -940,23 +962,61 @@ internal partial class EditorWindow : Window
         }
 
         CommitTextEdit();
-        if (_session.Tool == EditorTool.Crop || CurrentTransform() is not { } view)
-        {
-            return;
-        }
-
-        var point = CoordinateMapper.ViewDipToImage(e.GetPosition(ContentRoot), view);
-        if (_session.HitTest(point, CoordinateMapper.ViewLengthToImage(HitToleranceDip, view)) is not { } hit)
+        if (CurrentTransform() is not { } view)
         {
             return;
         }
 
         e.Handled = true;
-        _session.Select(hit);
-        var menu = (ContextMenu)Resources["AnnotationMenu"];
+        var point = CoordinateMapper.ViewDipToImage(e.GetPosition(ContentRoot), view);
+        var menu = PrepareContextMenu(point, CoordinateMapper.ViewLengthToImage(HitToleranceDip, view));
         menu.PlacementTarget = ContentRoot;
         menu.IsOpen = true;
     }
+
+    /// <summary>
+    /// 依右鍵的位置（圖片座標）與目前工具選擇快顯選單：裁切工具中為裁切選單；點到標註時選取它並使用標註選單；
+    /// 其他位置比照左鍵取消選取並使用畫布選單。項目的可用與顯示狀態在開啟前依目前的文件一次設定好。
+    /// </summary>
+    internal ContextMenu PrepareContextMenu(Point point, double tolerance)
+    {
+        var session = _session!;
+        if (session.Tool == EditorTool.Crop)
+        {
+            var cropMenu = (ContextMenu)Resources["CropMenu"];
+            MenuItemNamed(cropMenu, "CropResetCropMenuItem").IsEnabled = session.CanResetCrop;
+            return cropMenu;
+        }
+
+        var hit = session.HitTest(point, tolerance);
+        session.Select(hit);
+        if (hit is null)
+        {
+            var canvasMenu = (ContextMenu)Resources["CanvasMenu"];
+            MenuItemNamed(canvasMenu, "UndoMenuItem").IsEnabled = session.CanUndo;
+            MenuItemNamed(canvasMenu, "RedoMenuItem").IsEnabled = session.CanRedo;
+            MenuItemNamed(canvasMenu, "CopyMenuItem").IsEnabled = !_exporting;
+            MenuItemNamed(canvasMenu, "SaveMenuItem").IsEnabled = !_exporting;
+            MenuItemNamed(canvasMenu, "CanvasResetCropMenuItem").IsEnabled = session.CanResetCrop;
+            MenuItemNamed(canvasMenu, "ClearAnnotationsMenuItem").IsEnabled = session.CanClearAnnotations;
+            return canvasMenu;
+        }
+
+        // 只適用於特定種類的項目只在該種類上顯示。
+        var annotationMenu = (ContextMenu)Resources["AnnotationMenu"];
+        MenuItemNamed(annotationMenu, "EditTextMenuItem").Visibility = VisibleWhen(hit is TextAnnotation);
+        MenuItemNamed(annotationMenu, "EditStepNumberMenuItem").Visibility = VisibleWhen(hit is StepNumberAnnotation);
+        MenuItemNamed(annotationMenu, "ReverseArrowMenuItem").Visibility = VisibleWhen(hit is ArrowAnnotation);
+        var renumber = MenuItemNamed(annotationMenu, "RenumberStepsMenuItem");
+        renumber.Visibility = VisibleWhen(hit is StepNumberAnnotation);
+        renumber.IsEnabled = session.CanRenumberSteps;
+        return annotationMenu;
+    }
+
+    /// <summary>資源中的選單不會產生具名欄位（只設定項目的 Name），以名稱在選單的邏輯樹中找到項目。</summary>
+    internal static MenuItem MenuItemNamed(ContextMenu menu, string name) => (MenuItem)LogicalTreeHelper.FindLogicalNode(menu, name);
+
+    private static Visibility VisibleWhen(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
 
     private void ContentRoot_MouseLeave(object sender, MouseEventArgs e) => CursorText.Text = string.Empty;
 
@@ -1174,6 +1234,39 @@ internal partial class EditorWindow : Window
     private void SendToBack_Click(object sender, RoutedEventArgs e) => _session?.Reorder(ZOrderChange.SendToBack);
 
     private void Delete_Click(object sender, RoutedEventArgs e) => _session?.DeleteSelected();
+
+    // 選單項目的 Click 在選單關閉之後才執行，文字輸入框或編號欄位可以取得焦點。
+    private void EditSelected_Click(object sender, RoutedEventArgs e) => _session?.EditSelected();
+
+    private void Duplicate_Click(object sender, RoutedEventArgs e) => _session?.Duplicate();
+
+    private void ReverseArrow_Click(object sender, RoutedEventArgs e) => _session?.ReverseArrow();
+
+    private void RenumberSteps_Click(object sender, RoutedEventArgs e) => _session?.RenumberSteps();
+
+    private void Undo_Click(object sender, RoutedEventArgs e) => _session?.Undo();
+
+    private void Redo_Click(object sender, RoutedEventArgs e) => _session?.Redo();
+
+    private async void Copy_Click(object sender, RoutedEventArgs e) => await CopyImageAsync();
+
+    private async void Save_Click(object sender, RoutedEventArgs e) => await SaveImageAsync();
+
+    private void ZoomFit_Click(object sender, RoutedEventArgs e) => ApplyFit();
+
+    private void ZoomActual_Click(object sender, RoutedEventArgs e) => SetZoom(1, fit: false);
+
+    private void ZoomIn_Click(object sender, RoutedEventArgs e) => SetZoom(EditorZoom.ZoomIn(_zoom), fit: false);
+
+    private void ZoomOut_Click(object sender, RoutedEventArgs e) => SetZoom(EditorZoom.ZoomOut(_zoom), fit: false);
+
+    private void ResetCrop_Click(object sender, RoutedEventArgs e) => _session?.ResetCrop();
+
+    private void ClearAnnotations_Click(object sender, RoutedEventArgs e) => _session?.ClearAnnotations();
+
+    private void ApplyCrop_Click(object sender, RoutedEventArgs e) => _session?.ApplyCrop();
+
+    private void CancelCrop_Click(object sender, RoutedEventArgs e) => CancelOperation();
 
     /// <summary>縮放選單的項目；<see cref="Zoom"/> 為 null 代表符合視窗。</summary>
     private sealed record ZoomChoice(double? Zoom, string Label)

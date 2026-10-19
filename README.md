@@ -2,14 +2,14 @@
 
 Windows 原生的輕量截圖與圖片標註工具：常駐系統匣，以快捷鍵選取畫面，在編輯器加入方框、箭頭、文字、步驟編號或裁切後，複製到剪貼簿或另存 PNG。完全本機離線運作，不需要系統管理員權限、帳號或網路。
 
-目前版本：**1.0.0**。各階段完成的功能與驗證結果記錄於 [CHANGELOG.md](CHANGELOG.md)。
+目前版本：**1.1.0**（加入依情境的右鍵選單、再製與重新編號等編輯操作，裁切後以裁切範圍填滿畫布）。各版本的功能與驗證結果記錄於 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 下載與執行
 
 發佈版本是 Windows 11 x64 的自包含程式，不需要另外安裝 .NET：
 
-- `ScreenshotApp-1.0.0-win-x64.zip`：資料夾版本，解壓縮後執行 `ScreenshotApp.exe`。
-- `ScreenshotApp-1.0.0-win-x64-singlefile.zip`：只有一個 `ScreenshotApp.exe` 的版本。
+- `ScreenshotApp-1.1.0-win-x64.zip`：資料夾版本，解壓縮後執行 `ScreenshotApp.exe`。
+- `ScreenshotApp-1.1.0-win-x64-singlefile.zip`：只有一個 `ScreenshotApp.exe` 的版本。
 
 程式啟動後只在系統匣常駐，預設截圖快捷鍵為 `Ctrl+Shift+2`。安裝、截圖、編輯、複製與另存、設定與移除方式見 [使用說明](docs/USER_GUIDE.md)。
 

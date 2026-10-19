@@ -15,11 +15,11 @@
 
 ## Next Step
 
-Phase 6 已完成：暫停等待使用者指令。待使用者回報的實機項目：MT-04、MT-05、MT-07、MT-08 重新確認、MT-09、MT-10 確認、十字游標修正、Delete 實體鍵盤（可選）；MT-11 依使用者選擇標示「尚未驗證」。使用者回報問題時在 `main` 開 `fix/<slug>` 分支處理。
+Phase 7 已完成並發佈 v1.1.0（Key Question 12）：`phase-07` commit 以 fast-forward 合併回 `main`，本機標籤 `v1.1.0`（不推送），`publish/` 有以該 commit 產生的資料夾版與單檔版 ZIP。電腦閒置時以發佈版執行煙霧驗證（資料夾版 Phase 3、單檔版 Phase 1、2），結果記入 ACCEPTANCE 第 2 節與 `docs/evidence/phase-07/`，以新的 `phase-07` commit 合併回 `main`（標籤不動）。待使用者：依 ACCEPTANCE 第 3 節「Phase 7 驗證步驟」確認右鍵選單與單檔版；回答命中判定是否限制在裁切範圍內（findings「既有行為」）。仍待回報的實機項目：MT-04、MT-05、MT-07、MT-08 重新確認、MT-09、MT-10 確認、十字游標修正、Delete 實體鍵盤（可選）；MT-11 依使用者選擇標示「尚未驗證」。
 
 ## Current Phase
 
-全部 Phase 完成（Phase 6：`AGENTS.md`，2026-10-18）；v1.0.0 標籤維持在 Phase 5 的 commit。等待使用者的 MT 回報。
+全部 Phase 完成（Phase 7：右鍵選單與裁切後填滿畫布，2026-10-19，v1.1.0）；`v1.0.0` 標籤在 Phase 5 的 commit，`v1.1.0` 標籤在 Phase 7 的發佈 commit。
 
 ## 執行規範（本任務專用）
 
@@ -259,6 +259,27 @@ Checklist
 
 - **Status:** complete
 
+### Phase 7: 右鍵選單與裁切後填滿畫布（使用者要求，v1.0.0 之後）
+
+**目標**：畫布依情境提供三份右鍵選單（畫布空白處、標註上、裁切工具中），並加入再製（`Ctrl+D`）、反轉箭頭方向、重新編號所有步驟、清除所有標註與還原完整圖片；套用裁切後以裁切範圍填滿畫布（符合視窗上限 400%），復原回到裁切前的狀態並重新符合視窗。裁切維持非破壞性，文件模型與輸出不變。
+**依賴**：Phase 6。
+**分支**：`feature/phase-07-context-menu-crop-fill`（改動超過 3 個檔案）。
+
+Checklist
+- [x] P7-01 規格先行：FR-14 右鍵選單、FR-16 再製與反轉箭頭、FR-18 重新編號、FR-21 裁切後填滿畫布、FR-25 `Ctrl+D`、新增 FR-36（右鍵選單內容）；文件狀態加修訂註記｜無｜medium｜否｜規格與使用者確認的方案一致
+- [x] P7-02 命令與工作階段：`CompositeCommand`（依序執行、反序復原）；`EditorSession` 新增還原完整圖片、清除所有標註、編輯選取的標註（與雙擊相同）、再製、反轉箭頭方向、重新編號所有步驟，各至多一筆歷史｜無｜high｜否｜`EditCommandTests`、`EditorSessionTests` 先紅後綠
+- [x] P7-03 縮放：`EditorZoom.Fit` 可放大到最大階段；只顯示裁切範圍時符合視窗上限 400%、整張圖片維持 100%；離開裁切工具或復原、重做後顯示的裁切範圍與上次不同時回到符合視窗｜無｜high｜否｜`EditorZoomTests`；Phase 3 煙霧第 9 步的縮放斷言
+- [x] P7-04 右鍵選單：三份 XAML 選單（Click 處理，與既有標註選單相同）、開啟前同步設定可用與顯示狀態、`Ctrl+D` 再製；介面文字在 `Strings.resx`｜P7-02｜high｜否｜`EditorWindowTests`（具名項目存在、依情境選擇選單與狀態）、`StringsResourceTests`
+- [x] P7-05 文件：ADR-0010、ADR-0012 修訂；ARCHITECTURE、USER_GUIDE、KNOWN_LIMITATIONS、ACCEPTANCE、CHANGELOG `[Unreleased]`｜P7-01～P7-04｜medium｜否｜與程式一致、相對路徑
+- [x] P7-06 驗證：Release 建置 0 警告、完整測試；電腦閒置時以 Phase 3 煙霧腳本（含新斷言）實機確認，否則標示「尚未驗證」｜P7-01～P7-05｜medium｜否｜證據記錄（Release 0 警告、933 passed；煙霧腳本語法與內嵌 C# 通過，實機執行等待使用者閒置，結果記錄於 ACCEPTANCE 第 2 節 Phase 7，未執行前為「尚未驗證」）
+- [x] P7-07 收尾：findings、progress、handoff；Phase 標記 complete 並重新 attest；使用者沒有要求提交，不 commit｜全部｜low｜否｜handoff 存在
+- [x] P7-08 版本與文件對齊（Key Question 12）：`Version` 1.1.0（新功能，語意化版本次版號）與 manifest；CHANGELOG `[Unreleased]` 改為 `[1.1.0] - 2026-10-19`；README、USER_GUIDE、KNOWN_LIMITATIONS 的版本與發佈檔名；ACCEPTANCE、AGENTS.md、ADR-0017、規格修訂紀錄與目前狀態一致｜P7-01～P7-07｜medium｜否｜以 `1.0.0`／`v1.0` 搜尋確認只剩歷史紀錄與規格範圍用語
+- [x] P7-09 發佈：Release 建置 0 警告、完整測試；commit 前試發佈確認兩種版本與 ZIP；電腦閒置時以發佈版執行 Phase 3 煙霧腳本，否則標示「尚未驗證」｜P7-08｜medium｜否｜`publish/ScreenshotApp-1.1.0-win-x64*`（Release 0 警告、933 passed；資料夾版 275 檔／155.9 MB、ZIP 67.3 MB，單檔版 8 檔／149.4 MB、ZIP 63.5 MB；使用者一直在使用電腦，發佈版煙霧驗證尚未驗證）
+- [x] P7-10 提交與合併：`phase-07` commit、本機標籤 `v1.1.0`（不推送），以該 commit 重新發佈（產品版本內嵌 commit），fast-forward 合併回 `main`｜P7-09｜low｜否｜`main` 與標籤指向同一個 commit
+
+**Handoff**：`handoffs/phase-07-context-menu-crop-fill.md`（2026-10-19；933 個自動化測試通過；v1.1.0，發佈版煙霧驗證尚未驗證）。
+- **Status:** complete
+
 ## 追蹤矩陣：FR → 模組 → 測試 → 驗收證據
 
 | FR | 模組／檔案 | 自動化測試 | 驗收證據 | Phase |
@@ -276,18 +297,18 @@ Checklist
 | FR-11 | AppController → EditorWindow | CaptureFlowTests | Agent 煙霧 + MT-03 | 2/3 |
 | FR-12 | AppController 錯誤路徑 | CaptureFlowTests | MT-09 | 2 |
 | FR-13 | docs/KNOWN_LIMITATIONS.md | — | 文件 | 2/5 |
-| FR-14 | EditorWindow、EditorSession | — | Agent 截圖 + MT-07 | 3 |
+| FR-14 | EditorWindow、EditorSession | EditorWindowTests（右鍵選單，Phase 7） | Agent 截圖 + MT-07 | 3/7 |
 | FR-15 | Editor/Tools/* | AnnotationGeometryTests | Agent 截圖 | 3 |
-| FR-16 | Model/Annotation*、Commands | AnnotationGeometryTests（AT-04） | Agent 截圖 | 3 |
+| FR-16 | Model/Annotation*、Commands、EditorSession（再製、反轉箭頭、清除所有標註） | AnnotationGeometryTests（AT-04）、EditorSessionTests | Agent 截圖；Phase 7 項目見 ACCEPTANCE 第 3 節使用者驗證步驟 | 3/7 |
 | FR-17 | TextTool、TextAnnotation | TextAnnotationTests（AT-06） | MT-06 | 3 |
-| FR-18 | StepNumberTool、StepNumberAnnotation | AnnotationGeometryTests | Agent 截圖 | 3 |
+| FR-18 | StepNumberTool、StepNumberAnnotation、EditorSession.RenumberSteps | AnnotationGeometryTests、EditorSessionTests | Agent 截圖；重新編號見 ACCEPTANCE 使用者驗證步驟 | 3/7 |
 | FR-19 | 屬性列、AnnotationStyle | EditorSessionTests（樣式） | Agent 截圖 | 3 |
-| FR-20 | CropTool、SetCropCommand | CropCommandTests（AT-03） | Agent 截圖 | 3 |
-| FR-21 | EditorWindow 縮放、CoordinateMapper | CoordinateMapperTests（AT-01 縮放平移）、ImageRendererTests | MT-07 | 3 |
-| FR-22 | Commands/UndoRedoStack | UndoRedoStackTests（AT-05） | Agent 煙霧 | 3 |
+| FR-20 | CropTool、SetCropCommand、EditorSession.ResetCrop | CropCommandTests（AT-03）、EditorSessionTests | Agent 截圖；Phase 3 煙霧第 9 步（右鍵還原完整圖片） | 3/7 |
+| FR-21 | EditorWindow 縮放、CoordinateMapper、EditorZoom.Fit（裁切後放大） | CoordinateMapperTests（AT-01 縮放平移）、ImageRendererTests、EditorZoomTests | MT-07；Phase 3 煙霧第 9 步（裁切後填滿） | 3/7 |
+| FR-22 | Commands/UndoRedoStack、CompositeCommand | UndoRedoStackTests（AT-05）、EditCommandTests | Agent 煙霧 | 3/7 |
 | FR-23 | UnsavedChangesDialog、DirtyTracking | DirtyTrackingTests | Agent 煙霧 | 4 |
 | FR-24 | Export/ImageFileLoader | ImageFileLoaderTests（AT-10） | Agent 煙霧 | 4 |
-| FR-25 | EditorWindow InputBindings | — | Agent 煙霧 | 3 |
+| FR-25 | EditorWindow InputBindings | EditorWindowTests（Ctrl+D，Phase 7） | Agent 煙霧 | 3/7 |
 | FR-26 | Export/ImageRenderer | ImageRendererTests（AT-07） | Agent 像素比對 | 3/4 |
 | FR-27 | ImageRenderer | ImageRendererTests（AT-07） | Agent 像素比對 | 4 |
 | FR-28 | Export/ClipboardService | ClipboardFailureTests | Agent 剪貼簿讀取 + MT-08 | 4 |
@@ -298,6 +319,7 @@ Checklist
 | FR-33 | Settings/AppSettings、SettingsStore | SettingsStoreTests（AT-08） | Agent 煙霧 | 1 |
 | FR-34 | SettingsStore 復原 | SettingsStoreTests（AT-08） | Agent 煙霧 | 1 |
 | FR-35 | Strings.resx、所有 XAML | StringsResourceTests（資源鍵、XAML 硬編碼掃描） | 實機鍵盤導覽 | 1/5 |
+| FR-36 | EditorWindow（三份右鍵選單、PrepareContextMenu）、EditorSession | EditorWindowTests、EditorSessionTests | Phase 3 煙霧第 9 步（畫布選單）；其餘見 ACCEPTANCE 第 3 節 Phase 7 使用者驗證步驟 | 7 |
 
 ## 需使用者實機驗證的項目（MT）與提出時機
 
@@ -349,6 +371,8 @@ Checklist
 8. Delete 鍵沒有刪除選取標註的問題如何處理？→ 2026-10-18 使用者指示「Delete 鍵失敗原因，整理目前資訊後，先列為待辦，先繼續處理後續問題」：調查紀錄寫入 `findings.md`，列為 P5-11，Phase 4 其餘工作繼續。
 9. Phase 5 授權？→ 2026-10-18 使用者以「使用 planning-with-files 載入專案狀態，繼續」回覆（與 Phase 3、4 授權句式相同），視為授權 Phase 5。Phase 4 控制點的問題（十字游標、MT-08 重新確認、Delete 實體鍵盤、未修改的截圖不詢問）與 MT-04、MT-05、MT-07、MT-09 沒有回報，維持「尚未驗證」，於下一次回報時一併提出，並再次告知剪貼簿內容遺失一事。
 10. Phase 5 控制點的三個問題？→ 2026-10-18 使用者回覆「都依照預設，並產生 AGENTS.md，並提交」：剛截取或剛開啟、沒有修改的圖片維持不詢問；MT-11 標示「尚未驗證」；不推送到 `upstream`。另要求產生 `AGENTS.md` 並提交（Phase 6）。
+11. 右鍵選單與裁切後填滿畫布的方案？→ 2026-10-19 使用者先要求「深度思考、列出建議、使用者決定後再實作」，收到方案後回覆「都依照建議，開始實作」：右鍵選單納入畫布 A1～A5（復原／重做、還原完整圖片、縮放、複製／另存、清除所有標註）、標註 B1～B4（編輯文字或修改編號、再製 `Ctrl+D`、反轉箭頭方向、重新編號所有步驟）、裁切 C1～C3（套用、取消、還原完整圖片），不含「在此加入文字／編號」與「裁切至此標註」；填滿上限 400%；第一次開啟的小圖不放大（維持 100%）。這次沒有要求提交（Phase 7）。
+12. Phase 7 完成後的處理？→ 2026-10-19 使用者指示「更新文件，對齊專案狀態，新增版號，建置最終執行版本，提交後合併回 main」：版本定為 1.1.0（新增功能且相容，語意化版本次版號遞增），比照 v1.0.0 加上本機標籤 `v1.1.0`；發佈在 commit 之後以該 commit 執行；不推送 `upstream`（沒有要求）。命中判定是否限制在裁切範圍內沒有回覆，維持現狀。
 
 ## Decisions Made
 
@@ -422,6 +446,18 @@ Checklist
 | 使用者確認全部依預設：未修改的截圖不詢問、MT-11 標示「尚未驗證」、不推送 `upstream` | 2026-10-18 使用者回覆「都依照預設」（Key Question 10） |
 | `AGENTS.md` 只收錄從程式碼與設定看不出來的慣例、決策原因與陷阱，其餘以指向規格、ADR、架構與 findings 的方式處理；逐條對照程式碼與腳本確認 | 每次都會載入，篇幅即成本；目錄結構與一般指令可直接查得，重複寫入只會過期。煙霧腳本的安全規則與判定陷阱、發佈要在 commit 之後、Release 建置被執行中的程式鎖住等，都是看不出來且曾造成損失的事 |
 | `v1.0.0` 標籤維持在 Phase 5 的 commit，Phase 6 只合併回 `main` | `AGENTS.md` 是發佈之後的儲存庫文件，不影響發佈檔案；移動已建立的版本標籤會讓發佈檔案與標籤對不上 |
+| 裁切維持非破壞性；「填滿」是畫布的符合視窗規則：只顯示裁切範圍時上限 400%（`EditorZoom.Fit` 的 `enlarge`），顯示整張圖片時仍 100% | 規格 FR-20 要求非破壞性 `CropRect` 且裁切不改寫標註座標；把文件換成裁切後的圖片違反規格。使用者選擇上限 400%、第一次開啟的小圖不放大（Key Question 11）。規則由「顯示範圍是否為整張圖片」推得，不另加旗標 |
+| 填滿的觸發：`EditorWindow._shownCrop` 記住上次在裁切工具以外顯示的裁切範圍，不同時切回符合視窗模式；檢查放在 `UpdateDisplayedRegion` 的提早返回之前 | 一個條件涵蓋套用、復原、重做、還原完整圖片；只進出裁切工具時保留使用者的縮放。自我檢查發現「裁切工具中復原再離開」顯示範圍不變，若放在提早返回之後會留下過時的紀錄，之後重做不會填滿 |
+| 新增第六類命令 `CompositeCommand`（依序執行、反序復原），ADR-0010 修訂 | 清除所有標註與重新編號所有步驟各應只算一筆復原；專用的清除命令只解決一種操作。再製與反轉只是一筆新增或替換 |
+| 三份右鍵選單放在 XAML 資源，沿用既有標註選單的 `Click` 處理；開啟前同步設定可用與顯示狀態；項目以 `LogicalTreeHelper.FindLogicalNode` 依名稱找到 | 與既有選單一致；`RoutedCommand` 的可用狀態以背景優先權重新查詢，選單剛開啟時可能顯示上一刻的狀態。資源中的 `x:Name` 不產生欄位（建置時 CS0103 發現），以名稱查找並由 `EditorWindowTests` 在執行期確認每個名稱 |
+| 右鍵點在空白處比照左鍵取消選取；裁切工具中不選取 | 畫布選單開啟時若仍顯示選取外框，使用者會以為選單作用在該標註上（advisor 建議） |
+| `EditorWindowTests` 以未啟動的 `AppController` 建立但不顯示 `EditorWindow` | `Load` 只需要控制器的設定；不註冊快捷鍵、不顯示系統匣圖示，設定與日誌寫在暫存目錄。版面需要顯示視窗才會計算，填滿的縮放改由煙霧腳本驗證 |
+| 實機驗證只擴充 Phase 3 煙霧腳本第 9 步（裁切後縮放三項、右鍵畫布選單還原完整圖片兩項），不另寫腳本；右鍵位置取編輯視窗中央 | 第 9 步已有裁切、`Get-ZoomText` 與剪貼簿比對（advisor 建議）。腳本只把執行緒設為 PMv2，UI Automation 的座標是否為實體像素沒有把握，改用 `GetWindowRect`；符合視窗時視窗中央落在裁切範圍中央附近的空白處，點錯時找不到畫布選單的項目而判定失敗 |
+| 使用者這次沒有要求提交：完成後不 commit、不合併，變更留在 `feature/phase-07-context-menu-crop-fill` | 使用者全域指示「我要求時才 commit」；先前的 Phase 6 是使用者明確說「並提交」才提交 |
+| （上一列已由 Key Question 12 取代）版本定為 1.1.0，比照 v1.0.0 加本機標籤 `v1.1.0`、不推送；版本發佈列入 Phase 7（P7-08～P7-10），不另開 Phase | 新增相容的功能與行為調整，語意化版本遞增次版號；發佈只是把 Phase 7 的成果定版，工作量小，沿用同一分支與 `phase-07` commit |
+| 順序：文件與版本 → Release 建置與完整測試 → commit 前試發佈（記錄檔案數與大小）→ commit、標籤 → 以該 commit 重新發佈 → fast-forward 合併 | 產品版本內嵌建置當時的 commit，最終 ZIP 必須在 commit 之後產生；試發佈先確認封裝沒有問題、取得要寫進文件的數字，避免為了記錄發佈結果再多一個 commit（比照 v1.0.0） |
+| 使用者在使用電腦、沒有閒置時，發佈版煙霧驗證標示「尚未驗證」，不阻擋提交與合併；之後閒置時補跑並以新的 commit 記錄 | 使用者明確要求提交與合併；AGENTS.md 只允許在閒置時執行煙霧腳本。單檔版依 ADR-0017 第 2 點要以該版本的發佈檔通過煙霧驗證才算提供，文件註明驗證前優先使用資料夾版 |
+| 文件對齊範圍：版本與發佈檔名（README、USER_GUIDE、KNOWN_LIMITATIONS）、CHANGELOG 版本段落、ACCEPTANCE 的發佈紀錄與使用者驗證步驟、AGENTS.md、ADR-0017 修訂、規格修訂紀錄；v1.0.0 的歷史紀錄（CHANGELOG `[1.0.0]`、ACCEPTANCE Phase 5、ADR 原文）不改 | 歷史紀錄描述當時的狀態，改寫會失去依據；需要沿用的步驟加註改用新版 |
 
 ## Errors Encountered
 
@@ -470,6 +506,8 @@ Checklist
 | P5-11：Delete「沒有刪除」的判定（Phase 3、4 共三次） | 3 | 診斷版輸入紀錄證明 Delete 正常；腳本以偏紅像素判斷，已知圖樣在範圍內本來就有 560 個符合條件的像素 → 改為比較與原圖不同的像素 |
 | Phase 4 第 13 步：右鍵取消前前景仍是其他程式的視窗（覆蓋層剛顯示、尚未取得前景） | 1 | 加入 `Wait-OverlayForeground` |
 | Phase 4 第 13 步：GDI「後 5 次最大值 > 前 5 次最大值」判定失敗（132→134、128→132） | 2 | 逐次數據為單次尖峰、基準不變；每次刪除存檔、改以中位數判定，第 3 次執行通過 |
+| CS0103：`Window.Resources` 中 `ContextMenu` 的 `x:Name` 項目沒有產生欄位 | 1 | 資源以延遲載入建立，XAML 編譯器不為其中的名稱產生欄位；改以 `LogicalTreeHelper.FindLogicalNode` 依名稱查找，`EditorWindowTests` 確認每個名稱在執行期都找得到 |
+| Python 以 `write_bytes` 寫入 progress.md 時開檔失敗（OSError Errno 22） | 1 | 檔案可能正被其他程序開啟（findings.md 同樣的寫法先前成功）；確認檔案未被截斷後改用 Edit 工具 |
 
 ## Notes
 

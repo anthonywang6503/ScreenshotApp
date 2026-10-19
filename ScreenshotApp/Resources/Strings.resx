@@ -442,6 +442,78 @@
   <data name="Editor_DeleteGesture" xml:space="preserve">
     <value>Delete</value>
   </data>
+  <data name="Editor_MenuEditText" xml:space="preserve">
+    <value>編輯文字(_E)…</value>
+  </data>
+  <data name="Editor_MenuEditStepNumber" xml:space="preserve">
+    <value>修改編號(_N)…</value>
+  </data>
+  <data name="Editor_MenuDuplicate" xml:space="preserve">
+    <value>再製(_P)</value>
+  </data>
+  <data name="Editor_DuplicateGesture" xml:space="preserve">
+    <value>Ctrl+D</value>
+  </data>
+  <data name="Editor_MenuReverseArrow" xml:space="preserve">
+    <value>反轉箭頭方向(_V)</value>
+  </data>
+  <data name="Editor_MenuRenumberSteps" xml:space="preserve">
+    <value>重新編號所有步驟(_R)</value>
+  </data>
+  <data name="Editor_UndoGesture" xml:space="preserve">
+    <value>Ctrl+Z</value>
+  </data>
+  <data name="Editor_RedoGesture" xml:space="preserve">
+    <value>Ctrl+Y</value>
+  </data>
+  <data name="Editor_CopyGesture" xml:space="preserve">
+    <value>Ctrl+C</value>
+  </data>
+  <data name="Editor_SaveGesture" xml:space="preserve">
+    <value>Ctrl+S</value>
+  </data>
+  <data name="Editor_MenuZoom" xml:space="preserve">
+    <value>縮放(_M)</value>
+  </data>
+  <data name="Editor_MenuZoomFit" xml:space="preserve">
+    <value>符合視窗(_F)</value>
+  </data>
+  <data name="Editor_ZoomFitGesture" xml:space="preserve">
+    <value>Ctrl+0</value>
+  </data>
+  <data name="Editor_MenuZoomActual" xml:space="preserve">
+    <value>100%(_1)</value>
+  </data>
+  <data name="Editor_MenuZoomIn" xml:space="preserve">
+    <value>放大(_I)</value>
+  </data>
+  <data name="Editor_ZoomInGesture" xml:space="preserve">
+    <value>Ctrl+=</value>
+  </data>
+  <data name="Editor_MenuZoomOut" xml:space="preserve">
+    <value>縮小(_O)</value>
+  </data>
+  <data name="Editor_ZoomOutGesture" xml:space="preserve">
+    <value>Ctrl+-</value>
+  </data>
+  <data name="Editor_MenuResetCrop" xml:space="preserve">
+    <value>還原完整圖片(_E)</value>
+  </data>
+  <data name="Editor_MenuClearAnnotations" xml:space="preserve">
+    <value>清除所有標註(_L)</value>
+  </data>
+  <data name="Editor_MenuApplyCrop" xml:space="preserve">
+    <value>套用裁切(_A)</value>
+  </data>
+  <data name="Editor_ApplyCropGesture" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="Editor_MenuCancelCrop" xml:space="preserve">
+    <value>取消裁切(_C)</value>
+  </data>
+  <data name="Editor_CancelCropGesture" xml:space="preserve">
+    <value>Esc</value>
+  </data>
 
   <data name="Font_MicrosoftJhengHei" xml:space="preserve">
     <value>微軟正黑體</value>

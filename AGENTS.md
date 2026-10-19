@@ -17,7 +17,8 @@ dotnet test ScreenshotApp.sln -c Release
 pwsh -NoProfile -File tools/Publish-Release.ps1
 ```
 
-- 發佈在 commit 之後執行：產品版本內嵌建置當時的 commit（`1.0.0+<commit>`）。輸出在 `publish/`，不納入版本控制。
+- 發佈在 commit 之後執行：產品版本內嵌建置當時的 commit（`<版本>+<commit>`，版本取自專案檔的 `Version`）。輸出在 `publish/`，不納入版本控制。
+- 新版本：專案檔的 `Version` 與 `app.manifest` 的 `assemblyIdentity` 版本一起更新（語意化版本），CHANGELOG 的 `[Unreleased]` 改為版本段落；commit 後加上本機標籤 `v<版本>`，再以該 commit 發佈。
 - 使用者從 `bin\Release` 執行 ScreenshotApp 時執行檔被鎖住，Release 建置會失敗：請使用者從系統匣結束，期間可先以 Debug 組態建置與測試。
 - 已有 ScreenshotApp 在執行時再啟動一個，既有的執行個體會在使用者桌面開啟設定視窗或編輯器。
 
@@ -31,12 +32,14 @@ pwsh -NoProfile -File tools/Publish-Release.ps1
 - 執行緒：合成在 UI 執行緒；交給背景執行緒的點陣圖先 `Freeze()`；PNG 編碼與寫檔在背景執行緒。
 - GDI 與 USER 物件以 SafeHandle 持有；剪貼簿以 DIB 與 PNG 位元組提供（`Clipboard.SetImage` 每次會在處理程序留下一個 GDI 物件）。
 - 檔案與登錄錯誤顯示給使用者時，原因經 `ErrorText.Describe` 轉成繁體中文。
+- XAML 資源（例如 `Window.Resources` 中的右鍵選單）裡的 `x:Name` 不會產生欄位；以 `LogicalTreeHelper.FindLogicalNode` 依名稱查找，並以測試確認每個名稱在執行期都找得到。
 - 文字檔為 UTF-8、LF；以 Python 修改檔案時用位元組讀寫（Windows 的文字模式會寫成 CRLF）。
 
 ## 測試
 
 - 修正錯誤時先寫能重現的測試，確認失敗後再修正。
 - WPF 物件在 `StaRunner` 中建立；量測 GDI／USER 物件數的測試加入 `GdiObjectCountCollection`（不平行執行）。
+- 編輯視窗可以在測試中以未啟動的 `AppController` 建立並載入文件（不顯示）；沒有顯示的視窗不會計算版面，符合視窗等依賴版面的行為以煙霧腳本驗證。
 - 測試只使用 `TempDirectory`、測試專用的登錄子機碼與具名物件；使用者的剪貼簿、`%LocalAppData%\ScreenshotApp` 與 `HKCU\...\Run` 保持原樣。
 
 ## 實機煙霧驗證（`tools/smoke/`）

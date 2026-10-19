@@ -12,7 +12,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <NeutralLanguage>zh-TW</NeutralLanguage>
     <!-- 介面只有繁體中文；框架的附屬組件只保留繁體中文（例如文字輸入框的右鍵選單），不隨附其他語言。 -->
     <SatelliteResourceLanguages>zh-Hant</SatelliteResourceLanguages>

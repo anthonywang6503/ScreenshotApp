@@ -6,8 +6,8 @@ using ScreenshotApp.Editor.Model;
 namespace ScreenshotApp.Tests;
 
 /// <summary>
-/// 驗證文件模型與五種編輯命令：執行後復原會還原狀態、重複執行無害、刪除後復原回到原本的層序位置、裁切不改寫標註座標，
-/// 以及文件拒絕未凍結的圖片、重複的 Id 與無效的裁切範圍。
+/// 驗證文件模型與六種編輯命令：執行後復原會還原狀態、重複執行無害、刪除後復原回到原本的層序位置、裁切不改寫標註座標、
+/// 複合命令依序執行並以相反順序復原，以及文件拒絕未凍結的圖片、重複的 Id 與無效的裁切範圍。
 /// </summary>
 public class EditCommandTests
 {
@@ -165,6 +165,37 @@ public class EditCommandTests
 
         Assert.Equal(new Annotation[] { bottom, top }, document.Annotations);
 
+        command.Undo();
+        command.Undo();
+
+        Assert.Equal(new Annotation[] { bottom, middle, top }, document.Annotations);
+    }
+
+    // 由下而上刪除時每一筆刪除的都是當時的索引 0：只有以相反順序復原，三個標註才會回到原本的層序。
+    [Fact]
+    public void CompositeCommand_UndoRunsInReverseOrderAndRepeatsHarmlessly()
+    {
+        var document = CreateDocument();
+        var bottom = Add(document, Rectangle(new PixelRect(0, 0, 10, 10)));
+        var middle = Add(document, Rectangle(new PixelRect(10, 10, 10, 10)));
+        var top = Add(document, Rectangle(new PixelRect(20, 20, 10, 10)));
+        var command = new CompositeCommand(
+        [
+            new RemoveAnnotationCommand(document, bottom),
+            new RemoveAnnotationCommand(document, middle),
+            new RemoveAnnotationCommand(document, top),
+        ]);
+
+        command.Execute();
+
+        Assert.Empty(document.Annotations);
+
+        command.Undo();
+
+        Assert.Equal(new Annotation[] { bottom, middle, top }, document.Annotations);
+
+        command.Execute();
+        command.Execute();
         command.Undo();
         command.Undo();
 

@@ -1,7 +1,7 @@
 # ADR-0017：發佈與封裝——自包含 win-x64 資料夾版為主、單檔版為輔、不簽章
 
 - **狀態**：Accepted
-- **日期**：2026-10-18
+- **日期**：2026-10-18（2026-10-19 修訂第 4 點：版本遞增方式）
 
 ## 背景
 
@@ -21,6 +21,7 @@ v1.0 的交付物是 Windows 11 x64 自包含式發佈目錄及 ZIP，以 `dotne
 2. **單檔版為輔**：`PublishSingleFile=true` 搭配 `IncludeNativeLibrariesForSelfExtract=true`，輸出只有一個 `ScreenshotApp.exe`。只有在以發佈出來的單檔執行檔通過系統匣、快捷鍵、截圖與複製的煙霧驗證後才提供，否則在驗收紀錄中標示「未提供」。
 3. **只保留繁體中文的框架附屬組件**（`SatelliteResourceLanguages=zh-Hant`）：介面只有繁體中文；WPF 文字輸入框的右鍵選單（剪下、複製、貼上）等框架文字需要 zh-Hant 附屬組件，其餘 12 種語言用不到。
 4. **版本**：專案檔明確設定 `Version` 為 `1.0.0`，執行檔的檔案版本與產品版本由它產生。
+   - 修訂（2026-10-19）：版本隨發佈依語意化版本遞增，專案檔的 `Version` 與 `app.manifest` 的 `assemblyIdentity` 版本一起更新；加入相容的新功能時遞增次版號（v1.1.0 為 `1.1.0`／`1.1.0.0`）。commit 後加上本機標籤 `v<版本>`，再以該 commit 發佈，產品版本內嵌的 commit 才會與標籤一致。單檔版仍須以該版本的發佈檔通過煙霧驗證後才提供（第 2 點）。
 5. **授權檔案**：自包含版本內含 .NET Runtime 與 Windows Desktop Runtime（MIT 授權），發佈時把兩個 Runtime 套件的授權檔與第三方聲明複製到發佈目錄的 `licenses/`；儲存庫根目錄的 `THIRD-PARTY-NOTICES.md` 說明來源。
 6. **不簽章、不做安裝程式、不修剪、不使用 ReadyToRun 或 Native AOT**：WPF 不支援修剪與 Native AOT；框架組件在 Runtime 套件中已預先編譯，應用程式本身很小，ReadyToRun 的效益有限。
 7. **偵錯符號**：保留應用程式的 `ScreenshotApp.pdb`（約 80 KB），故障日誌的堆疊會包含行號，方便回報問題；框架不附帶符號。

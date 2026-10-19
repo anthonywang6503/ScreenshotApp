@@ -86,3 +86,26 @@ internal sealed class SetCropCommand(ImageDocument document, PixelRect before, P
 
     public void Undo() => document.SetCropRect(before);
 }
+
+/// <summary>
+/// 把多個命令當成一筆操作（例如清除所有標註、重新編號所有步驟）：依序執行，以相反順序復原，
+/// 每個命令復原時看到的文件都與它執行完當下相同。各命令應由執行前的文件狀態建立。
+/// </summary>
+internal sealed class CompositeCommand(IReadOnlyList<IEditCommand> commands) : IEditCommand
+{
+    public void Execute()
+    {
+        foreach (var command in commands)
+        {
+            command.Execute();
+        }
+    }
+
+    public void Undo()
+    {
+        for (var index = commands.Count - 1; index >= 0; index--)
+        {
+            commands[index].Undo();
+        }
+    }
+}

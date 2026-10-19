@@ -12,6 +12,8 @@ namespace ScreenshotApp.Tests;
 /// 驗證編輯工作階段把指標操作轉成命令的工具邏輯：繪製圖形、選取與移動、控制點調整、步驟編號、樣式、裁切、取消順序、
 /// 復原與重做、層序調整與刪除。指標位置一律以圖片像素傳入，工作階段捨去到所在像素並限制在圖片內；拖曳期間只更新預覽，
 /// 放開時才產生一筆命令；同一個圖片上的手勢在任何縮放比例下都得到相同的標註。
+/// 右鍵選單的操作（還原完整圖片、清除所有標註、編輯選取的標註、再製、反轉箭頭方向、重新編號所有步驟）各至多產生一筆歷史，
+/// 拖曳或文字輸入進行中一律不執行。
 /// </summary>
 public class EditorSessionTests
 {
@@ -1020,6 +1022,334 @@ public class EditorSessionTests
         Assert.Equal(expected, session.Document.Annotations.Select(annotation => annotation with { Id = Guid.Empty }));
     }
 
+    [Fact]
+    public void ResetCrop_AfterAppliedCrop_RestoresWholeImageWithOneCommand()
+    {
+        var session = CreateSession(200, 100);
+        var rectangle = AddAnnotation(session, Rectangle(new PixelRect(60, 30, 40, 30)));
+        EnterCropTool(session, new PixelRect(50, 20, 100, 60));
+        Assert.True(session.ApplyCrop());
+        var undoCount = session.Document.History.UndoCount;
+
+        Assert.True(session.CanResetCrop);
+        Assert.True(session.ResetCrop());
+
+        Assert.Equal(session.Document.Bounds, session.Document.CropRect);
+        Assert.Equal(undoCount + 1, session.Document.History.UndoCount);
+        Assert.Equal(EditorTool.Select, session.Tool);
+        Assert.Same(rectangle, Assert.Single(session.Document.Annotations)); // 不改寫標註
+        Assert.False(session.CanResetCrop);
+        Assert.False(session.ResetCrop()); // 已是整張圖片時不做任何事
+        Assert.Equal(undoCount + 1, session.Document.History.UndoCount);
+
+        Assert.True(session.Undo()); // 復原回到還原前的裁切範圍
+        Assert.Equal(new PixelRect(50, 20, 100, 60), session.Document.CropRect);
+    }
+
+    [Fact]
+    public void ResetCrop_WithoutCrop_IsUnavailableAndRecordsNothing()
+    {
+        var session = CreateSession();
+
+        Assert.False(session.CanResetCrop);
+        Assert.False(session.ResetCrop());
+        Assert.Equal(0, session.Document.History.UndoCount);
+    }
+
+    [Fact]
+    public void ResetCrop_InCropTool_DiscardsPendingCropAndReturnsToSelect()
+    {
+        var session = CreateSession(200, 100);
+        EnterCropTool(session, new PixelRect(50, 20, 100, 60));
+        Assert.True(session.ApplyCrop());
+        EnterCropTool(session, new PixelRect(10, 10, 30, 30)); // 尚未套用的新範圍
+
+        Assert.True(session.CanResetCrop);
+        Assert.True(session.ResetCrop());
+
+        Assert.Equal(session.Document.Bounds, session.Document.CropRect);
+        Assert.Equal(2, session.Document.History.UndoCount);
+        Assert.Equal(EditorTool.Select, session.Tool);
+        Assert.Null(session.PendingCrop);
+    }
+
+    [Fact]
+    public void ResetCrop_InCropToolWithoutAppliedCrop_IsUnavailableAndKeepsPendingCrop()
+    {
+        var session = CreateSession(200, 100);
+        EnterCropTool(session, new PixelRect(50, 20, 100, 60));
+
+        // 文件沒有裁切：捨棄未套用的範圍是「取消裁切」的工作。
+        Assert.False(session.CanResetCrop);
+        Assert.False(session.ResetCrop());
+        Assert.Equal(EditorTool.Crop, session.Tool);
+        Assert.Equal(new PixelRect(50, 20, 100, 60), session.PendingCrop);
+        Assert.Equal(0, session.Document.History.UndoCount);
+    }
+
+    [Fact]
+    public void ClearAnnotations_RemovesAllAsOneHistoryEntryAndUndoRestoresLayerOrder()
+    {
+        var session = CreateSession();
+        var annotations = AddRectangles(session, 3);
+        session.Select(annotations[1]);
+        var undoCount = session.Document.History.UndoCount;
+
+        Assert.True(session.CanClearAnnotations);
+        Assert.True(session.ClearAnnotations());
+
+        Assert.Empty(session.Document.Annotations);
+        Assert.Null(session.Selected);
+        Assert.Equal(undoCount + 1, session.Document.History.UndoCount);
+        Assert.False(session.CanClearAnnotations);
+        Assert.False(session.ClearAnnotations()); // 沒有標註時不做任何事
+        Assert.Equal(undoCount + 1, session.Document.History.UndoCount);
+
+        Assert.True(session.Undo());
+        Assert.Equal(annotations, session.Document.Annotations);
+
+        Assert.True(session.Redo());
+        Assert.Empty(session.Document.Annotations);
+    }
+
+    [Fact]
+    public void EditSelected_Text_StartsReEditingWithoutCommand()
+    {
+        var session = CreateSession();
+        var text = AddAnnotation(session, Text(new PixelPoint(30, 40), "原本的文字"));
+        session.Select(text);
+        var undoCount = session.Document.History.UndoCount;
+
+        Assert.True(session.EditSelected());
+
+        Assert.NotNull(session.TextEdit);
+        Assert.Same(text, session.TextEdit.Original);
+        Assert.Equal(text.Origin, session.TextEdit.Origin);
+        Assert.Equal(undoCount, session.Document.History.UndoCount);
+    }
+
+    [Fact]
+    public void EditSelected_StepNumber_RequestsNumberEditWithoutCommand()
+    {
+        var session = CreateSession();
+        var step = AddAnnotation(session, Step(new PixelPoint(50, 50), 3));
+        session.Select(step);
+        var requests = 0;
+        session.StepNumberEditRequested += (_, _) => requests++;
+        var undoCount = session.Document.History.UndoCount;
+
+        Assert.True(session.EditSelected());
+
+        Assert.Equal(1, requests);
+        Assert.Null(session.TextEdit);
+        Assert.Same(step, session.Selected);
+        Assert.Equal(undoCount, session.Document.History.UndoCount);
+    }
+
+    [Fact]
+    public void EditSelected_OtherKindOrNoSelection_ReturnsFalse()
+    {
+        var session = CreateSession();
+        var requests = 0;
+        session.StepNumberEditRequested += (_, _) => requests++;
+
+        Assert.False(session.EditSelected());
+
+        session.Select(AddAnnotation(session, Rectangle(new PixelRect(20, 20, 40, 30))));
+
+        Assert.False(session.EditSelected());
+        Assert.Null(session.TextEdit);
+        Assert.Equal(0, requests);
+    }
+
+    [Fact]
+    public void Duplicate_AddsOffsetCopyOnTopWithNewIdAndSelectsIt()
+    {
+        var session = CreateSession(200, 100);
+        var annotations = AddRectangles(session, 2);
+        var original = annotations[0];
+        session.Select(original);
+        var undoCount = session.Document.History.UndoCount;
+
+        Assert.True(session.Duplicate());
+
+        Assert.Equal(3, session.Document.Annotations.Count);
+        Assert.Equal(annotations, session.Document.Annotations.Take(2)); // 原本的標註與層序不變
+        var copy = Assert.IsType<RectangleAnnotation>(session.Document.Annotations[^1]); // 最上層
+        Assert.NotEqual(original.Id, copy.Id);
+        Assert.Equal(original.Translate(10, 10) with { Id = copy.Id }, copy);
+        Assert.Same(copy, session.Selected);
+        Assert.Equal(undoCount + 1, session.Document.History.UndoCount);
+
+        Assert.True(session.Undo());
+        Assert.Equal(annotations, session.Document.Annotations);
+    }
+
+    // 裁切範圍 (20,10)～(140,80)：向右或向下偏移 10 像素會超出裁切範圍的方向改往反方向，複本才看得到。
+    [Theory]
+    [InlineData(30, 20, 10, 10)]
+    [InlineData(110, 20, 10, 10)] // 右緣 130 + 10 剛好等於裁切範圍右緣
+    [InlineData(111, 20, -10, 10)]
+    [InlineData(30, 50, 10, 10)] // 下緣 70 + 10 剛好等於裁切範圍下緣
+    [InlineData(30, 51, 10, -10)]
+    [InlineData(111, 51, -10, -10)]
+    public void Duplicate_NearEdgeOfVisibleCrop_OffsetsTowardTheInside(int x, int y, int dx, int dy)
+    {
+        var session = CreateSession(200, 100);
+        EnterCropTool(session, new PixelRect(20, 10, 120, 70));
+        Assert.True(session.ApplyCrop());
+        var original = AddAnnotation(session, Rectangle(new PixelRect(x, y, 20, 20)));
+        session.Select(original);
+
+        Assert.True(session.Duplicate());
+
+        var copy = session.Document.Annotations[^1];
+        Assert.Equal(original.Translate(dx, dy) with { Id = copy.Id }, copy);
+    }
+
+    [Fact]
+    public void Duplicate_StepNumber_TakesNextNumberAndKeepsStyle()
+    {
+        var session = CreateSession(200, 100);
+        var first = AddAnnotation(session, Step(new PixelPoint(30, 30), 1));
+        AddAnnotation(session, Step(new PixelPoint(80, 30), 4));
+        session.Select(first);
+
+        Assert.True(session.Duplicate());
+
+        var copy = Assert.IsType<StepNumberAnnotation>(session.Document.Annotations[^1]);
+        Assert.Equal(first with { Id = copy.Id, Center = new PixelPoint(40, 40), Number = 5 }, copy);
+    }
+
+    [Fact]
+    public void ReverseArrow_SwapsStartAndEndWithOneReplace()
+    {
+        var session = CreateSession();
+        var arrow = AddAnnotation(session, Arrow(new PixelPoint(20, 20), new PixelPoint(60, 50)));
+        session.Select(arrow);
+        var undoCount = session.Document.History.UndoCount;
+
+        Assert.True(session.ReverseArrow());
+
+        var reversed = Assert.IsType<ArrowAnnotation>(Assert.Single(session.Document.Annotations));
+        Assert.Equal(arrow with { Start = arrow.End, End = arrow.Start }, reversed);
+        Assert.Same(reversed, session.Selected);
+        Assert.Equal(undoCount + 1, session.Document.History.UndoCount);
+
+        Assert.True(session.Undo());
+        Assert.Same(arrow, Assert.Single(session.Document.Annotations));
+    }
+
+    [Fact]
+    public void ReverseArrow_LineOrNoSelection_ReturnsFalseWithoutCommand()
+    {
+        var session = CreateSession();
+
+        Assert.False(session.ReverseArrow());
+
+        var line = AddAnnotation(session, new LineAnnotation
+        {
+            Color = DefaultStyle.Color, Start = new PixelPoint(20, 20), End = new PixelPoint(60, 50), StrokeWidth = DefaultStyle.StrokeWidth,
+        });
+        session.Select(line);
+
+        Assert.False(session.ReverseArrow()); // 直線對調起訖看不出差別，只適用於箭頭
+        Assert.Same(line, Assert.Single(session.Document.Annotations));
+        Assert.Equal(1, session.Document.History.UndoCount);
+    }
+
+    [Fact]
+    public void RenumberSteps_FillsGapsInNumberOrderAsOneHistoryEntry()
+    {
+        var session = CreateSession();
+        var four = AddAnnotation(session, Step(new PixelPoint(20, 20), 4));
+        var one = AddAnnotation(session, Step(new PixelPoint(50, 20), 1));
+        var rectangle = AddAnnotation(session, Rectangle(new PixelRect(60, 50, 30, 20)));
+        var three = AddAnnotation(session, Step(new PixelPoint(80, 20), 3));
+        session.Select(four);
+        var undoCount = session.Document.History.UndoCount;
+
+        Assert.True(session.CanRenumberSteps);
+        Assert.True(session.RenumberSteps());
+
+        Assert.Equal(new Annotation[] { four with { Number = 3 }, one, rectangle, three with { Number = 2 } }, session.Document.Annotations);
+        Assert.Equal(undoCount + 1, session.Document.History.UndoCount);
+        Assert.Equal(four.Id, session.Selected?.Id); // 選取保留
+        Assert.False(session.CanRenumberSteps); // 已是 1、2、3
+        Assert.False(session.RenumberSteps());
+        Assert.Equal(undoCount + 1, session.Document.History.UndoCount);
+
+        Assert.True(session.Undo());
+        Assert.Equal(new Annotation[] { four, one, rectangle, three }, session.Document.Annotations);
+    }
+
+    [Fact]
+    public void RenumberSteps_EqualNumbers_KeepLowerLayerFirst()
+    {
+        var session = CreateSession();
+        var lower = AddAnnotation(session, Step(new PixelPoint(20, 20), 2));
+        var upper = AddAnnotation(session, Step(new PixelPoint(50, 20), 2));
+        var first = AddAnnotation(session, Step(new PixelPoint(80, 20), 1));
+
+        Assert.True(session.RenumberSteps());
+
+        Assert.Equal(new Annotation[] { lower with { Number = 2 }, upper with { Number = 3 }, first }, session.Document.Annotations);
+    }
+
+    [Fact]
+    public void RenumberSteps_WithoutSteps_IsUnavailable()
+    {
+        var session = CreateSession();
+        AddRectangles(session, 2);
+
+        Assert.False(session.CanRenumberSteps);
+        Assert.False(session.RenumberSteps());
+        Assert.Equal(2, session.Document.History.UndoCount);
+    }
+
+    [Fact]
+    public void MenuActions_WhileDraggingOrEditingText_AreUnavailableAndRecordNothing()
+    {
+        var session = CreateSession(200, 100);
+        EnterCropTool(session, new PixelRect(50, 20, 100, 60));
+        Assert.True(session.ApplyCrop());
+        var arrow = AddAnnotation(session, Arrow(new PixelPoint(60, 30), new PixelPoint(120, 60)));
+        AddAnnotation(session, Step(new PixelPoint(70, 70), 3));
+        session.Select(arrow);
+        var undoCount = session.Document.History.UndoCount;
+
+        session.PointerDown(new Point(90.5, 45.5), Tolerance, 1); // 在箭頭線身上按下，開始拖曳
+
+        Assert.True(session.IsDragging);
+        AssertMenuActionsUnavailable(session);
+
+        session.PointerUp(new Point(90.5, 45.5));
+        session.SetTool(EditorTool.Text);
+        session.PointerDown(new Point(150.5, 75.5), Tolerance, 1);
+
+        Assert.NotNull(session.TextEdit);
+        AssertMenuActionsUnavailable(session);
+
+        session.CancelTextEdit();
+
+        Assert.Equal(undoCount, session.Document.History.UndoCount);
+        Assert.True(session.CanResetCrop);
+        Assert.True(session.CanClearAnnotations);
+    }
+
+    private static void AssertMenuActionsUnavailable(EditorSession session)
+    {
+        Assert.False(session.CanResetCrop);
+        Assert.False(session.ResetCrop());
+        Assert.False(session.CanClearAnnotations);
+        Assert.False(session.ClearAnnotations());
+        Assert.False(session.CanRenumberSteps);
+        Assert.False(session.RenumberSteps());
+        Assert.False(session.EditSelected());
+        Assert.False(session.Duplicate());
+        Assert.False(session.ReverseArrow());
+    }
+
     private static ImageDocument CreateDocument(int width = 200, int height = 100)
     {
         var source = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgr32, null, new byte[width * height * 4], width * 4);
@@ -1079,4 +1409,7 @@ public class EditorSessionTests
 
     private static TextAnnotation Text(PixelPoint origin, string text) =>
         new() { Color = DefaultStyle.Color, Origin = origin, Text = text, FontFamily = DefaultStyle.FontFamily, FontSize = DefaultStyle.FontSize };
+
+    private static ArrowAnnotation Arrow(PixelPoint start, PixelPoint end) =>
+        new() { Color = DefaultStyle.Color, Start = start, End = end, StrokeWidth = DefaultStyle.StrokeWidth };
 }

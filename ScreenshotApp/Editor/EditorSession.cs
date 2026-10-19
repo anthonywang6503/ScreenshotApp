@@ -39,6 +39,9 @@ internal sealed record TextEdit(TextAnnotation? Original, PixelPoint Origin, Col
 /// </summary>
 internal sealed class EditorSession
 {
+    // 再製的複本偏移的距離（圖片像素）。
+    private const int DuplicateOffset = 10;
+
     private Drag? _drag;
     private Guid? _selectedId;
     private PixelRect? _pendingCrop;
@@ -55,7 +58,7 @@ internal sealed class EditorSession
     /// <summary>沒有選取標註時變更了樣式，成為之後新增標註的預設值。</summary>
     public event EventHandler? StyleDefaultsChanged;
 
-    /// <summary>雙擊步驟編號，要求編輯它的數值。</summary>
+    /// <summary>雙擊步驟編號（或從選單要求編輯它），要求編輯它的數值。</summary>
     public event EventHandler? StepNumberEditRequested;
 
     public ImageDocument Document { get; }
@@ -71,6 +74,14 @@ internal sealed class EditorSession
     public bool CanUndo => !IsBusy && Document.History.CanUndo;
 
     public bool CanRedo => !IsBusy && Document.History.CanRedo;
+
+    /// <summary>文件有裁切，可以還原完整圖片。</summary>
+    public bool CanResetCrop => !IsBusy && Document.CropRect != Document.Bounds;
+
+    public bool CanClearAnnotations => !IsBusy && Document.Annotations.Count > 0;
+
+    /// <summary>步驟編號不是依序的 1、2、3…，重新編號會改變其中一些。</summary>
+    public bool CanRenumberSteps => !IsBusy && RenumberedSteps().Any();
 
     /// <summary>目前選取的標註（文件中的版本）。</summary>
     public Annotation? Selected => _selectedId is { } id ? Document.Find(id) : null;
@@ -308,6 +319,128 @@ internal sealed class EditorSession
         }
 
         Document.History.Execute(new ReorderAnnotationCommand(Document, selected.Id, from, to));
+        OnChanged();
+        return true;
+    }
+
+    /// <summary>
+    /// 把裁切範圍還原為整張原圖（一筆命令）；裁切工具中一併捨棄未套用的範圍並回到選取工具。文件沒有裁切時不做任何事。
+    /// </summary>
+    public bool ResetCrop()
+    {
+        if (!CanResetCrop)
+        {
+            return false;
+        }
+
+        Document.History.Execute(new SetCropCommand(Document, Document.CropRect, Document.Bounds));
+        if (Tool == EditorTool.Crop)
+        {
+            _pendingCrop = null;
+            Tool = EditorTool.Select;
+        }
+
+        OnChanged();
+        return true;
+    }
+
+    /// <summary>刪除全部標註，只產生一筆歷史；復原時全部放回原本的層序。</summary>
+    public bool ClearAnnotations()
+    {
+        if (!CanClearAnnotations)
+        {
+            return false;
+        }
+
+        var removals = Document.Annotations.Select(annotation => (IEditCommand)new RemoveAnnotationCommand(Document, annotation)).ToList();
+        Document.History.Execute(new CompositeCommand(removals));
+        _selectedId = null;
+        OnChanged();
+        return true;
+    }
+
+    /// <summary>與雙擊選取的標註相同：文字開始重新編輯，步驟編號要求編輯它的數值；其他種類不做任何事。</summary>
+    public bool EditSelected()
+    {
+        if (IsBusy)
+        {
+            return false;
+        }
+
+        switch (Selected)
+        {
+            case TextAnnotation text:
+                StartTextEdit(text);
+                OnChanged();
+                return true;
+            case StepNumberAnnotation:
+                StepNumberEditRequested?.Invoke(this, EventArgs.Empty);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// 再製選取的標註：樣式相同的複本放在最上層並成為選取，向右、向下偏移；某個方向會超出目前顯示的裁切範圍時改往反方向，
+    /// 複本才看得到。步驟編號的複本取下一個編號。
+    /// </summary>
+    public bool Duplicate()
+    {
+        if (IsBusy || Selected is not { } selected)
+        {
+            return false;
+        }
+
+        var bounds = selected.Bounds;
+        var crop = Document.CropRect;
+        var dx = bounds.Right + DuplicateOffset <= crop.Right ? DuplicateOffset : -DuplicateOffset;
+        var dy = bounds.Bottom + DuplicateOffset <= crop.Bottom ? DuplicateOffset : -DuplicateOffset;
+        var copy = selected.Translate(dx, dy) with { Id = Guid.NewGuid() };
+        if (copy is StepNumberAnnotation step)
+        {
+            copy = step with { Number = Document.NextStepNumber };
+        }
+
+        Document.History.Execute(new AddAnnotationCommand(Document, copy));
+        _selectedId = copy.Id;
+        OnChanged();
+        return true;
+    }
+
+    /// <summary>對調選取箭頭的起點與終點。只適用於箭頭：直線對調起訖看不出差別。</summary>
+    public bool ReverseArrow()
+    {
+        if (IsBusy || Selected is not ArrowAnnotation arrow)
+        {
+            return false;
+        }
+
+        var reversed = arrow with { Start = arrow.End, End = arrow.Start };
+        Replace(arrow, reversed);
+        return reversed != arrow;
+    }
+
+    /// <summary>
+    /// 依現有編號由小到大把步驟編號重排為 1、2、3…，編號相同時較底層者在前。只替換編號改變的標註，全部只產生一筆歷史；
+    /// 已經依序時不做任何事。
+    /// </summary>
+    public bool RenumberSteps()
+    {
+        if (IsBusy)
+        {
+            return false;
+        }
+
+        var replacements = RenumberedSteps()
+            .Select(change => (IEditCommand)new ReplaceAnnotationCommand(Document, change.Before, change.After))
+            .ToList();
+        if (replacements.Count == 0)
+        {
+            return false;
+        }
+
+        Document.History.Execute(new CompositeCommand(replacements));
         OnChanged();
         return true;
     }
@@ -582,6 +715,13 @@ internal sealed class EditorSession
         OnChanged();
         return true;
     }
+
+    // 重新編號會改變的步驟編號：依編號排序後第 n 個應為 n。排序是穩定的，相同編號維持原本的層序（較底層者在前）。
+    private IEnumerable<(StepNumberAnnotation Before, StepNumberAnnotation After)> RenumberedSteps() =>
+        Document.Annotations.OfType<StepNumberAnnotation>()
+            .OrderBy(step => step.Number)
+            .Select((step, index) => (Before: step, After: step with { Number = index + 1 }))
+            .Where(change => change.After.Number != change.Before.Number);
 
     private PixelPoint ToImagePixel(Point point) => Document.Bounds.Clamp(CoordinateMapper.ImageToPixel(point));
 

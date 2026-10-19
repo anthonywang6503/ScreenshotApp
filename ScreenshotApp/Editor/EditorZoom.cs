@@ -13,11 +13,14 @@ internal static class EditorZoom
 
     public static IReadOnlyList<double> Steps { get; } = [0.25, 1.0 / 3, 0.5, 2.0 / 3, 1, 1.5, 2, 3, 4];
 
-    /// <summary>可用空間（實體像素）放得下整個範圍、且不超過 100% 的最大縮放；超大圖片可低於最小階段。</summary>
-    public static double Fit(double availableWidth, double availableHeight, int contentWidth, int contentHeight)
+    /// <summary>
+    /// 可用空間（實體像素）放得下整個範圍的最大縮放；超大圖片可低於最小階段。預設不超過 100%，小圖維持原尺寸；
+    /// <paramref name="enlarge"/> 為 true 時（畫布只顯示裁切範圍）可放大到最大階段，讓範圍填滿畫布。
+    /// </summary>
+    public static double Fit(double availableWidth, double availableHeight, int contentWidth, int contentHeight, bool enlarge = false)
     {
         var fit = Math.Min(availableWidth / contentWidth, availableHeight / contentHeight);
-        return double.IsFinite(fit) ? Math.Clamp(fit, MinFit, 1) : 1;
+        return double.IsFinite(fit) ? Math.Clamp(fit, MinFit, enlarge ? Steps[^1] : 1) : 1;
     }
 
     /// <summary>下一個較大的階段；已達最大階段時維持最大階段。</summary>

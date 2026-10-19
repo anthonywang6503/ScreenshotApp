@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
     ScreenshotApp 圖片編輯器煙霧驗證：選取覆蓋層的十字游標、截圖後開啟編輯器、100% 時畫布與已知圖樣逐像素一致、以 Tab 巡覽控制項、繪製標註、文字輸入、
-    復原與重做、選取刪除與移動、縮放後輸出不變、裁切、預設樣式回寫、文件取代與恢復、重複循環的資源量測。
+    復原與重做、選取刪除與移動、縮放後輸出不變、裁切（含裁切後填滿畫布）、預設樣式回寫、文件取代與恢復、重複循環的資源量測。
 
 .DESCRIPTION
     會在目前的桌面工作階段實際啟動 ScreenshotApp，並以模擬的鍵盤與滑鼠操作；執行期間（約 2～4 分鐘）請勿操作滑鼠與鍵盤。
@@ -244,6 +244,7 @@ public static class Phase3Native
     public static uint LeftDown() { return Send(MouseInput(0x0002, 0)); }
     public static uint LeftUp() { return Send(MouseInput(0x0004, 0)); }
     public static uint LeftClick() { return Send(MouseInput(0x0002, 0), MouseInput(0x0004, 0)); }
+    public static uint RightClick() { return Send(MouseInput(0x0008, 0), MouseInput(0x0010, 0)); }
 
     // Ctrl+滾輪一格（direction 正值向上）：本機以 SendInput 送出的滾輪到不了編輯器，改為以 SendInput 按住 Ctrl、
     // 把 WM_MOUSEWHEEL 直接送給游標下的頂層視窗，再放開 Ctrl。張貼的訊息比輸入訊息先被取出，按下 Ctrl 後要先等編輯器處理；
@@ -616,6 +617,35 @@ function Invoke-Click([int]$X, [int]$Y, [IntPtr[]]$Allowed) {
     Start-Sleep -Milliseconds 60
     [void][Phase3Native]::LeftClick()
     Start-Sleep -Milliseconds 150
+}
+
+# 在 (X, Y) 按滑鼠右鍵開啟編輯器的快顯選單，以 UI Automation 按下 AutomationId（XAML 的 x:Name）為 ItemId 的項目，等選單關閉後回傳 $true。
+# 選單是 ScreenshotApp 處理程序另一個可見的頂層視窗；找不到選單或項目、或項目停用時送 Esc 關閉選單並回傳 $false。
+function Invoke-ContextMenuItem([int]$X, [int]$Y, [string]$ItemId, [int]$ProcessId, [IntPtr]$Editor, [IntPtr[]]$Allowed) {
+    Assert-Target $X $Y $Allowed
+    [Phase3Native]::MoveCursor($X, $Y)
+    Start-Sleep -Milliseconds 60
+    [void][Phase3Native]::RightClick()
+    # 變數不可命名為 $condition：Wait-Until 的參數同名，腳本區塊內會取到參數本身。
+    $byId = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::AutomationIdProperty, $ItemId)
+    # 列舉途中出現或消失的工具提示等暫時視窗會讓 UI Automation 拋出例外，視為不是選單。
+    $menuWindow = Wait-Until {
+        [Phase3Native]::TopLevelWindows([uint32]$ProcessId) | Where-Object {
+            $_ -ne $Editor -and [Phase3Native]::IsWindowVisible($_) -and
+                $(try { [System.Windows.Automation.AutomationElement]::FromHandle($_).FindFirst([System.Windows.Automation.TreeScope]::Descendants, $byId) } catch { $null })
+        } | Select-Object -First 1
+    } 3000
+    $item = if ($menuWindow) { try { [System.Windows.Automation.AutomationElement]::FromHandle($menuWindow).FindFirst([System.Windows.Automation.TreeScope]::Descendants, $byId) } catch { $null } }
+    if (-not $item -or -not $item.Current.IsEnabled) {
+        Send-KeysTo $Editor @([Phase3Native]::VK_ESCAPE)
+        return $false
+    }
+    Assert-NoUserInput
+    $item.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    # 選單項目的動作在選單關閉之後才執行。
+    [void](Wait-Until { -not [Phase3Native]::IsWindowVisible($menuWindow) } 2000)
+    Start-Sleep -Milliseconds 300
+    return $true
 }
 
 # 在 (X, Y) 一格一格以 Ctrl+滾輪縮放，直到狀態列顯示目標百分比（最多 12 格）；每一格之前都檢查使用者輸入與目標視窗。
@@ -1029,7 +1059,8 @@ try {
         $origin = Find-ImageOrigin $editor 300 300 200 80
         Add-Result 'Ctrl+0 回到符合視窗（100%）且位置可再次定位' ([bool]$origin) $(if ($origin) { '圖片原點 ({0},{1})' -f $origin.X, $origin.Y } else { '找不到一比一的區塊' })
 
-        # 9. 裁切：輸出尺寸等於裁切範圍，內容為裁切前的對應區域；Ctrl+Z／Ctrl+Y
+        # 9. 裁切：輸出尺寸等於裁切範圍，內容為裁切前的對應區域；Ctrl+Z／Ctrl+Y。
+        #    套用裁切後畫布以裁切範圍填滿（符合視窗可放大到 400%），復原回到整張圖片時重新符合視窗、不超過 100%。
         if ($origin) {
             if (-not (Select-Tool $editor 'CropToolButton')) { Stop-Simulation '無法切換到裁切工具' }
             Start-Sleep -Milliseconds 300
@@ -1044,11 +1075,31 @@ try {
             $cropMatches = [bool]$cropped -and $cropped.Width -eq 400 -and $cropped.Height -eq 280 -and
                 [Phase3Native]::CountDifferent($cropped.Bytes, $cropped.Stride, 0, 0, $withText.Bytes, $withText.Stride, 20, 20, 400, 280) -eq 0
             Add-Result '裁切後輸出尺寸等於裁切範圍且內容一致' $cropMatches $(if ($cropped) { '{0}×{1}（預期 400×280）' -f $cropped.Width, $cropped.Height } else { '剪貼簿沒有圖片' })
+            $croppedZoom = [int]((Get-ZoomText $editor) -replace '\D', '')
+            Add-Result '套用裁切後以裁切範圍填滿畫布（縮放大於 100%）' ($croppedZoom -gt 100) "狀態列 $croppedZoom%"
             Send-KeysTo $editor @([Phase3Native]::VK_CONTROL, [uint16][char]'Z')
             $uncropped = Copy-EditorImage $editor
             Add-Result '裁切後 Ctrl+Z 恢復原尺寸' (Test-SameImage $uncropped $withText) $(if ($uncropped) { '{0}×{1}' -f $uncropped.Width, $uncropped.Height } else { '' })
+            $uncroppedZoom = [int]((Get-ZoomText $editor) -replace '\D', '')
+            Add-Result 'Ctrl+Z 後對整張圖片重新符合視窗（不超過 100%）' ($uncroppedZoom -gt 0 -and $uncroppedZoom -le 100) "狀態列 $uncroppedZoom%"
             Send-KeysTo $editor @([Phase3Native]::VK_CONTROL, [uint16][char]'Y')
             Add-Result '再以 Ctrl+Y 重做裁切' (Test-SameImage (Copy-EditorImage $editor) $cropped) ''
+            $redoneZoom = [int]((Get-ZoomText $editor) -replace '\D', '')
+            Add-Result 'Ctrl+Y 後再次以裁切範圍填滿畫布' ($redoneZoom -eq $croppedZoom) "狀態列 $redoneZoom%（套用時 $croppedZoom%）"
+
+            # 9b. 在畫布空白處按右鍵，以畫布選單的「還原完整圖片」回到整張圖片並重新符合視窗；Ctrl+Z 恢復裁切，後續步驟的狀態不變。
+            #     位置取視窗水平中央、狀態列上方（視窗下緣往上 70 個實體像素）：符合視窗時畫布置中，175% 時落在裁切範圍下方的
+            #     灰色邊界（對應圖片 y 300 以下），100% 時落在裁切範圍下緣內側的 x 220 附近；兩處都沒有標註（矩形在 y 139 以上、
+            #     箭頭在 x 300 以右、文字在 y 247 以上）。點到標註時開啟的是標註選單，找不到「還原完整圖片」而判定失敗。
+            $rect = Get-WindowRect $editor
+            $reset = Invoke-ContextMenuItem ($rect.X + [int]($rect.Width / 2)) ($rect.Y + $rect.Height - 70) 'CanvasResetCropMenuItem' $appId $editor $mine
+            $restored = if ($reset) { Copy-EditorImage $editor } else { $null }
+            $resetZoom = [int]((Get-ZoomText $editor) -replace '\D', '')
+            Add-Result '右鍵畫布選單「還原完整圖片」：輸出回到整張圖片並重新符合視窗' ($reset -and (Test-SameImage $restored $withText) -and $resetZoom -gt 0 -and $resetZoom -le 100) $(if ($reset) { "狀態列 $resetZoom%" } else { '選單或項目沒有出現' })
+            if ($reset) {
+                Send-KeysTo $editor @([Phase3Native]::VK_CONTROL, [uint16][char]'Z')
+                Add-Result '還原完整圖片後 Ctrl+Z 恢復裁切' (Test-SameImage (Copy-EditorImage $editor) $cropped) ''
+            }
         }
 
         # 10. 沒有選取時變更顏色，寫入設定檔成為預設值；再改回紅色

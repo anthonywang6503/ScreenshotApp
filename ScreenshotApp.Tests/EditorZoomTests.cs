@@ -3,8 +3,8 @@ using ScreenshotApp.Editor;
 namespace ScreenshotApp.Tests;
 
 /// <summary>
-/// 編輯畫布的縮放：符合視窗的比例（上限 100%、超大圖片可低於最小階段、可用空間異常時的下限與預設值），
-/// 以及在固定縮放階段之間逐階放大與縮小。
+/// 編輯畫布的縮放：符合視窗的比例（上限 100%、只顯示裁切範圍時可放大到最大階段、超大圖片可低於最小階段、
+/// 可用空間異常時的下限與預設值），以及在固定縮放階段之間逐階放大與縮小。
 /// </summary>
 public class EditorZoomTests
 {
@@ -27,6 +27,20 @@ public class EditorZoomTests
         double availableWidth, double availableHeight, int contentWidth, int contentHeight, double expected)
     {
         Assert.Equal(expected, EditorZoom.Fit(availableWidth, availableHeight, contentWidth, contentHeight), 1e-12);
+    }
+
+    // 只顯示裁切範圍時允許放大，讓範圍填滿畫布；放大以最大階段為上限，比可用空間大的範圍與不放大時相同。
+    [Theory]
+    [InlineData(800.0, 600.0, 100, 50, 4.0)] // 很小的範圍停在最大階段
+    [InlineData(800.0, 600.0, 400, 200, 2.0)] // 寬度先受限
+    [InlineData(800.0, 600.0, 300, 400, 1.5)] // 高度先受限
+    [InlineData(1920.0, 1080.0, 800, 600, 1.8)] // 不放大時維持 100% 的小圖
+    [InlineData(800.0, 600.0, 1600, 1200, 0.5)]
+    [InlineData(1000.0, 1000.0, 8000, 4000, 0.125)]
+    public void Fit_Enlarge_FillsAvailableSpaceUpToLargestStep(
+        double availableWidth, double availableHeight, int contentWidth, int contentHeight, double expected)
+    {
+        Assert.Equal(expected, EditorZoom.Fit(availableWidth, availableHeight, contentWidth, contentHeight, enlarge: true), 1e-12);
     }
 
     [Theory]

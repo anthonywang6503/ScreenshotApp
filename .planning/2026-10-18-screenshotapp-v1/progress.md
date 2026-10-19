@@ -354,3 +354,54 @@
 - 依 writing-for-agents 的原則撰寫 `AGENTS.md`（60 行）：只收錄看不出來的慣例、原因與陷阱（介面文字與註解規則、座標與文件模型、單一繪製碼與整張合成、執行緒與 GDI、ErrorText、LF；測試隔離；煙霧腳本的閒置與前景規則、以與原圖不同的像素判定、剪貼簿序號；發佈在 commit 之後、Release 建置被鎖、單一執行個體；Git 分支、commit 格式、不主動推送、attest），其餘以指向規格、ADR、ARCHITECTURE 與 findings 處理。
 - 逐條對照：`IEditCommand`、`GdiObjectCountCollection`（`DisableParallelization = true`）、`StaRunner`、`StringsResourceTests` 的三項檢查、各煙霧腳本的保護（Phase 1 以 SendKeys 送鍵且不等待閒置、Phase 2 只在開始前等待閒置、Phase 3、4 每次模擬輸入前檢查使用者操作）。
 - CHANGELOG `[Unreleased]` 記錄 `AGENTS.md`；Phase 6 → complete；`v1.0.0` 標籤維持原位。
+
+## Session: 2026-10-19（Phase 7 右鍵選單與裁切後填滿畫布）
+
+### Current Status
+- **Phase:** Phase 7 in_progress（Key Question 11）
+- **Branch:** `feature/phase-07-context-menu-crop-fill`（自 `main` 51cd11c 建立）
+
+### Actions Taken
+- 使用者要求先深度思考右鍵選單內容與「裁切後以裁切範圍填滿畫布、可復原」，讓使用者選擇後再實作。讀編輯器程式碼後提出方案：目前右鍵只在標註上開啟層序與刪除選單；裁切已是非破壞性且可復原，沒有填滿是因為符合視窗上限 100%、手動縮放後套用裁切不重算。「裁切後文件改成裁切後的圖片」違反非破壞性裁切的規格，不列為選項。
+- 使用者回覆「都依照建議，開始實作」。新增 Phase 7（分支，改動超過 3 個檔案），計畫重新 attest。這次沒有要求提交，依使用者全域指示不 commit。
+- 本專案沒有 CodeGraph 與 codebase-memory 索引，直接讀程式碼。advisor 檢視實作計畫：填滿的觸發條件以「離開裁切工具時顯示的裁切範圍與上次不同」涵蓋套用、復原、重做與還原；資源中選單的具名項目要以執行期測試確認；右鍵空白處比照左鍵取消選取；煙霧驗證只在 Phase 3 第 9 步加縮放斷言，不另寫腳本。
+- P7-01 規格：修訂紀錄、FR-14／16／18／20／21／22／25、新增 FR-36、AT-03／04／05。
+- P7-02／P7-03 先寫測試（`EditorSessionTests` 22、`EditCommandTests` 1、`EditorZoomTests` 6），建置失敗（CS0246／CS1061，紅燈）後實作 `CompositeCommand`、`EditorSession` 六個操作與三個可否執行的屬性、`EditorZoom.Fit(..., enlarge)`，217 個相關測試通過。
+- P7-04：XAML 三份選單、`PrepareContextMenu`、16 個 Click 處理、`Ctrl+D`、`Strings.resx` 24 個鍵（選單文字沿用工具列的復原、重做、複製、另存）。資源中的 `x:Name` 沒有產生欄位（CS0103），改以 `FindLogicalNode` 依名稱查找。`EditorWindowTests` 10 個（未啟動的控制器、建立但不顯示的視窗）通過，確認每個名稱在執行期都找得到。
+- 自我檢查發現填滿觸發的邊界情況（裁切工具中復原再離開時顯示範圍不變、紀錄過時，之後重做不填滿），把檢查移到提早返回之前；版面需要顯示視窗才會計算，無法以單元測試重現。
+- Phase 3 煙霧腳本第 9 步：裁切後縮放三項、右鍵畫布選單「還原完整圖片」兩項（新增 `RightClick` 與 `Invoke-ContextMenuItem`）；語法剖析與內嵌 C# 以 scratchpad 的檢查腳本編譯通過。
+- P7-05 文件：ADR-0010、ADR-0012 修訂；ARCHITECTURE（六類命令、右鍵選單、縮放規則、測試對應）、USER_GUIDE（裁切後填滿、右鍵選單、`Ctrl+D`）、KNOWN_LIMITATIONS（400% 上限、復原不回到裁切前的檢視、再製方向）、ACCEPTANCE（測試數、Phase 7 煙霧檢查、使用者驗證步驟）、CHANGELOG。
+- 實機煙霧驗證依 AGENTS.md 等使用者閒置：背景偵測 90 秒閒置（上限 120 分鐘）。
+- 規格、使用說明與 CHANGELOG 原寫「無法執行的項目停用」，但既有的層序項目在最上層或最下層時仍可按（沒有效果）；改為列出實際會停用的項目，不改既有項目的行為。
+- advisor 審查（程式碼沒有發現缺陷）後修正煙霧腳本：右鍵位置改為視窗水平中央、下緣往上 70 個實體像素（原本的視窗中央在 175% 時離矩形下緣只有幾個圖片像素，容易誤點成標註選單）；UI Automation 查詢暫時視窗的例外視為不是選單。重新剖析與編譯通過。
+- `handoffs/phase-07-context-menu-crop-fill.md`；Phase 7 → complete（煙霧實機執行等待閒置）、重新 attest、ledger 加入 phase_complete。
+
+### Test Results（Phase 7）
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build ScreenshotApp.Tests -c Debug`（實作前） | 編譯失敗（紅燈） | CS0246 `CompositeCommand`、CS1061 `ResetCrop` 等 | PASS（紅燈） |
+| `dotnet test --filter EditorSessionTests\|EditCommandTests\|EditorZoomTests\|CropCommandTests\|UndoRedoStackTests`（Debug） | 全數通過 | 217 passed | PASS |
+| `dotnet build ScreenshotApp -c Debug`（命名項目改用欄位時） | 0 error | CS0103 ×9（資源中的名稱沒有欄位） | 改以名稱查找 |
+| `dotnet test --filter EditorWindowTests\|StringsResourceTests`（Debug） | 全數通過 | 17 passed | PASS |
+| Phase 3 煙霧腳本：語法剖析、內嵌 C# 編譯 | 通過 | PARSE OK、C# COMPILE OK | PASS |
+| `dotnet build ScreenshotApp.sln -c Release` | 0 warning、0 error | 0 warning、0 error | PASS |
+| `dotnet test ScreenshotApp.sln -c Release --no-build` | 全數通過 | 933 passed（894 + 39） | PASS |
+
+## Session: 2026-10-19（Phase 7 收尾：v1.1.0 發佈、提交與合併）
+
+### Actions Taken
+- 使用者指示「更新文件，對齊專案狀態，新增版號，建置最終執行版本，提交後合併回 main」（Key Question 12）。Phase 7 加入 P7-08～P7-10 並改回 in_progress，計畫重新 attest。
+- 背景閒置偵測（09:05 起）到 09:36 仍沒有出現 90 秒閒置，使用者一直在使用電腦；煙霧驗證不阻擋使用者明確要求的提交與發佈，標示「尚未驗證」。
+- P7-08：版本 1.1.0（新增相容的功能，語意化版本遞增次版號）：專案檔 `Version`、`app.manifest` 的 `assemblyIdentity`；CHANGELOG `[Unreleased]` 改為 `[1.1.0] - 2026-10-19`，保留空的 `[Unreleased]`；README（目前版本與發佈檔名）、USER_GUIDE（發佈檔名、從舊版更新）、KNOWN_LIMITATIONS（v1.1.0）；ACCEPTANCE（v1.1.0 發佈版、使用者驗證步驟改用 1.1.0 的 ZIP、Phase 5 步驟註明改用新版）；AGENTS.md（版本範例改為不綁定版號、發佈新版本的步驟、資源中具名元素沒有欄位、未顯示的視窗不計算版面）；ADR-0017 第 4 點修訂（版本遞增方式）；規格修訂紀錄標示 v1.1.0。以 `1.0.0` 搜尋，剩下的都是 v1.0.0 的歷史紀錄。
+- ADR-0017 第 2 點：單檔版要以該版本的發佈檔通過系統匣、快捷鍵、截圖與複製的煙霧驗證後才提供；本次沒有閒置可驗證，ACCEPTANCE 與 handoff 註明驗證前優先使用資料夾版。
+- P7-09：Release 建置 0 警告、933 passed；執行檔檔案版本 1.1.0.0。commit 前試發佈：資料夾版 275 個檔案、155.9 MB（ZIP 67.3 MB），單檔版 8 個檔案、149.4 MB（ZIP 63.5 MB），23 秒。
+- 以 Python 位元組寫入 progress.md 時開檔失敗（Errno 22，檔案可能正被其他程序開啟），檔案未被截斷，改用 Edit 工具。
+- P7-10：`phase-07` commit、本機標籤 `v1.1.0`、以該 commit 重新發佈（產品版本內嵌該 commit）、fast-forward 合併回 `main`；不推送 `upstream`。
+
+### Test Results（v1.1.0）
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build ScreenshotApp.sln -c Release`（1.1.0） | 0 warning、0 error | 0 warning、0 error | PASS |
+| `dotnet test ScreenshotApp.sln -c Release --no-build` | 全數通過 | 933 passed | PASS |
+| `pwsh -File tools/Publish-Release.ps1`（試發佈） | 兩種版本與 ZIP | 資料夾版 275 檔／155.9 MB（ZIP 67.3 MB）、單檔版 8 檔／149.4 MB（ZIP 63.5 MB） | PASS |
+| 發佈版煙霧驗證（資料夾版 Phase 3、單檔版 Phase 1、2） | 全數通過 | 沒有閒置，未執行 | 尚未驗證 |

@@ -18,7 +18,7 @@ ScreenshotApp 是常駐 Windows 11 系統匣的截圖與圖片標註工具：以
 | `Capture/` | 截圖流程、選取覆蓋層與拖曳幾何、自繪十字游標、座標換算 [CoordinateMapper](../ScreenshotApp/Capture/CoordinateMapper.cs) |
 | `Editor/` | 編輯視窗、編輯工作階段（工具邏輯）、標註層與控制點層、縮放階段、未匯出變更對話框 |
 | `Editor/Model/` | 圖片文件、不可變的標註 record、`PixelRect`／`PixelPoint`、控制點、命中幾何、文字版面 |
-| `Editor/Commands/` | 五種編輯命令與 `UndoRedoStack` |
+| `Editor/Commands/` | 六種編輯命令（含把多個命令當成一筆的複合命令）與 `UndoRedoStack` |
 | `Editor/Rendering/` | [AnnotationPainter](../ScreenshotApp/Editor/Rendering/AnnotationPainter.cs)：畫面與輸出共用的標註繪製碼 |
 | `Export/` | 圖片合成、剪貼簿、PNG 存檔、開啟圖片 |
 | `Settings/` | 設定模型與 JSON 持久化、快捷鍵組合、顏色與樣式選項、設定視窗 |
@@ -209,11 +209,24 @@ sequenceDiagram
 
 `PixelRect` 是半開區間（含左上、不含右下），建構子拒絕負的寬高，`default` 是原點的空矩形。[BoxHandles](../ScreenshotApp/Editor/Model/BoxHandles.cs) 提供矩形範圍的八個控制點與以控制點調整範圍（拖過對邊時翻轉、至少 1×1），矩形、橢圓與裁切範圍共用；[Geometry2D](../ScreenshotApp/Editor/Model/Geometry2D.cs) 提供命中判定的距離計算。
 
-**命令與歷史**：[EditCommands](../ScreenshotApp/Editor/Commands/EditCommands.cs) 實作 `IEditCommand`（只有 `Execute` 與 `Undo`，兩者都是把文件設為某個狀態，重複執行無害），共五類：`AddAnnotationCommand`、`RemoveAnnotationCommand`（復原時放回原層序）、`ReplaceAnnotationCommand`（移動、調整大小或端點、樣式、文字、編號都是替換）、`ReorderAnnotationCommand`、`SetCropCommand`。[UndoRedoStack](../ScreenshotApp/Editor/Commands/UndoRedoStack.cs) 只保存命令、不保存點陣圖，預設上限 100 筆，超過時捨棄最舊的一筆；執行新命令時清除可重做的紀錄，命令拋出例外時不記錄。每個狀態有一個版本：執行新命令產生新版本，復原與重做回到該狀態原本的版本；捨棄最舊一筆時，最底層狀態的版本改為那筆命令執行後的版本。
+**命令與歷史**：[EditCommands](../ScreenshotApp/Editor/Commands/EditCommands.cs) 實作 `IEditCommand`（只有 `Execute` 與 `Undo`，兩者都是把文件設為某個狀態，重複執行無害），共六類：`AddAnnotationCommand`、`RemoveAnnotationCommand`（復原時放回原層序）、`ReplaceAnnotationCommand`（移動、調整大小或端點、樣式、文字、編號都是替換）、`ReorderAnnotationCommand`、`SetCropCommand`，以及把多個命令當成一筆的 `CompositeCommand`（依序執行、以相反順序復原；清除所有標註與重新編號所有步驟使用）。[UndoRedoStack](../ScreenshotApp/Editor/Commands/UndoRedoStack.cs) 只保存命令、不保存點陣圖，預設上限 100 筆，超過時捨棄最舊的一筆；執行新命令時清除可重做的紀錄，命令拋出例外時不記錄。每個狀態有一個版本：執行新命令產生新版本，復原與重做回到該狀態原本的版本；捨棄最舊一筆時，最底層狀態的版本改為那筆命令執行後的版本。
 
 ## 7. 編輯器
 
-[EditorWindow](../ScreenshotApp/Editor/EditorWindow.xaml.cs)（版面見 [EditorWindow.xaml](../ScreenshotApp/Editor/EditorWindow.xaml)）是唯一的編輯視窗，由 `AppController` 建立並重複使用，關閉後下次再建立新的。`Load(document)` 先解除舊工作階段的事件，再以新文件建立新的 `EditorSession`，工具回到選取、縮放回到符合視窗。視窗由上而下是工具列（八種工具、復原與重做、開啟、複製、另存）、屬性列（八種常用色與自訂色、線寬、字型、字級、步驟編號）、畫布與狀態列（圖片尺寸、裁切尺寸、游標所在像素、訊息、縮放）。在標註上按滑鼠右鍵會開啟調整層序與刪除的選單（裁切工具中不開啟）。
+[EditorWindow](../ScreenshotApp/Editor/EditorWindow.xaml.cs)（版面見 [EditorWindow.xaml](../ScreenshotApp/Editor/EditorWindow.xaml)）是唯一的編輯視窗，由 `AppController` 建立並重複使用，關閉後下次再建立新的。`Load(document)` 先解除舊工作階段的事件，再以新文件建立新的 `EditorSession`，工具回到選取、縮放回到符合視窗。視窗由上而下是工具列（八種工具、復原與重做、開啟、複製、另存）、屬性列（八種常用色與自訂色、線寬、字型、字級、步驟編號）、畫布與狀態列（圖片尺寸、裁切尺寸、游標所在像素、訊息、縮放）。
+
+**右鍵選單**：`EditorWindow.xaml` 的資源中有三份 `ContextMenu`，放開滑鼠右鍵時由 `PrepareContextMenu` 依位置與工具選一份。
+
+| 選單 | 開啟條件 | 項目 |
+|---|---|---|
+| 裁切選單 | 裁切工具中 | 套用裁切、取消裁切、還原完整圖片 |
+| 標註選單 | 點到標註，先選取它 | 編輯文字（文字）、修改編號（步驟編號）、再製、反轉箭頭方向（箭頭）、重新編號所有步驟（步驟編號）、調整層序、刪除 |
+| 畫布選單 | 其他位置，比照左鍵取消選取 | 復原、重做、複製、另存 PNG、縮放子選單、還原完整圖片、清除所有標註 |
+
+- 開啟前同步設定項目的可用狀態（例如沒有裁切時停用還原完整圖片），只適用於特定種類的項目以 `Visibility` 隱藏；選單開著時不依靠命令的非同步重新查詢。
+- 項目用 `Click` 處理，WPF 在選單關閉之後才執行，編輯文字與修改編號因此能把焦點交給輸入框與編號欄位。
+- 資源中的元素不會產生具名欄位，`MenuItemNamed` 以 `x:Name` 在選單的邏輯樹中找到項目；`EditorWindowTests` 建立（不顯示）視窗，確認每個名稱都找得到。
+- 右鍵前會先提交進行中的文字輸入。
 
 **畫布層次**（由下而上）：
 
@@ -232,11 +245,15 @@ sequenceDiagram
 - 步驟編號在按下時放置、放開前可拖曳位置，放開時才新增。裁切拖曳只更新待套用的範圍，`ApplyCrop`（`Enter` 或在範圍內雙擊）且範圍有變更時才產生 `SetCropCommand`；離開裁切工具即捨棄未套用的範圍。
 - `Esc` 依序取消拖曳、離開裁切工具、取消選取；失去滑鼠捕捉時 `AbortDrag` 丟棄預覽，不產生命令。
 - 樣式變更的目標依序是輸入中的文字、選取的標註；沒有選取時改變之後新增標註的預設值並觸發 `StyleDefaultsChanged`。編輯視窗收到後把顏色、線寬與字級寫入設定；字型不寫入設定，只保留在這個編輯視窗的欄位中，關閉編輯視窗後再開啟即回到預設字型。
-- 拖曳或文字輸入進行中，復原、重做、刪除、調整層序與替換樣式等會產生命令的操作一律不執行。
+- 右鍵選單的操作各至多產生一筆命令：`ResetCrop`（裁切範圍設回整張原圖；裁切工具中一併捨棄未套用的範圍並回到選取工具）、`ClearAnnotations`（複合命令）、`EditSelected`（與雙擊相同：文字開始重新編輯，步驟編號觸發 `StepNumberEditRequested`）、`Duplicate`（`Ctrl+D`）、`ReverseArrow`、`RenumberSteps`（複合命令）。
+  - 再製的複本在最上層並成為選取，向右、向下偏移 10 像素；某個方向會超出目前的裁切範圍時改往反方向。步驟編號的複本取下一個編號。
+  - 重新編號依編號排序，排序穩定，相同編號維持層序；只替換編號改變的標註，已經依序時不產生命令。
+  - 可否執行由 `CanResetCrop`、`CanClearAnnotations`、`CanRenumberSteps` 判斷。
+- 拖曳或文字輸入進行中，復原、重做、刪除、調整層序、替換樣式與右鍵選單的操作等會產生命令的操作一律不執行。
 
 **文字輸入**：`TextEditor` 是放在縮放容器內的 WPF `TextBox`，字級即圖片像素並隨縮放一起縮放；透明背景、無框線、不自動換行，輸入法組字、選取、複製貼上與輸入框內的復原都由 `TextBox` 處理。開始輸入時先清除輸入框的復原紀錄；版面完成後量測第一個字元的位置，把輸入框放在「標註起點減去內部偏移」處，提交後由繪製碼畫出的文字才不會位移。重新編輯期間標註層不畫原本的標註，改由輸入框顯示。`Ctrl+Enter`、在輸入框外按下滑鼠、切換工具、複製、另存，以及詢問未匯出的變更之前都會提交；`Esc` 取消。`CommitTextEdit` 至多產生一筆命令：新文字非空白時新增，既有文字有變更時替換、清空時刪除，新文字為空白時不建立。編輯器快捷鍵以視窗的 `CommandBindings`／`InputBindings` 註冊。文字輸入框有焦點時，`Ctrl+C`、`Ctrl+Z`、`Ctrl+Y`、`Delete` 等按鍵先由 `TextBox` 自己的編輯命令處理並標記為已處理，不會到達視窗的快捷鍵，因此作用在文字上；`Esc` 由輸入框的 `PreviewKeyDown` 取消輸入；其他會修改文件的命令在文字輸入中由 `EditorSession` 的忙碌保護擋下（縮放等不修改文件的命令照常作用）。`Ctrl+S` 與 `Ctrl+O` 在輸入中仍可使用，兩者在開始前都會先提交文字輸入。從屬性列變更樣式後，以 `Dispatcher` 把焦點交回輸入框。
 
-**縮放**：[EditorZoom](../ScreenshotApp/Editor/EditorZoom.cs) 定義階段 25%、33%、50%、67%、100%、150%、200%、300%、400%；「符合視窗」取放得下且不超過 100% 的最大比例（下限 1%，超大圖片可低於 25%）。`Ctrl+滾輪` 以游標下的圖片位置為錨點，快捷鍵與縮放選單以可視區域中央為錨點，縮放後錨點下的圖片位置不變（`ScrollOffsetToKeep`）。符合視窗模式下調整視窗大小會重新計算；按住空白鍵或滑鼠中鍵拖曳可平移。縮放只改變顯示，不修改文件。
+**縮放**：[EditorZoom](../ScreenshotApp/Editor/EditorZoom.cs) 定義階段 25%、33%、50%、67%、100%、150%、200%、300%、400%；「符合視窗」取放得下的最大比例（下限 1%，超大圖片可低於 25%）：顯示整張圖片時不超過 100%；只顯示裁切範圍時可放大到 400%（`EditorZoom.Fit` 的 `enlarge`），讓裁切範圍填滿畫布。`EditorWindow` 以 `_shownCrop` 記住上次在裁切工具以外顯示的裁切範圍，`UpdateDisplayedRegion` 回到一般狀態時若不同（套用、復原、重做、還原完整圖片），就切回符合視窗模式；只進出裁切工具而範圍沒有改變時維持原本的縮放。復原裁切時對恢復的範圍重新符合視窗，不還原裁切前的縮放與捲動位置。`Ctrl+滾輪` 以游標下的圖片位置為錨點，快捷鍵、縮放選單與右鍵選單的縮放以可視區域中央為錨點，縮放後錨點下的圖片位置不變（`ScrollOffsetToKeep`）。符合視窗模式下調整視窗大小會重新計算；按住空白鍵或滑鼠中鍵拖曳可平移。縮放只改變顯示，不修改文件。
 
 ## 8. 繪製與輸出
 
@@ -349,7 +366,7 @@ sequenceDiagram
 | 狀態機與截圖流程 | `AppStateMachineTests`、`CaptureFlowTests` |
 | 選取幾何、十字游標、座標換算 | `SelectionLogicTests`（`DragSelection`）、`CrosshairCursorTests`、`CoordinateMapperTests`、`PixelRectTests` |
 | 文件模型、命令與歷史 | `EditCommandTests`、`CropCommandTests`、`UndoRedoStackTests`、`DirtyTrackingTests`、`AnnotationGeometryTests` |
-| 編輯工作階段與縮放 | `EditorSessionTests`、`TextAnnotationTests`、`EditorZoomTests` |
+| 編輯工作階段與縮放、右鍵選單 | `EditorSessionTests`、`TextAnnotationTests`、`EditorZoomTests`、`EditorWindowTests`（建立但不顯示編輯視窗） |
 | 合成與輸出、開啟圖片 | `ImageRendererTests`、`ClipboardServiceTests`、`PngFileServiceTests`、`ImageFileLoaderTests` |
 | 設定 | `SettingsStoreTests`、`AppSettingsTests`、`HotkeyGestureTests` |
 | 文字資源與組件設定 | `StringsResourceTests`、`ErrorTextTests`、`AssemblyConfigurationTests` |
@@ -362,7 +379,7 @@ sequenceDiagram
 |---|---|
 | `Invoke-Phase1Smoke.ps1` | 首次啟動、系統匣、單一執行個體、設定視窗、快捷鍵註冊與占用、DPI 感知、正常結束 |
 | `Invoke-Phase2Smoke.ps1` | 覆蓋層貼合、選取結果逐像素比對、取消、零尺寸、重入、自家視窗與選單不被截入、顯示設定變更、資源量測 |
-| `Invoke-Phase3Smoke.ps1` | 十字游標、100% 畫布逐像素比對、Tab 鍵盤巡覽、標註、文字輸入、復原與重做、選取刪除、縮放後輸出不變、裁切、資源量測 |
+| `Invoke-Phase3Smoke.ps1` | 十字游標、100% 畫布逐像素比對、Tab 鍵盤巡覽、標註、文字輸入、復原與重做、選取刪除、縮放後輸出不變、裁切（含裁切後填滿畫布、右鍵畫布選單的還原完整圖片）、資源量測 |
 | `Invoke-Phase4Smoke.ps1` | 剪貼簿兩種格式、另存與剪貼簿位元組相同、未匯出變更的詢問、開啟 BMP／JPEG 與損壞檔、另存失敗、剪貼簿被占用；`-Cycles` 次完整循環（取消、截圖、畫矩形、複製、另存、關閉）的資源量測，以及截圖、開啟大圖片、複製與另存的延遲量測 |
 
 判斷標註是否出現或被刪除時，一律比較「與已知圖樣不同的像素」而不用顏色條件：圖樣本身在部分區域就有符合「偏紅」條件的像素。
@@ -384,9 +401,9 @@ sequenceDiagram
 | [ADR-0007](adr/0007-capture-strategy.md) | 截圖策略：逐顯示器 `BitBlt` 加 `GetDIBits` 取得凍結的 `Bgr32` 快照，GDI 物件以 SafeHandle 管理 |
 | [ADR-0008](adr/0008-overlay-placement-and-input.md) | 覆蓋層定位與輸入：以 `HwndSource` 直接在顯示器實體邊界建立覆蓋層，滑鼠位置取自事件本身 |
 | [ADR-0009](adr/0009-app-state-machine.md) | 應用程式狀態機與重入保護：`AppStateMachine` 擋住截圖重入，`CaptureFlow` 經 `ICaptureEnvironment` 注入平台步驟並在所有結束路徑回復 |
-| [ADR-0010](adr/0010-document-model-and-commands.md) | 文件模型與命令模式：凍結原圖、不可變標註 record、非破壞性裁切，五類命令與上限 100 筆的復原／重做 |
+| [ADR-0010](adr/0010-document-model-and-commands.md) | 文件模型與命令模式：凍結原圖、不可變標註 record、非破壞性裁切，六類命令（含複合命令）與上限 100 筆的復原／重做 |
 | [ADR-0011](adr/0011-shared-annotation-painter.md) | 共用 AnnotationPainter：畫面與輸出共用唯一繪製碼，`ImageRenderer` 先合成整張再取出裁切範圍 |
-| [ADR-0012](adr/0012-canvas-zoom-model.md) | 畫布縮放模型：100% 為一個圖片像素對應一個實體像素，縮放容器比例為 `zoom / dpiScale`，控制點層在縮放容器之外 |
+| [ADR-0012](adr/0012-canvas-zoom-model.md) | 畫布縮放模型：100% 為一個圖片像素對應一個實體像素，縮放容器比例為 `zoom / dpiScale`，控制點層在縮放容器之外；裁切後符合視窗可放大到 400% 以填滿畫布 |
 | [ADR-0013](adr/0013-text-input-strategy.md) | 文字輸入策略：在縮放容器內以 WPF `TextBox` 原地輸入並交由輸入法處理，每次提交至多一筆命令 |
 | [ADR-0014](adr/0014-clipboard-formats-and-retry.md) | 剪貼簿格式：同一張合成結果提供 24 位元 DIB 與 PNG，沿用 .NET 內建的重試，失敗時回報原因 |
 | [ADR-0015](adr/0015-file-writing-and-background-encoding.md) | 檔案寫入與背景編碼：凍結的合成結果交給背景執行緒編碼，寫入同資料夾的暫存檔後取代目標 |
