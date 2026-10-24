@@ -4,7 +4,7 @@ ScreenshotApp 是 Windows 11 常駐系統匣的截圖與圖片標註工具：.NE
 
 ## 依據
 
-- 產品行為以規格 `ScreenshotApp — Windows 原生截圖與圖片標註工具.md` 為準；需求變更先修改規格。
+- 產品行為以規格 `docs/ScreenshotApp.Spec.md` 為準；需求變更先修改規格。
 - 修改某個領域前，先讀 `docs/adr/` 中對應的 ADR；決策改變時新增 ADR，或在原 ADR 加上「修訂」段落。
 - 模組關係、資料流、座標系統與執行緒模型：`docs/ARCHITECTURE.md`。
 - 實測得到的 WPF／Win32 行為與踩過的陷阱：`.planning/2026-10-18-screenshotapp-v1/findings.md`。

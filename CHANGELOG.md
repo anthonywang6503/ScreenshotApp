@@ -4,7 +4,12 @@
 
 ## [Unreleased]
 
+### Added
+- 以 Apache License 2.0 授權：儲存庫根目錄加入 `LICENSE`；執行檔的著作權資訊為 `Copyright 2026 Anthony Wang`；`tools/Publish-Release.ps1` 把授權條款以 `LICENSE.txt` 放進資料夾版與單檔版的發佈目錄。ADR-0017 第 5 點加入修訂。
+- README：特點、畫面截圖（取自實機煙霧驗證的證據）、從 GitHub Releases 下載，以及授權段落。
+
 ### Changed
+- `THIRD-PARTY-NOTICES.md` 註明本專案的授權；`AGENTS.md` 的規格檔路徑改為實際位置 `docs/ScreenshotApp.Spec.md`。
 - 驗收紀錄：記錄 v1.1.0 發佈版的實機煙霧驗證（資料夾版 Phase 3 43／43，含裁切後填滿與右鍵還原完整圖片；單檔版 Phase 1 31／31、Phase 2 38／38），依 ADR-0017 提供單檔版；證據放在 `docs/evidence/phase-07/`。
 
 ## [1.1.0] - 2026-10-19

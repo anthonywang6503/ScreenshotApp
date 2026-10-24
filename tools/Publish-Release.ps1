@@ -8,7 +8,8 @@
       - 資料夾版：publish/ScreenshotApp-<版本>-win-x64/ 與同名 ZIP。
       - 單檔版：publish/ScreenshotApp-<版本>-win-x64-singlefile/ 與同名 ZIP；WPF 原生程式庫內含於執行檔，
         第一次執行時解壓到暫存資料夾。
-    兩者都附上 .NET Runtime 與 Windows Desktop Runtime 的授權檔（licenses/）、第三方聲明、使用說明與已知限制。
+    兩者都附上本專案的授權條款（LICENSE.txt，Apache License 2.0）、.NET Runtime 與 Windows Desktop Runtime 的授權檔（licenses/）、
+    第三方聲明、使用說明與已知限制。
     ZIP 以發佈資料夾本身為根目錄。版本取自專案檔的 Version；每次執行都先刪除同名的舊輸出。
 
 .EXAMPLE
@@ -60,6 +61,8 @@ foreach ($variant in $variants) {
             Where-Object { $_.Name -match '^(LICENSE|THIRD-PARTY-NOTICES)(\.txt)?$' } |
             ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $licenses "$($pack.FrameworkName).$($_.BaseName).txt") }
     }
+    # 加上副檔名，沒有安裝開發工具的使用者也能直接以記事本開啟。
+    Copy-Item -LiteralPath (Join-Path $root 'LICENSE') -Destination (Join-Path $output 'LICENSE.txt')
     Copy-Item -LiteralPath (Join-Path $root 'THIRD-PARTY-NOTICES.md'), (Join-Path $root 'docs/USER_GUIDE.md'), (Join-Path $root 'docs/KNOWN_LIMITATIONS.md') -Destination $output
 
     Compress-Archive -LiteralPath $output -DestinationPath $zip

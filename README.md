@@ -4,9 +4,36 @@ Windows 原生的輕量截圖與圖片標註工具：常駐系統匣，以快捷
 
 目前版本：**1.1.0**（加入依情境的右鍵選單、再製與重新編號等編輯操作，裁切後以裁切範圍填滿畫布）。各版本的功能與驗證結果記錄於 [CHANGELOG.md](CHANGELOG.md)。
 
+## 特點
+
+- **Windows 原生**：以 .NET 10 WPF 與 Win32 API 開發的桌面程式，不是網頁或 Electron 包裝。以 GDI 直接擷取畫面，支援 Per-Monitor V2 高 DPI 與多螢幕；截圖尺寸以螢幕實體像素為準，在 175% 縮放的螢幕上選取 100 × 50 像素，得到的就是 100 × 50 像素的圖片。
+- **免安裝**：自包含發佈，不需要另外安裝 .NET，解壓縮即可執行；以目前使用者的權限執行，不需要系統管理員權限。
+- **簡單**：只做「截圖 → 標註 → 複製或另存」這件事。程式常駐系統匣、沒有主視窗；編輯器只有選取、裁切、矩形、橢圓、直線、箭頭、文字、步驟編號八種工具。
+- **易用**：按下快捷鍵（預設 `Ctrl+Shift+2`）、拖曳選取，截圖就在編輯器中開啟。常用操作都有快捷鍵，右鍵選單依位置提供對應的操作；可復原 100 步，關閉前會提醒尚未複製或儲存的修改。
+- **快速**：實測按下快捷鍵到選取畫面出現約 154 ms（3456 × 2160 螢幕），放開滑鼠到編輯器出現約 91 ms（中位數，見[驗收紀錄](docs/ACCEPTANCE.md)）。
+- **貼上即用**：剪貼簿同時提供 PNG 與點陣圖，PowerPoint、Word、Teams、小畫家都可以直接貼上；複製與另存的圖片像素完全相同。
+- **重視隱私**：不需要帳號、不連線網路、不上傳任何資料；截圖與標註只存在記憶體中，只有另存 PNG 時才寫入你選擇的檔案。
+- **繁體中文介面**：介面與錯誤訊息都是台灣繁體中文，文字工具支援微軟注音輸入。
+
+## 畫面
+
+畫面中的漸層色塊是實機煙霧驗證使用的測試圖樣。
+
+**區域選取**：按下快捷鍵後所有顯示器的畫面凍結並變暗，拖曳選取時顯示實際的像素寬高。
+
+![區域選取覆蓋層：選取框旁顯示 400 × 300](docs/evidence/phase-02/phase2-overlay-selecting.png)
+
+**編輯器**：上方是工具列與屬性列（顏色、線寬、字型、字級、編號值），下方狀態列顯示圖片與裁切尺寸、游標座標與縮放比例。圖中加上矩形、線條與文字標註後套用裁切，畫布以裁切範圍放大填滿。
+
+![編輯器：裁切後以裁切範圍填滿畫布，含矩形、線條與文字標註](docs/evidence/phase-07/release-phase3-cropped-fill.png)
+
+**設定**：截圖快捷鍵、登入 Windows 時啟動，以及新增標註的預設顏色、線寬與字級。
+
+![設定視窗](docs/evidence/phase-01/phase1-settings.png)
+
 ## 下載與執行
 
-發佈版本是 Windows 11 x64 的自包含程式，不需要另外安裝 .NET：
+到 [Releases](https://github.com/wanghy6503/ScreenshotApp/releases) 下載 Windows 11 x64 的自包含版本，不需要另外安裝 .NET：
 
 - `ScreenshotApp-1.1.0-win-x64.zip`：資料夾版本，解壓縮後執行 `ScreenshotApp.exe`。
 - `ScreenshotApp-1.1.0-win-x64-singlefile.zip`：只有一個 `ScreenshotApp.exe` 的版本。
@@ -57,3 +84,24 @@ tools/                    圖示產生、發佈、實機煙霧驗證（smoke/）
 - [已知限制](docs/KNOWN_LIMITATIONS.md)
 - [架構決策紀錄](docs/adr/)
 - [第三方聲明](THIRD-PARTY-NOTICES.md)
+- [授權條款](LICENSE)
+
+## 授權
+
+本專案以 [Apache License 2.0](LICENSE) 授權。發佈版本內含的 .NET Runtime 與 Windows Desktop Runtime 依 MIT 授權散布，見[第三方聲明](THIRD-PARTY-NOTICES.md)。
+
+```text
+Copyright 2026 Anthony Wang
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```

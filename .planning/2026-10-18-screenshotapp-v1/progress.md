@@ -421,3 +421,21 @@
 | `Invoke-Phase3Smoke.ps1 -ExePath publish\ScreenshotApp-1.1.0-win-x64\ScreenshotApp.exe` | 全數通過 | 43 PASS／0 FAIL；套用裁切 400%、Ctrl+Z 100%、Ctrl+Y 400%、右鍵還原完整圖片 100%、Ctrl+Z 恢復裁切；10 次循環 GDI 38～40、USER 52～53 | PASS |
 | `Invoke-Phase1Smoke.ps1 -ExePath publish\ScreenshotApp-1.1.0-win-x64-singlefile\ScreenshotApp.exe` | 全數通過 | 31 PASS／0 FAIL | PASS |
 | `Invoke-Phase2Smoke.ps1 -ExePath publish\ScreenshotApp-1.1.0-win-x64-singlefile\ScreenshotApp.exe` | 全數通過 | 38 PASS／0 FAIL；30 次循環 GDI 恆為 39、USER 57～59 | PASS |
+
+## Session: 2026-10-24（Apache 2.0 授權與 GitHub README）
+
+### Actions Taken
+- 使用者要上傳到 GitHub，要求 README 加入畫面截圖、特點說明與 Apache 版權宣告，並更新其他需要的檔案。分支 `feature/phase-05-github-license`（屬於發佈與文件，歸 Phase 5）。
+- `LICENSE`：Apache License 2.0 官方全文原樣複製（SHA-256 `cfc7749b…3d30`，與 apache.org 發佈的檔案相同）。著作權人暫定為 `Anthony Wang`（git 作者）、年份 2026，待使用者確認。
+- README：特點（Windows 原生、免安裝、簡單、易用、快速、貼上即用、隱私、繁中介面；延遲數據取自 ACCEPTANCE）、畫面（直接引用證據截圖：區域選取、v1.1.0 編輯器、設定；只含測試圖樣）、從 GitHub Releases 下載、授權段落（Apache 標準宣告）。
+- 專案檔加入 `Copyright`（執行檔的著作權資訊）；`tools/Publish-Release.ps1` 把 `LICENSE` 以 `LICENSE.txt` 放進發佈目錄；ADR-0017 第 5 點修訂；THIRD-PARTY-NOTICES 註明本專案授權；AGENTS.md 的規格路徑改為 `docs/ScreenshotApp.Spec.md`；CHANGELOG `[Unreleased]`。
+- 沒有執行發佈腳本：會以未提交的工作樹重新產生並覆蓋 `publish/` 中以 `v1.1.0` commit 建置的 ZIP。
+
+### Test Results
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| `dotnet build ScreenshotApp.sln -c Release` | 0 warning、0 error | 0 warning、0 error | PASS |
+| 執行檔 `LegalCopyright` | `Copyright 2026 Anthony Wang` | 相同 | PASS |
+| `AssemblyConfigurationTests` | 通過 | 1 passed | PASS |
+| `Publish-Release.ps1` 語法解析 | 無錯誤 | 0 個錯誤 | PASS |
+| README 相對連結與圖片 | 全部存在 | 14／14 存在 | PASS |

@@ -1,5 +1,7 @@
 # 第三方聲明
 
+ScreenshotApp 本身以 Apache License 2.0 授權，授權條款見儲存庫根目錄的 `LICENSE`（發佈版本中為 `LICENSE.txt`）。
+
 ScreenshotApp 的原始碼不包含第三方程式碼，也沒有複製 ShareX、Greenshot 或其他開源專案的程式碼（只參考其操作行為）。
 
 ## 隨發佈版本散布的元件
