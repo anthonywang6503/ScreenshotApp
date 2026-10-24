@@ -33,7 +33,7 @@ Windows 原生的輕量截圖與圖片標註工具：常駐系統匣，以快捷
 
 ## 下載與執行
 
-到 [Releases](https://github.com/wanghy6503/ScreenshotApp/releases) 下載 Windows 11 x64 的自包含版本，不需要另外安裝 .NET：
+到 [Releases](https://github.com/anthonywang6503/ScreenshotApp/releases) 下載 Windows 11 x64 的自包含版本，不需要另外安裝 .NET：
 
 - `ScreenshotApp-1.1.0-win-x64.zip`：資料夾版本，解壓縮後執行 `ScreenshotApp.exe`。
 - `ScreenshotApp-1.1.0-win-x64-singlefile.zip`：只有一個 `ScreenshotApp.exe` 的版本。

@@ -439,3 +439,19 @@
 | `AssemblyConfigurationTests` | 通過 | 1 passed | PASS |
 | `Publish-Release.ps1` 語法解析 | 無錯誤 | 0 個錯誤 | PASS |
 | README 相對連結與圖片 | 全部存在 | 14／14 存在 | PASS |
+## Session: 2026-10-24（推送與 GitHub Release v1.1.0）
+
+### Actions Taken
+- 使用者要求提交、以目前版本建立標籤、發佈執行檔的 Release 並推送，回覆「都照你的建議執行」：著作權人 `Anthony Wang`；沿用既有的 `v1.1.0` 標籤（`6c7c103`）與以該 commit 建置、已通過煙霧驗證的 ZIP，不升版；`.planning/` 與證據檔照原樣公開。
+- `1d8a0c8` 以 fast-forward 合併回 `main`。
+- 遠端對應（以 SSH 驗證確認）：`origin` 是 `anthonywang6503/ScreenshotApp`（公開，推送前是空的；`p76871024` 是 github.com 的 SSH 主機別名），`upstream` 是 `wanghy6503/ScreenshotApp`（`gh` 以 anthonywang6503 登入時無法存取）。
+- 推送：`upstream` 加入 `main`、`feature/phase-05-github-license`、`v1.0.0`、`v1.1.0`；`origin` 加入 `main`、`v1.0.0`、`v1.1.0`（功能分支沒有推送）。
+- 以 `gh`（anthonywang6503）在 `origin` 建立 Release `v1.1.0`，附上兩個 ZIP；說明含下載方式、SmartScreen 處理、1.1.0 變更、驗證結果、SHA-256 與授權。
+- README 的 Releases 連結改為公開儲存庫 `anthonywang6503/ScreenshotApp`。
+
+### Test Results
+| Test | Expected | Actual | Status |
+|------|----------|--------|--------|
+| 發佈檔的產品版本 | `1.1.0+6c7c103…`（與 `v1.1.0` 標籤相同） | 資料夾版與單檔版皆為 `1.1.0+6c7c10383a92…` | PASS |
+| Release 檔案的 SHA-256 與大小 | 與本機 ZIP 相同 | 兩個檔案的 digest 與大小皆相同（70,599,553／66,576,859 bytes） | PASS |
+| Release 狀態 | 正式版（非草稿、非預覽版） | draft false、prerelease false | PASS |
