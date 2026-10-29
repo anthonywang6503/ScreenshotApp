@@ -51,7 +51,7 @@ pwsh -NoProfile -File tools/Test-Quality.ps1
 - 權限僅 `contents: read`；checkout 不持久化憑證；沒有遠端寫入、發佈或部署步驟。
 - Actions 固定至查證過的 release commit：checkout v7.0.1、setup-dotnet v6.0.0、upload-artifact v7.0.2，不使用浮動標籤。
 - 本機可用 `go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/quality.yml` 檢查 workflow；Go 不是產品建置或日常品質檢查的必要工具。
-- **2026-10-29 驗證範圍**：本機入口 953 個測試全部通過、四項負向驗證通過、PowerShell 語法與 actionlint 通過。遠端 GitHub runner 尚未執行，尤其不能用本機通過推論其桌面／Win32 環境已驗證。
+- **2026-10-29 驗證範圍**：本機入口最終 957 個測試全部通過、四項負向驗證通過、PowerShell 語法與 actionlint 通過。新增長序列測試另通過三項突變辨識驗證，詳見 [工程改善紀錄](GOAL_BACKLOG.md)。遠端 GitHub runner 尚未執行，尤其不能用本機通過推論其桌面／Win32 環境已驗證。
 
 ## 維護
 

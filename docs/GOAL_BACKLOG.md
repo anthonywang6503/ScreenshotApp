@@ -4,6 +4,7 @@
 
 - 起始日期：2026-10-29（台灣時間）。起始 commit：`7729736`；工作分支：`fix/engineering-improvements`。
 - 執行輪次：**1 / 40**。一輪指一個完整的代理執行回合（包含其工具呼叫）；後續回合接續此紀錄，不重設計數。
+- 最終狀態：**本輪盤點中符合條件的四項改善全部完成**。2026-10-29 依「無剩餘高可信度且可獨立驗證的候選」停止，未耗滿 40 輪；這不代表證明整個產品沒有任何未知缺陷。
 - 逐項完成客觀驗證、更新本文件及 CHANGELOG，建立一個完整且可獨立理解的 commit。
 - 保留規格與 ADR 已記載的行為；不部署、不合併、不推送、不建立 PR、不修改正式環境基礎設施、不弱化測試、不進行推測性的產品變更。
 - 起始已有未追蹤的 `.codegraph/`、`AUTONOMOUS_GOAL.md`、`BUSINESS_VALUE_OPPORTUNITIES.md`、`UIUX_VALUE_OPPORTUNITIES.md`；保留原狀，不納入提交。
@@ -44,7 +45,7 @@ TRX 等可重建的本機產物放在忽略的 `artifacts/engineering-goal/`；�
 | 1 | E01 | 確認關閉／替換時，保護背景匯出期間新增的修改 | 5 | 5 | 5 | **125** | 已完成；見完成紀錄 |
 | 2 | E02 | 開圖背景解碼完成前新增的修改不得無聲被替換 | 5 | 5 | 5 | **125** | 已完成；見完成紀錄 |
 | 3 | E03 | 建立可重現的本機品質檢查與 Windows CI 設定 | 4 | 5 | 4 | **80** | 已完成本機驗證與 CI 設定；遠端未執行 |
-| 4 | E04 | 編輯歷史、裁切、匯出版本的長操作序列回歸驗證 | 4 | 4 | 5 | **80** | 待核對既有測試缺口 |
+| 4 | E04 | 編輯歷史、裁切、匯出版本的長操作序列回歸驗證 | 4 | 4 | 5 | **80** | 已完成；見完成紀錄 |
 
 ### E01：確認流程與背景匯出
 
@@ -108,3 +109,21 @@ TRX 等可重建的本機產物放在忽略的 `artifacts/engineering-goal/`；�
 - **驗證**：`pwsh -NoProfile -File tools/Invoke-Quality.ps1` 結束碼 0，建置零警告／零錯誤，**953/953 通過**；`pwsh -NoProfile -File tools/Test-Quality.ps1` 結束碼 0，四項注入各由品質入口拒絕且診斷符合預期。兩支 PowerShell 腳本語法剖析通過，`actionlint v1.7.12` 結束碼 0，`git diff --check` 通過。
 - CI 使用 `windows-2025`、唯讀權限及固定 Actions commit，只執行品質檢查並保留 TRX。**遠端 runner 尚未執行**，不宣稱其 Windows／Win32 環境通過；目前未推送，沒有部署或遠端副作用。
 - 文件：新增 [QUALITY.md](QUALITY.md) 與 [ADR-0018](adr/0018-reproducible-quality-checks.md)，同步 README、CHANGELOG。Commit 主旨：`phase-05: 建立可重現的 Windows 品質檢查`。
+
+### E04 — 已完成（第 1 輪）
+
+- 缺口確認：現有 UndoRedoStack／EditCommand／CropCommand／DirtyTracking 測試以短序列或單一邊界為主；新增 [DocumentHistorySequenceTests](../ScreenshotApp.Tests/DocumentHistorySequenceTests.cs)，不修改產品程式碼。
+- 4 個固定種子（0、17、771、20261029），每個執行 1,500 次混合操作；另外固定跨越 100 筆容量、完整復原／重做、分支後完成舊版本匯出，最後巡覽所有仍保留的狀態。
+- 預期值使用獨立的標註／裁切快照與游標，不以產品的 Undo/Redo 計算期望內容。每一步檢查標註值與順序、裁切、版本、匯出狀態、歷史數量與原圖參照；失敗顯示種子與操作序號。
+- **驗證**：新測試加上 UndoRedoStack／EditCommand／CropCommand／DirtyTracking 共 **71/71 通過**。最終 `pwsh -NoProfile -File tools/Invoke-Quality.ps1` 結束碼 0，鎖定還原通過、Release **0 警告／0 錯誤**、完整測試 **957/957 通過、0 跳過**（起始 933＋24）。
+- **測試有效性**：在獨立副本各自注入三項突變，只執行 `--filter FullyQualifiedName~DocumentHistorySequenceTests`，三者皆由新測試以結束碼 1 攔截：移除 `UndoRedoStack.Execute` 的 `_redo.Clear()`；讓 `CompositeCommand.Undo` 改為正向走訪；讓 `ImageDocument.MarkExported` 忽略傳入版本、改記當前版本。這些故障沒有寫入來源程式碼，三項突變完成後均還原副本。
+- 本機 TRX：`artifacts/engineering-goal/e04-green/`；突變診斷：`artifacts/engineering-goal/e04-mutations-<GUID>/`。重現方式是在自己的隔離副本各套用上述一項變更，執行 `dotnet test ScreenshotApp.Tests/ScreenshotApp.Tests.csproj -c Release --filter FullyQualifiedName~DocumentHistorySequenceTests`，預期非零且測試失敗，而非編譯失敗。
+- Commit 主旨：`phase-03: 加入編輯歷史的長序列回歸驗證`。
+
+## 最後檢查與停止依據
+
+- E01～E04 均已有客觀驗證與獨立 commit；最後檢查產品差異僅涵蓋兩條非同步文件保護路徑，沒有改變繪製、座標、匯出格式或既有操作選項。
+- Build／Tests 比基準改善：零警告維持，完整測試由 933 增至 957 且全部通過；品質入口、套件鎖定、CI 靜態檢查與負向驗證已建立。
+- 剩餘開放事項重新評估：xunit v3／其他版本升級目前沒有漏洞或建置失敗證據；全面抽離 AppController、EditorWindow 或煙霧腳本需要較大範圍改動，尚無足以支持其立即收益的具體缺陷。這些不因「可以改寫」就視為高可信度的改善。
+- 裁切外操作仍有產品決策缺口；遠端 CI、混合 DPI、多螢幕與乾淨機器等仍需額外環境或授權，不以本機單元測試取代。
+- 沒有部署、合併、推送、PR、發佈、正式環境變更或測試弱化；原有未追蹤文件與索引保留。可重建的驗證副本及結果留在忽略的 artifacts 目錄。
