@@ -7,6 +7,7 @@ using Microsoft.Win32;
 using ScreenshotApp.Editor;
 using ScreenshotApp.Editor.Commands;
 using ScreenshotApp.Editor.Model;
+using ScreenshotApp.Export;
 using ScreenshotApp.Platform;
 using ScreenshotApp.Settings;
 using ScreenshotApp.Tests.TestSupport;
@@ -327,6 +328,119 @@ public sealed class EditorWindowTests : IDisposable
 
             Assert.True(confirmation.IsCompletedSuccessfully);
             Assert.True(confirmation.GetAwaiter().GetResult());
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LoadReplacement_NewEditDuringLoad_CancelsReplacement(bool text)
+    {
+        RunWithWindow(CreateAnnotatedCroppedDocument, (window, document) =>
+        {
+            var decoding = new TaskCompletionSource<ImageLoadResult>();
+            var pending = window.LoadReplacementAsync(() => decoding.Task);
+            Assert.False(pending.IsCompleted);
+
+            if (text)
+            {
+                Click(Item(window.PrepareContextMenu(OnText, Tolerance), "EditTextMenuItem"));
+                window.TextEditor.Text = "載入期間輸入的文字";
+            }
+            else
+            {
+                document.History.Execute(new AddAnnotationCommand(document,
+                    new RectangleAnnotation { Color = Colors.Blue, Rect = new PixelRect(50, 50, 20, 20), StrokeWidth = 3 }));
+            }
+
+            decoding.SetResult(new ImageLoadResult(CreateDocument().Source, null));
+            StaRunner.DoEvents();
+
+            Assert.True(pending.IsCompletedSuccessfully);
+            Assert.Null(pending.GetAwaiter().GetResult());
+            Assert.Same(document.Source, window.SourceImage.Source);
+            Assert.True(document.IsDirty);
+            if (text)
+            {
+                Assert.Equal("載入期間輸入的文字", Assert.Single(document.Annotations.OfType<TextAnnotation>()).Text);
+            }
+            else
+            {
+                Assert.Equal(5, document.Annotations.Count);
+            }
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LoadReplacement_NoNewEdits_ReturnsImageEvenIfOldChangesWereDiscarded(bool dirty)
+    {
+        RunWithWindow(dirty ? CreateAnnotatedCroppedDocument : CreateDocument, (window, document) =>
+        {
+            var decoding = new TaskCompletionSource<ImageLoadResult>();
+            var pending = window.LoadReplacementAsync(() => decoding.Task);
+            var loaded = new ImageLoadResult(CreateDocument().Source, null);
+            Assert.False(pending.IsCompleted);
+            decoding.SetResult(loaded);
+            StaRunner.DoEvents();
+
+            Assert.True(pending.IsCompletedSuccessfully);
+            Assert.Same(loaded, pending.GetAwaiter().GetResult());
+            Assert.Equal(dirty, document.IsDirty);
+            Assert.Same(document.Source, window.SourceImage.Source);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LoadReplacement_NewEditsUndoneOrExported_ReturnsImage(bool exported)
+    {
+        RunWithWindow(CreateAnnotatedCroppedDocument, (window, document) =>
+        {
+            var decoding = new TaskCompletionSource<ImageLoadResult>();
+            var pending = window.LoadReplacementAsync(() => decoding.Task);
+            document.History.Execute(new AddAnnotationCommand(document,
+                new RectangleAnnotation { Color = Colors.Blue, Rect = new PixelRect(50, 50, 20, 20), StrokeWidth = 3 }));
+            if (exported)
+            {
+                document.MarkExported(document.History.Version);
+            }
+            else
+            {
+                document.History.Undo();
+            }
+
+            var loaded = new ImageLoadResult(CreateDocument().Source, null);
+            decoding.SetResult(loaded);
+            StaRunner.DoEvents();
+
+            Assert.True(pending.IsCompletedSuccessfully);
+            Assert.Same(loaded, pending.GetAwaiter().GetResult());
+            Assert.Equal(!exported, document.IsDirty);
+        });
+    }
+
+    [Fact]
+    public void LoadReplacement_Failure_ReturnsReasonAndPreservesDocumentAndPendingText()
+    {
+        RunWithWindow(CreateAnnotatedCroppedDocument, (window, document) =>
+        {
+            var version = document.History.Version;
+            var decoding = new TaskCompletionSource<ImageLoadResult>();
+            var pending = window.LoadReplacementAsync(() => decoding.Task);
+            Click(Item(window.PrepareContextMenu(OnText, Tolerance), "EditTextMenuItem"));
+            window.TextEditor.Text = "繼續編輯";
+            var failed = new ImageLoadResult(null, "測試用解碼失敗");
+            decoding.SetResult(failed);
+            StaRunner.DoEvents();
+
+            Assert.True(pending.IsCompletedSuccessfully);
+            Assert.Same(failed, pending.GetAwaiter().GetResult());
+            Assert.Equal(version, document.History.Version);
+            Assert.Equal("繼續編輯", window.TextEditor.Text);
+            Assert.Same(document.Source, window.SourceImage.Source);
         });
     }
 

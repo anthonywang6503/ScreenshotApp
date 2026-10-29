@@ -199,6 +199,22 @@ internal partial class EditorWindow : Window
         };
     }
 
+    /// <summary>載入要替換目前文件的圖片；呼叫端已確認原有變更，回傳 null 表示中止替換。</summary>
+    internal async Task<ImageLoadResult?> LoadReplacementAsync(Func<Task<ImageLoadResult>> load)
+    {
+        CommitTextEdit();
+        var version = _session?.Document.History.Version;
+        var loaded = await load();
+
+        // 開檔對話框關閉後可以繼續編輯；解碼完成前的新修改不在原先的捨棄確認範圍內。
+        if (loaded.Image is not null && HasUnexportedChanges() && _session?.Document.History.Version != version)
+        {
+            return null;
+        }
+
+        return loaded;
+    }
+
     private UnsavedChangesChoice AskToDiscard()
     {
         Show();

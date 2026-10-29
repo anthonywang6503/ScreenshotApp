@@ -255,7 +255,14 @@ internal sealed class AppController : IDisposable
 
             // 大圖片的解碼在背景執行緒進行，結果是凍結的圖片；載入失敗時原本的文件不變。
             var path = dialog.FileName;
-            var loaded = await Task.Run(() => ImageFileLoader.Load(path));
+            var loaded = owner is null
+                ? await Task.Run(() => ImageFileLoader.Load(path))
+                : await owner.LoadReplacementAsync(() => Task.Run(() => ImageFileLoader.Load(path)));
+            if (loaded is null)
+            {
+                return;
+            }
+
             if (loaded.Image is null)
             {
                 ShowError(owner, Strings.Format("Open_Failed", Path.GetFileName(path), loaded.Error));

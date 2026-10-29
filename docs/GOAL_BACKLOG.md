@@ -42,7 +42,7 @@ TRX 等可重建的本機產物放在忽略的 `artifacts/engineering-goal/`；�
 | 順序 | ID | 改善項目 | I | C | V | 乘積 | 狀態 |
 |---:|---|---|---:|---:|---:|---:|---|
 | 1 | E01 | 確認關閉／替換時，保護背景匯出期間新增的修改 | 5 | 5 | 5 | **125** | 已完成；見完成紀錄 |
-| 2 | E02 | 開圖背景解碼完成前新增的修改不得無聲被替換 | 5 | 4 | 5 | **100** | 待以可控制完成時機的測試確認 |
+| 2 | E02 | 開圖背景解碼完成前新增的修改不得無聲被替換 | 5 | 5 | 5 | **125** | 已完成；見完成紀錄 |
 | 3 | E03 | 建立可重現的本機品質檢查與 Windows CI 設定 | 4 | 5 | 4 | **80** | 待執行 |
 | 4 | E04 | 編輯歷史、裁切、匯出版本的長操作序列回歸驗證 | 4 | 4 | 5 | **80** | 待核對既有測試缺口 |
 
@@ -89,3 +89,13 @@ TRX 等可重建的本機產物放在忽略的 `artifacts/engineering-goal/`；�
 - 命令：`dotnet test ScreenshotApp.Tests/ScreenshotApp.Tests.csproj -c Release --filter "FullyQualifiedName~EditorWindowTests|FullyQualifiedName~DirtyTrackingTests"`；`dotnet build ScreenshotApp.sln -c Release --nologo -warnaserror`；`dotnet test ScreenshotApp.sln -c Release --no-build --nologo`。TRX 位於 `artifacts/engineering-goal/e01-{red,green,full}/`。
 - 文件：更新 ADR-0016、架構、已知限制與 CHANGELOG。未操作使用者剪貼簿、未顯示編輯視窗，未宣稱桌面煙霧驗證完成。
 - Commit 主旨：`phase-04: 保護確認匯出期間新增的編輯內容`。
+
+### E02 — 已完成（第 1 輪）
+
+- 根因：開檔對話框前的捨棄確認不涵蓋背景解碼期間的新編輯；原本解碼成功就直接替換文件。
+- 修正：已有編輯器時，控制器透過 `LoadReplacementAsync` 載入並比較前後版本；新標註或尚未提交的文字仍未匯出時中止替換。原已確認捨棄且沒有再變更、復原回原版本、新內容已匯出的情況仍照常完成；失敗原因與待輸入文字均保留。
+- **紅燈**：只將載入移到委派接縫、維持原判斷時，新標註與新文字兩個案例均失敗（預期取消，實際回傳可替換的圖片），結束碼 1。
+- **綠燈**：新增 7 個案例，相關 `EditorWindowTests|ImageFileLoaderTests|DirtyTrackingTests` **65/65 通過**；Release `-warnaserror` 建置 **0 警告、0 錯誤**。控制器與編輯器共同改動，執行完整測試 **953/953 通過、0 跳過**（前項 946＋7）。`git diff --check` 通過。
+- 命令：`dotnet test ScreenshotApp.Tests/ScreenshotApp.Tests.csproj -c Release --filter "FullyQualifiedName~EditorWindowTests|FullyQualifiedName~ImageFileLoaderTests|FullyQualifiedName~DirtyTrackingTests"`；完整建置／測試同 E01。TRX 位於 `artifacts/engineering-goal/e02-{red,green,full}/`。
+- 驗證的是實際文件保護判斷與控制器接線；沒有執行檔案對話框或桌面煙霧驗證，未更改既有人工驗收狀態。
+- 文件：ADR-0016、架構、已知限制、CHANGELOG。Commit 主旨：`phase-04: 保護背景開圖期間新增的編輯內容`。
