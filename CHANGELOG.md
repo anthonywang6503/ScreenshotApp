@@ -10,6 +10,7 @@
 
 ### Added
 - 工程改善待辦 `docs/GOAL_BACKLOG.md`：依影響、可信度與可驗證性排序，記錄基準與逐項驗證。
+- 固定 .NET SDK 與 NuGet 相依版本；新增本機／Windows CI 共用的品質檢查、獨立副本負向驗證，以及開發者操作說明。品質檢查要求零建置警告、測試全部通過且不得跳過，不包含發佈或部署。
 - 以 Apache License 2.0 授權：儲存庫根目錄加入 `LICENSE`；執行檔的著作權資訊為 `Copyright 2026 Anthony Wang`；`tools/Publish-Release.ps1` 把授權條款以 `LICENSE.txt` 放進資料夾版與單檔版的發佈目錄。ADR-0017 第 5 點加入修訂。
 - README：特點、畫面截圖（取自實機煙霧驗證的證據）、從 GitHub Releases 下載，以及授權段落。
 

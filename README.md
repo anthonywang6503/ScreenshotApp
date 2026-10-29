@@ -43,9 +43,11 @@ Windows 原生的輕量截圖與圖片標註工具：常駐系統匣，以快捷
 ## 系統需求
 
 - 執行：Windows 11 x64（Windows 10 x64 盡力相容）。
-- 開發：.NET 10 SDK（`net10.0-windows`，含 WPF 與 Windows Forms）。
+- 開發：.NET SDK 10.0.403（由 [global.json](global.json) 固定；`net10.0-windows`，含 WPF 與 Windows Forms）。
 
 ## 建置、測試與發佈
+
+本機與 Windows CI 共用完整品質檢查入口：`pwsh -NoProfile -File tools/Invoke-Quality.ps1`，包含鎖定套件還原、Release 零警告建置及完整測試。環境、負向驗證與 CI 的驗證範圍見 [品質檢查說明](docs/QUALITY.md)。個別命令如下：
 
 ```powershell
 dotnet build ScreenshotApp.sln -c Release

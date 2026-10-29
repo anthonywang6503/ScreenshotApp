@@ -43,7 +43,7 @@ TRX 等可重建的本機產物放在忽略的 `artifacts/engineering-goal/`；�
 |---:|---|---|---:|---:|---:|---:|---|
 | 1 | E01 | 確認關閉／替換時，保護背景匯出期間新增的修改 | 5 | 5 | 5 | **125** | 已完成；見完成紀錄 |
 | 2 | E02 | 開圖背景解碼完成前新增的修改不得無聲被替換 | 5 | 5 | 5 | **125** | 已完成；見完成紀錄 |
-| 3 | E03 | 建立可重現的本機品質檢查與 Windows CI 設定 | 4 | 5 | 4 | **80** | 待執行 |
+| 3 | E03 | 建立可重現的本機品質檢查與 Windows CI 設定 | 4 | 5 | 4 | **80** | 已完成本機驗證與 CI 設定；遠端未執行 |
 | 4 | E04 | 編輯歷史、裁切、匯出版本的長操作序列回歸驗證 | 4 | 4 | 5 | **80** | 待核對既有測試缺口 |
 
 ### E01：確認流程與背景匯出
@@ -99,3 +99,12 @@ TRX 等可重建的本機產物放在忽略的 `artifacts/engineering-goal/`；�
 - 命令：`dotnet test ScreenshotApp.Tests/ScreenshotApp.Tests.csproj -c Release --filter "FullyQualifiedName~EditorWindowTests|FullyQualifiedName~ImageFileLoaderTests|FullyQualifiedName~DirtyTrackingTests"`；完整建置／測試同 E01。TRX 位於 `artifacts/engineering-goal/e02-{red,green,full}/`。
 - 驗證的是實際文件保護判斷與控制器接線；沒有執行檔案對話框或桌面煙霧驗證，未更改既有人工驗收狀態。
 - 文件：ADR-0016、架構、已知限制、CHANGELOG。Commit 主旨：`phase-04: 保護背景開圖期間新增的編輯內容`。
+
+### E03 — 本機品質檢查與 CI 設定已完成（第 1 輪）
+
+- global.json 固定已在本機實測且官方發行資料存在的 SDK 10.0.403；兩個 NuGet lock file 鎖定現有相依版本，沒有套件升級。
+- `tools/Invoke-Quality.ps1` 共用鎖定還原、零警告 Release 建置與全測試，檢查每次獨立 TRX 的非零總數及全部通過，避免跳過／沒有測試或讀到舊報告而誤報成功。
+- `tools/Test-Quality.ps1` 在忽略目錄建立副本，驗證 **4/4** 負向路徑：CS1030 警告、必然失敗的測試、被跳過的測試、NU1004 相依鎖定不一致。來源與原有測試未改寫。
+- **驗證**：`pwsh -NoProfile -File tools/Invoke-Quality.ps1` 結束碼 0，建置零警告／零錯誤，**953/953 通過**；`pwsh -NoProfile -File tools/Test-Quality.ps1` 結束碼 0，四項注入各由品質入口拒絕且診斷符合預期。兩支 PowerShell 腳本語法剖析通過，`actionlint v1.7.12` 結束碼 0，`git diff --check` 通過。
+- CI 使用 `windows-2025`、唯讀權限及固定 Actions commit，只執行品質檢查並保留 TRX。**遠端 runner 尚未執行**，不宣稱其 Windows／Win32 環境通過；目前未推送，沒有部署或遠端副作用。
+- 文件：新增 [QUALITY.md](QUALITY.md) 與 [ADR-0018](adr/0018-reproducible-quality-checks.md)，同步 README、CHANGELOG。Commit 主旨：`phase-05: 建立可重現的 Windows 品質檢查`。
