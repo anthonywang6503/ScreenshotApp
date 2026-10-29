@@ -4,7 +4,11 @@
 
 ## [Unreleased]
 
+### Fixed
+- 未匯出變更提示中選擇複製或儲存時，若背景匯出期間繼續編輯，完成後會重新提交文字輸入並檢查文件，保留新增修改並中止原本的關閉或替換操作。
+
 ### Added
+- 工程改善待辦 `docs/GOAL_BACKLOG.md`：依影響、可信度與可驗證性排序，記錄基準與逐項驗證。
 - 以 Apache License 2.0 授權：儲存庫根目錄加入 `LICENSE`；執行檔的著作權資訊為 `Copyright 2026 Anthony Wang`；`tools/Publish-Release.ps1` 把授權條款以 `LICENSE.txt` 放進資料夾版與單檔版的發佈目錄。ADR-0017 第 5 點加入修訂。
 - README：特點、畫面截圖（取自實機煙霧驗證的證據）、從 GitHub Releases 下載，以及授權段落。
 

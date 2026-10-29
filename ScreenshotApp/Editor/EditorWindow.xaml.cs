@@ -178,13 +178,29 @@ internal partial class EditorWindow : Window
     /// <summary>
     /// 文件有未匯出的變更時詢問使用者；回傳 true 表示可以繼續（已複製、已儲存、選擇捨棄或沒有未匯出的變更）。
     /// </summary>
-    public async Task<bool> ConfirmDiscardAsync()
+    public Task<bool> ConfirmDiscardAsync() => ConfirmDiscardAsync(AskToDiscard, CopyImageAsync, SaveImageAsync);
+
+    // 對話框與匯出是外部副作用；決策共用同一條路徑，測試可控制背景工作完成的時機。
+    internal async Task<bool> ConfirmDiscardAsync(
+        Func<UnsavedChangesChoice> ask, Func<Task<bool>> copy, Func<Task<bool>> save)
     {
         if (!HasUnexportedChanges())
         {
             return true;
         }
 
+        return ask() switch
+        {
+            // 背景匯出期間仍可編輯；成功只代表當時合成的版本已匯出，不能捨棄後來的修改。
+            UnsavedChangesChoice.Copy => await copy() && !HasUnexportedChanges(),
+            UnsavedChangesChoice.Save => await save() && !HasUnexportedChanges(),
+            UnsavedChangesChoice.Discard => true,
+            _ => false,
+        };
+    }
+
+    private UnsavedChangesChoice AskToDiscard()
+    {
         Show();
         if (WindowState == WindowState.Minimized)
         {
@@ -192,13 +208,7 @@ internal partial class EditorWindow : Window
         }
 
         Activate();
-        return UnsavedChangesDialog.Ask(this) switch
-        {
-            UnsavedChangesChoice.Copy => await CopyImageAsync(),
-            UnsavedChangesChoice.Save => await SaveImageAsync(),
-            UnsavedChangesChoice.Discard => true,
-            _ => false,
-        };
+        return UnsavedChangesDialog.Ask(this);
     }
 
     /// <summary>關閉而不詢問；呼叫端已處理未匯出的變更（例如結束程式前已詢問）。</summary>

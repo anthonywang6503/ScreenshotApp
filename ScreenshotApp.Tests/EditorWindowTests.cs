@@ -181,6 +181,155 @@ public sealed class EditorWindowTests : IDisposable
         });
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ConfirmDiscard_EditDuringExport_PreservesNewChanges(bool copy)
+    {
+        RunWithWindow(CreateAnnotatedCroppedDocument, (window, document) =>
+        {
+            var exportedVersion = document.History.Version;
+            var export = new TaskCompletionSource<bool>();
+            var confirmation = window.ConfirmDiscardAsync(
+                () => copy ? UnsavedChangesChoice.Copy : UnsavedChangesChoice.Save,
+                () => copy ? export.Task : throw new InvalidOperationException("不應複製。"),
+                () => copy ? throw new InvalidOperationException("不應儲存。") : export.Task);
+            Assert.False(confirmation.IsCompleted);
+
+            var added = new RectangleAnnotation { Color = Colors.Blue, Rect = new PixelRect(50, 50, 20, 20), StrokeWidth = 3 };
+            document.History.Execute(new AddAnnotationCommand(document, added));
+            document.MarkExported(exportedVersion);
+            export.SetResult(true);
+            StaRunner.DoEvents();
+
+            Assert.True(confirmation.IsCompletedSuccessfully);
+            Assert.False(confirmation.GetAwaiter().GetResult());
+            Assert.True(document.IsDirty);
+            Assert.Contains(added, document.Annotations);
+            Assert.False(window.IsVisible);
+        });
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ConfirmDiscard_TextEnteredDuringExport_CommitsAndPreservesNewText(bool copy)
+    {
+        RunWithWindow(CreateAnnotatedCroppedDocument, (window, document) =>
+        {
+            var exportedVersion = document.History.Version;
+            var export = new TaskCompletionSource<bool>();
+            var confirmation = window.ConfirmDiscardAsync(
+                () => copy ? UnsavedChangesChoice.Copy : UnsavedChangesChoice.Save,
+                () => export.Task, () => export.Task);
+            Assert.False(confirmation.IsCompleted);
+
+            var menu = window.PrepareContextMenu(OnText, Tolerance);
+            Click(Item(menu, "EditTextMenuItem"));
+            window.TextEditor.Text = "背景匯出期間輸入的文字";
+            document.MarkExported(exportedVersion);
+            Assert.False(document.IsDirty); // 文字尚在輸入框，還沒有提交到文件。
+            export.SetResult(true);
+            StaRunner.DoEvents();
+
+            Assert.True(confirmation.IsCompletedSuccessfully);
+            Assert.False(confirmation.GetAwaiter().GetResult());
+            Assert.True(document.IsDirty);
+            Assert.Equal("背景匯出期間輸入的文字", Assert.Single(document.Annotations.OfType<TextAnnotation>()).Text);
+        });
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    public void ConfirmDiscard_ExportWithoutNewEdits_ContinuesOnlyOnSuccess(bool copy, bool succeeds)
+    {
+        RunWithWindow(CreateAnnotatedCroppedDocument, (window, document) =>
+        {
+            var export = new TaskCompletionSource<bool>();
+            var confirmation = window.ConfirmDiscardAsync(
+                () => copy ? UnsavedChangesChoice.Copy : UnsavedChangesChoice.Save,
+                () => copy ? export.Task : throw new InvalidOperationException("不應複製。"),
+                () => copy ? throw new InvalidOperationException("不應儲存。") : export.Task);
+            Assert.False(confirmation.IsCompleted);
+            if (succeeds)
+            {
+                document.MarkExported(document.History.Version);
+            }
+
+            export.SetResult(succeeds);
+            StaRunner.DoEvents();
+
+            Assert.True(confirmation.IsCompletedSuccessfully);
+            Assert.Equal(succeeds, confirmation.GetAwaiter().GetResult());
+            Assert.Equal(!succeeds, document.IsDirty);
+            Assert.Equal(4, document.Annotations.Count);
+        });
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ConfirmDiscard_UndoToExportedVersionDuringExport_AllowsContinuation(bool copy)
+    {
+        RunWithWindow(CreateAnnotatedCroppedDocument, (window, document) =>
+        {
+            var version = document.History.Version;
+            var export = new TaskCompletionSource<bool>();
+            var confirmation = window.ConfirmDiscardAsync(
+                () => copy ? UnsavedChangesChoice.Copy : UnsavedChangesChoice.Save,
+                () => export.Task, () => export.Task);
+            document.History.Execute(new AddAnnotationCommand(document,
+                new RectangleAnnotation { Color = Colors.Blue, Rect = new PixelRect(50, 50, 20, 20), StrokeWidth = 3 }));
+            document.History.Undo();
+            document.MarkExported(version);
+            export.SetResult(true);
+            StaRunner.DoEvents();
+
+            Assert.True(confirmation.IsCompletedSuccessfully);
+            Assert.True(confirmation.GetAwaiter().GetResult());
+            Assert.False(document.IsDirty);
+        });
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ConfirmDiscard_DiscardOrCancel_DoesNotExportOrChangeDocument(bool discard)
+    {
+        RunWithWindow(CreateAnnotatedCroppedDocument, (window, document) =>
+        {
+            var version = document.History.Version;
+            var confirmation = window.ConfirmDiscardAsync(
+                () => discard ? UnsavedChangesChoice.Discard : UnsavedChangesChoice.Cancel,
+                () => throw new InvalidOperationException("不應複製。"),
+                () => throw new InvalidOperationException("不應儲存。"));
+
+            Assert.True(confirmation.IsCompletedSuccessfully);
+            Assert.Equal(discard, confirmation.GetAwaiter().GetResult());
+            Assert.True(document.IsDirty);
+            Assert.Equal(version, document.History.Version);
+            Assert.Equal(4, document.Annotations.Count);
+        });
+    }
+
+    [Fact]
+    public void ConfirmDiscard_UneditedDocument_ContinuesWithoutPromptOrExport()
+    {
+        RunWithWindow(CreateDocument, (window, _) =>
+        {
+            var confirmation = window.ConfirmDiscardAsync(
+                () => throw new InvalidOperationException("不應詢問。"),
+                () => throw new InvalidOperationException("不應複製。"),
+                () => throw new InvalidOperationException("不應儲存。"));
+
+            Assert.True(confirmation.IsCompletedSuccessfully);
+            Assert.True(confirmation.GetAwaiter().GetResult());
+        });
+    }
+
     private void RunWithWindow(Func<ImageDocument> createDocument, Action<EditorWindow, ImageDocument> test) =>
         StaRunner.Run(() =>
         {
