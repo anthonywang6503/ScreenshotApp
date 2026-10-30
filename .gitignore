@@ -14,3 +14,4 @@ publish/
 .planning/**/.gate_last_ledger
 .planning/**/.nonce
 .planning/**/ledger-*.jsonl
+.codegraph/
