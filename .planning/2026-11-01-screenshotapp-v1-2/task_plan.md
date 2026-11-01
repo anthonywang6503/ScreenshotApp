@@ -15,11 +15,11 @@
 
 ## Next Step
 
-Phase 11 已完成並停在控制點；Phase 12 維持 pending。續作先讀 handoffs/phase-11-ruler-eyedropper.md；實機煙霧因既有 ScreenshotApp 而尚未驗證。
+Phase 12 已完成並停在控制點；Phase 13 維持 pending。續作先讀 handoffs/phase-12-capture-history.md；實機煙霧因既有 ScreenshotApp 而尚未驗證。
 
 ## Current Phase
 
-Phase 11 完成（2026-11-02）；分支 `feature/phase-11-ruler-eyedropper`，基準 `352b53a`。Release 0 警告／0 錯誤、1072／1072 測試通過。依使用者指令在目前分支提交，不建立 PR、不推送。
+Phase 12 完成（2026-11-02）；分支 `feature/phase-12-capture-history`，基準 `71fb4ff`。Release 0 警告／0 錯誤、1127／1127 測試通過。依使用者指令在目前分支提交，不合併、不建立 PR、不推送。
 
 ## 使用者決定（2026-11-01）
 
@@ -61,7 +61,7 @@ Phase 11 完成（2026-11-02）；分支 `feature/phase-11-ruler-eyedropper`，�
 2. 煙霧驗證只在使用者閒置時執行（AGENTS.md「實機煙霧驗證」）；無法執行的項目標示「尚未驗證」。Phase 12 之後，所有煙霧腳本都不得把測試圖樣留在使用者的截圖歷史中。
 3. 更新 `CHANGELOG.md` 的 `[Unreleased]`、相關 `docs/`（ARCHITECTURE、USER_GUIDE、KNOWN_LIMITATIONS、ACCEPTANCE）。
 4. 建立 `handoffs/phase-<NN>-<slug>.md`；更新本檔案、`progress.md`、`findings.md`；Phase 標記 `complete`（下一 Phase 維持 `pending`）並重新 attest。
-5. 每個 Phase 完成後停在控制點。使用者已於 2026-11-01 明確授權每個 Phase 完成後在目前分支 commit（`phase-<NN>: <摘要>`，內文條列變更與驗證結果）。不建立 PR、不推送 `upstream`；本次依 2026-11-02 使用者指令實作 Phase 11 並提交；在目前分支停於控制點，不合併、不推送。
+5. 每個 Phase 完成後停在控制點。使用者已於 2026-11-01 明確授權每個 Phase 完成後在目前分支 commit（`phase-<NN>: <摘要>`，內文條列變更與驗證結果）。不建立 PR、不推送 `upstream`；本次依 2026-11-02 使用者指令實作 Phase 12 並提交；在目前分支停於控制點，不合併、不推送。
 
 ## Phases
 
@@ -173,25 +173,27 @@ Checklist
 **分支**：`feature/phase-12-capture-history`。
 
 Checklist
-- [ ] P12-00 ADR-0022 截圖歷史：推翻原本「不保存截圖歷史」的決策並記錄原因（使用者明確選擇預設開啟）；位置 `%LocalAppData%\ScreenshotApp\history\<時間戳記>\`（`original.png`、`thumb.png`、`document.json`）；寫入時機（截圖完成寫原圖；取代、關閉、結束、成功複製或另存時更新標註）；原子寫入與背景編碼；保留筆數與淘汰；第一次建立歷史資料夾時的通知；寫入失敗不阻擋截圖（通知一次並寫日誌，日誌不含圖像）；結束程式時等待進行中的寫入（有上限）；`document.json` 是內部格式（含結構版本）；修訂 ADR-0004（新設定欄位）與 ADR-0016（未匯出保護不因歷史而改變）｜Phase 11｜xhigh｜ADR Accepted、修訂段落存在
-- [ ] P12-01 文件快照的 JSON 序列化：全部標註種類（含馬賽克、模糊、尺寸標註）、裁切、結構版本；未知種類或無效值時整份標註視為損毀（只還原原圖並提示）｜P12-00｜high｜AT-15：每種標註往返相等、損毀與未來版本的處理
-- [ ] P12-02 `HistoryStore`（根目錄可注入）：列出（新到舊）、新增（背景執行緒編碼原圖與縮圖、同資料夾暫存檔後取代）、更新標註、刪除、清除全部、依保留筆數淘汰；不完整的條目略過並於下次啟動清理；只在歷史根目錄內讀寫｜P12-01｜xhigh｜AT-15（以 `TempDirectory`）：淘汰順序、不完整條目、唯讀或磁碟錯誤時回傳原因不拋出
-- [ ] P12-03 `ImageDocument` 以「原圖＋既有標註＋裁切」為初始狀態建立（復原紀錄為空、視為未修改）｜P12-00｜high｜AT-15：還原後輸出與保存當時相同；`IsDirty` 為 false
-- [ ] P12-04 `AppController` 整合：截圖完成時加入（之後的長截圖同樣加入）；取代、關閉、結束與成功匯出後更新；結束時等待進行中的寫入；從歷史開啟走未匯出變更保護並 `BeginEditing`；忙碌時忽略；截圖或選取中不顯示歷史視窗｜P12-02、P12-03｜xhigh｜流程測試（未啟動的 `AppController`、不顯示的編輯視窗、注入的歷史根目錄）
-- [ ] P12-05 歷史視窗（WPF，同時只有一個）：縮圖（背景解碼、凍結）、時間、尺寸；開啟、複製（經 `ImageRenderer` 與既有剪貼簿路徑）、刪除、全部清除（需確認）；鍵盤操作、存取鍵與工具提示；系統匣「截圖歷史」與編輯器工具列「歷史」入口｜P12-04｜high｜`x:Name` 於執行期可找到（比照 `EditorWindowTests`）
-- [ ] P12-06 設定：「保留截圖歷史」（預設開；關閉後停止記錄，既有條目保留到清除）、「保留筆數」（預設 50）、「清除全部歷史」按鈕（需確認）；`AppSettings`、`SettingsStore` 讀寫與無效值回復、設定視窗｜P12-02｜medium｜AT-08 延伸：新欄位缺少時用預設值、型別錯誤或超出範圍只重設該欄位
-- [ ] P12-07 既有煙霧腳本（Phase 2～4、9～11）在啟動受測程式前寫入關閉歷史的設定（沿用既有的 `settings.json` 備份與還原），測試圖樣不進入使用者的歷史｜P12-06｜medium｜重跑任一既有腳本後，使用者的歷史資料夾內容不變
-- [ ] P12-08 文件：README 與 USER_GUIDE 的隱私說明改寫（不再宣稱不自動存圖）、KNOWN_LIMITATIONS（歷史資料夾含有螢幕內容且未加密、清除方式、復原紀錄不保留）、ARCHITECTURE（第 6、9、10、11、12 節）｜P12-06｜medium｜文件與程式碼一致
-- [ ] P12-09 自動化測試整理：序列化、`HistoryStore`、`ImageDocument` 還原、設定、`StringsResourceTests`；確認單元測試只寫入 `TempDirectory`｜P12-01～P12-06｜high｜完整測試通過（觸及文件模型與 AppController）
-- [ ] P12-10 煙霧腳本 `Invoke-Phase12Smoke.ps1`：開啟歷史 → 三次截圖各畫不同標註 → 條目檔案存在 → 重新啟動程式後歷史視窗列出三筆 → 重新開啟第一筆，複製結果與當時相同 → 保留筆數 2 時最舊的被淘汰 → 刪除與全部清除後檔案移除；結束時只刪除本次建立的條目並還原設定；證據 `docs/evidence/phase-12/`｜P12-07｜high｜全部通過或標示「尚未驗證」
-- [ ] P12-11 Phase 收尾儀式（handoff `handoffs/phase-12-capture-history.md`）｜全部｜low｜commit 與合併
+- [x] P12-00 ADR-0022 截圖歷史：推翻原本「不保存截圖歷史」的決策並記錄原因（使用者明確選擇預設開啟）；位置 `%LocalAppData%\ScreenshotApp\history\<時間戳記>\`（`original.png`、`thumb.png`、`document.json`）；寫入時機（截圖完成寫原圖；取代、關閉、結束、成功複製或另存時更新標註）；原子寫入與背景編碼；保留筆數與淘汰；第一次建立歷史資料夾時的通知；寫入失敗不阻擋截圖（通知一次並寫日誌，日誌不含圖像）；結束程式時等待進行中的寫入（有上限）；`document.json` 是內部格式（含結構版本）；修訂 ADR-0004（新設定欄位）與 ADR-0016（未匯出保護不因歷史而改變）｜Phase 11｜xhigh｜ADR Accepted、修訂段落存在
+- [x] P12-01 文件快照的 JSON 序列化：全部標註種類（含馬賽克、模糊、尺寸標註）、裁切、結構版本；未知種類或無效值時整份標註視為損毀（只還原原圖並提示）｜P12-00｜high｜AT-15：每種標註往返相等、損毀與未來版本的處理
+- [x] P12-02 `HistoryStore`（根目錄可注入）：列出（新到舊）、新增（背景執行緒編碼原圖與縮圖、同資料夾暫存檔後取代）、更新標註、刪除、清除全部、依保留筆數淘汰；不完整的條目略過並於下次啟動清理；只在歷史根目錄內讀寫｜P12-01｜xhigh｜AT-15（以 `TempDirectory`）：淘汰順序、不完整條目、唯讀或磁碟錯誤時回傳原因不拋出
+- [x] P12-03 `ImageDocument` 以「原圖＋既有標註＋裁切」為初始狀態建立（復原紀錄為空、視為未修改）｜P12-00｜high｜AT-15：還原後輸出與保存當時相同；`IsDirty` 為 false
+- [x] P12-04 `AppController` 整合：截圖完成時加入（之後的長截圖同樣加入）；取代、關閉、結束與成功匯出後更新；結束時等待進行中的寫入；從歷史開啟走未匯出變更保護並 `BeginEditing`；忙碌時忽略；截圖或選取中不顯示歷史視窗｜P12-02、P12-03｜xhigh｜流程測試（未啟動的 `AppController`、不顯示的編輯視窗、注入的歷史根目錄）
+- [x] P12-05 歷史視窗（WPF，同時只有一個）：縮圖（背景解碼、凍結）、時間、尺寸；開啟、複製（經 `ImageRenderer` 與既有剪貼簿路徑）、刪除、全部清除（需確認）；鍵盤操作、存取鍵與工具提示；系統匣「截圖歷史」與編輯器工具列「歷史」入口｜P12-04｜high｜`x:Name` 於執行期可找到（比照 `EditorWindowTests`）
+- [x] P12-06 設定：「保留截圖歷史」（預設開；關閉後停止記錄，既有條目保留到清除）、「保留筆數」（預設 50）、「清除全部歷史」按鈕（需確認）；`AppSettings`、`SettingsStore` 讀寫與無效值回復、設定視窗｜P12-02｜medium｜AT-08 延伸：新欄位缺少時用預設值、型別錯誤或超出範圍只重設該欄位
+- [x] P12-07 既有煙霧腳本（Phase 2～4、9～11）在啟動受測程式前寫入關閉歷史的設定（沿用既有的 `settings.json` 備份與還原），測試圖樣不進入使用者的歷史｜P12-06｜medium｜重跑任一既有腳本後，使用者的歷史資料夾內容不變
+- [x] P12-08 文件：README 與 USER_GUIDE 的隱私說明改寫（不再宣稱不自動存圖）、KNOWN_LIMITATIONS（歷史資料夾含有螢幕內容且未加密、清除方式、復原紀錄不保留）、ARCHITECTURE（第 6、9、10、11、12 節）｜P12-06｜medium｜文件與程式碼一致
+- [x] P12-09 自動化測試整理：序列化、`HistoryStore`、`ImageDocument` 還原、設定、`StringsResourceTests`；確認單元測試只寫入 `TempDirectory`｜P12-01～P12-06｜high｜完整測試通過（觸及文件模型與 AppController）
+- [x] P12-10 煙霧腳本 `Invoke-Phase12Smoke.ps1`：開啟歷史 → 三次截圖各畫不同標註 → 條目檔案存在 → 重新啟動程式後歷史視窗列出三筆 → 重新開啟第一筆，複製結果與當時相同 → 保留筆數 2 時最舊的被淘汰 → 刪除與全部清除後檔案移除；結束時只刪除本次建立的條目並還原設定；證據 `docs/evidence/phase-12/`｜P12-07｜high｜全部通過或標示「尚未驗證」
+- [x] P12-11 Phase 收尾儀式（handoff `handoffs/phase-12-capture-history.md`）｜全部｜low｜交接、驗證、attest 與目前分支提交（不合併、不推送）
+
+**驗證界線**：P12-07 的腳本隔離已實作；P12-10 依允許的「尚未驗證」路徑記錄 NOT_RUN。既有執行個體使腳本在備份／輸入前停止；實際重啟、首次通知、桌面 UI 與 MT-15 尚未驗證。
 
 **Acceptance Criteria**
 1. FR-42 可操作；AT-15 通過；重新啟動後歷史仍可開啟並還原標註。
 2. 歷史寫入失敗時截圖與編輯照常（測試證據）；煙霧驗證不污染使用者的歷史。
 3. 使用者需驗證：MT-15（長時間常駐、重新啟動）。
 
-- **Status:** pending
+- **Status:** complete
 
 ### Phase 13: 長截圖（FR-43，手動與自動捲動）
 

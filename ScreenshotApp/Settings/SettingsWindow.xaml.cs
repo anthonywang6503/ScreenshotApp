@@ -20,6 +20,7 @@ internal partial class SettingsWindow : Window
     {
         _controller = controller;
         InitializeComponent();
+        MaxHeight = SystemParameters.WorkArea.Height;
         ColorList.ItemsSource = _colors;
         ShowSettings(controller.Settings);
     }
@@ -30,6 +31,9 @@ internal partial class SettingsWindow : Window
         HotkeyBox.Text = settings.Hotkey.ToString();
         ShowHotkeyStatus();
 
+        HistoryEnabledBox.IsChecked = settings.HistoryEnabled;
+        HistoryLimitBox.Text = settings.HistoryLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        HistoryPathBox.Text = _controller.HistoryRoot;
         StartWithWindowsBox.IsChecked = settings.StartWithWindows;
         LastSaveDirectoryBox.Text = settings.LastSaveDirectory ?? Strings.Get("Settings_LastSaveDirectoryNone");
 
@@ -146,11 +150,23 @@ internal partial class SettingsWindow : Window
 
     private void ApplyButton_Click(object sender, RoutedEventArgs e) => ApplyChanges();
 
+    private async void ClearHistory_Click(object sender, RoutedEventArgs e) => await _controller.ClearHistoryAsync(this);
+
     private bool ApplyChanges()
     {
+        if (!int.TryParse(HistoryLimitBox.Text, out var limit) || limit is < 1 or > 500)
+        {
+            ResultText.Text = Strings.Get("Settings_HistoryLimitHint");
+            ResultText.Visibility = Visibility.Visible;
+            ResultText.Foreground = ErrorBrush;
+            HistoryLimitBox.Focus();
+            return false;
+        }
         var current = _controller.Settings;
         var proposed = current with
         {
+            HistoryEnabled = HistoryEnabledBox.IsChecked == true,
+            HistoryLimit = limit,
             Hotkey = _pendingHotkey,
             StartWithWindows = StartWithWindowsBox.IsChecked == true,
             DefaultColor = (ColorList.SelectedItem as NamedColor)?.Color ?? current.DefaultColor,

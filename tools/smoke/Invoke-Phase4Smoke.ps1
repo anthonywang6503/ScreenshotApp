@@ -1192,6 +1192,8 @@ try {
     $readOnlyBytes = [IO.File]::ReadAllBytes($test.ReadOnly)
     $savedPath = Join-Path $files ('saved_{0:yyyyMMdd_HHmmss}.png' -f (Get-Date))
 
+    New-Item -ItemType Directory -Force -Path $DataDirectory | Out-Null
+    [IO.File]::WriteAllText($SettingsPath, '{"Hotkey":"Ctrl+Shift+2","StartWithWindows":false,"HistoryEnabled":false}')
     $patternProcess = Start-Process pwsh -PassThru -WindowStyle Hidden -ArgumentList @(
         '-NoProfile', '-File', (Join-Path $PSScriptRoot 'Show-TestPattern.ps1'),
         '-X', $Pattern.X, '-Y', $Pattern.Y, '-Width', $Pattern.Width, '-Height', $Pattern.Height)

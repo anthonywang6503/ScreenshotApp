@@ -24,6 +24,15 @@ internal sealed class ImageDocument
         CropRect = Bounds;
     }
 
+    internal ImageDocument(BitmapSource source, IEnumerable<Annotation> annotations, PixelRect crop) : this(source)
+    {
+        SetCropRect(crop);
+        foreach (var annotation in annotations)
+        {
+            Insert(_annotations.Count, annotation);
+        }
+    }
+
     public BitmapSource Source { get; }
 
     public int PixelWidth { get; }

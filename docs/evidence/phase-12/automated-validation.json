@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-02",
+  "phase": 12,
+  "baseline": "71fb4ff",
+  "branch": "feature/phase-12-capture-history",
+  "command": "pwsh -NoProfile -File tools/Invoke-Quality.ps1",
+  "release": {
+    "warnings": 0,
+    "errors": 0
+  },
+  "tests": {
+    "total": 1127,
+    "passed": 1127,
+    "failed": 0,
+    "newSincePhase11": 55
+  },
+  "trx": "artifacts/quality/61601d1580894aecbde52d9414d26cc7/tests.trx",
+  "assemblies": {
+    "ScreenshotApp\\bin\\Release\\net10.0-windows\\ScreenshotApp.dll": "6377e6b6ed58cbfdd5c4cb991c49cc5a4f275367fbb6c8ae9409740f3e324441",
+    "ScreenshotApp.Tests\\bin\\Release\\net10.0-windows\\ScreenshotApp.Tests.dll": "7691d30d30dd69994a11b54e5314e0fc995b2436fc5be332425f20df13c8e21c"
+  },
+  "smoke": {
+    "status": "NOT_RUN",
+    "reason": "既有使用者 ScreenshotApp PID 27708 執行中；未送出輸入",
+    "evidence": "docs/evidence/phase-12/phase12-results.txt"
+  },
+  "boundaries": [
+    "單元測試使用暫存目錄及未顯示視窗；未存取使用者剪貼簿或啟動登錄值",
+    "RenderTargetBitmap 檢查不等於桌面鍵鼠或 PrintWindow 驗收",
+    "MT-15、首次通知、實際重新啟動及長時間常駐尚未驗證"
+  ]
+}

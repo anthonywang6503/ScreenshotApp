@@ -186,6 +186,8 @@
 
                 <Rectangle Style="{StaticResource BarSeparator}" />
 
+                <Button x:Name="HistoryButton" Style="{StaticResource ActionButton}" Content="{res:Str Editor_History}"
+                        ToolTip="{res:Str History_Title}" Click="History_Click" />
                 <Button x:Name="OpenButton" Style="{StaticResource ActionButton}" ToolTip="{res:Str Editor_OpenToolTip}">
                     <StackPanel Orientation="Horizontal">
                         <Path Style="{StaticResource Icon}" Data="M1.5,3.5 H6 L7.5,5 H13.5 V13.5 H1.5 Z M1.5,7.5 H13.5" />

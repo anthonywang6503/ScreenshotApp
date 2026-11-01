@@ -14,6 +14,10 @@ internal sealed record AppSettings
 
     public bool StartWithWindows { get; init; }
 
+    public bool HistoryEnabled { get; init; } = true;
+
+    public int HistoryLimit { get; init; } = 50;
+
     public string? LastSaveDirectory { get; init; }
 
     public Color DefaultColor { get; init; } = Color.FromRgb(0xFF, 0x00, 0x00);

@@ -679,4 +679,106 @@
   <data name="Editor_PickedColor" xml:space="preserve">
     <value>已取色：{0}</value>
   </data>
+  <data name="Tray_History" xml:space="preserve">
+    <value>截圖歷史(&amp;H)</value>
+  </data>
+  <data name="Editor_History" xml:space="preserve">
+    <value>歷史(_X)</value>
+  </data>
+  <data name="History_Title" xml:space="preserve">
+    <value>截圖歷史</value>
+  </data>
+  <data name="History_Entry" xml:space="preserve">
+    <value>{0:yyyy/MM/dd HH:mm:ss}  ·  {1} × {2} 像素</value>
+  </data>
+  <data name="History_Missing" xml:space="preserve">
+    <value>此歷史條目已刪除或尚未完整儲存。</value>
+  </data>
+  <data name="History_OriginalOnly" xml:space="preserve">
+    <value>標註資料損毀或版本不受支援，僅還原原圖。原歷史條目不會被自動覆寫。</value>
+  </data>
+  <data name="History_Failed" xml:space="preserve">
+    <value>歷史作業失敗：{0}</value>
+  </data>
+  <data name="History_FirstUse" xml:space="preserve">
+    <value>已開啟本機截圖歷史，原圖與標註將保存於磁碟且未加密。可在設定關閉「保留截圖歷史」或清除全部歷史。</value>
+  </data>
+  <data name="History_Privacy" xml:space="preserve">
+    <value>歷史會保存未加密的原圖與標註，包含裁切或遮蔽前的內容。可在設定關閉；關閉後既有條目仍會保留。</value>
+  </data>
+  <data name="History_Timeout" xml:space="preserve">
+    <value>歷史寫入尚未完成，等待已超過 3 秒。本次最新修改可能無法保存至歷史。</value>
+  </data>
+  <data name="SettingsField_HistoryEnabled" xml:space="preserve">
+    <value>保留截圖歷史</value>
+  </data>
+  <data name="SettingsField_HistoryLimit" xml:space="preserve">
+    <value>歷史保留筆數</value>
+  </data>
+  <data name="Settings_HistoryEnabled" xml:space="preserve">
+    <value>保留截圖歷史(_E)</value>
+  </data>
+  <data name="Settings_HistoryLimit" xml:space="preserve">
+    <value>保留筆數(_N)：</value>
+  </data>
+  <data name="Settings_HistoryLimitHint" xml:space="preserve">
+    <value>請輸入 1～500 的整數；預設保留 50 筆。</value>
+  </data>
+  <data name="History_PathHint" xml:space="preserve">
+    <value>歷史資料夾位置（固定，無法在此變更）</value>
+  </data>
+  <data name="History_Open" xml:space="preserve">
+    <value>開啟(_O)</value>
+  </data>
+  <data name="History_OpenHint" xml:space="preserve">
+    <value>重新開啟並繼續編輯（Enter）</value>
+  </data>
+  <data name="History_Copy" xml:space="preserve">
+    <value>複製(_C)</value>
+  </data>
+  <data name="History_CopyHint" xml:space="preserve">
+    <value>複製包含標註與裁切的合成圖片</value>
+  </data>
+  <data name="History_Delete" xml:space="preserve">
+    <value>刪除(_D)</value>
+  </data>
+  <data name="History_DeleteHint" xml:space="preserve">
+    <value>刪除選取的歷史條目（Delete）</value>
+  </data>
+  <data name="History_Clear" xml:space="preserve">
+    <value>全部清除(_X)</value>
+  </data>
+  <data name="History_ClearHint" xml:space="preserve">
+    <value>確認後刪除全部歷史原圖與標註</value>
+  </data>
+  <data name="History_ClearConfirm" xml:space="preserve">
+    <value>確定清除全部截圖歷史？已保存的原圖與標註將從歷史資料夾刪除，無法復原。正在編輯的文件會保留。</value>
+  </data>
+  <data name="History_Refresh" xml:space="preserve">
+    <value>重新整理(_R)</value>
+  </data>
+  <data name="History_RefreshHint" xml:space="preserve">
+    <value>重新讀取磁碟上的歷史清單</value>
+  </data>
+  <data name="History_Empty" xml:space="preserve">
+    <value>目前沒有截圖歷史。</value>
+  </data>
+  <data name="History_Copied" xml:space="preserve">
+    <value>已複製歷史圖片。</value>
+  </data>
+  <data name="History_AlreadyExists" xml:space="preserve">
+    <value>歷史條目已存在。</value>
+  </data>
+  <data name="History_InvalidId" xml:space="preserve">
+    <value>歷史識別碼無效。</value>
+  </data>
+  <data name="History_InvalidPath" xml:space="preserve">
+    <value>歷史路徑無效。</value>
+  </data>
+  <data name="History_LinkRejected" xml:space="preserve">
+    <value>歷史位置不可使用連結或重新解析點。</value>
+  </data>
+  <data name="History_UnexpectedDirectory" xml:space="preserve">
+    <value>歷史條目包含非預期的子目錄。</value>
+  </data>
 </root>

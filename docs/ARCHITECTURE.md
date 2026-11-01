@@ -219,6 +219,10 @@ sequenceDiagram
 
 **命令與歷史**：[EditCommands](../ScreenshotApp/Editor/Commands/EditCommands.cs) 實作 `IEditCommand`（只有 `Execute` 與 `Undo`，兩者都是把文件設為某個狀態，重複執行無害），共六類：`AddAnnotationCommand`、`RemoveAnnotationCommand`（復原時放回原層序）、`ReplaceAnnotationCommand`（移動、調整大小或端點、樣式、文字、編號都是替換）、`ReorderAnnotationCommand`、`SetCropCommand`，以及把多個命令當成一筆的 `CompositeCommand`（依序執行、以相反順序復原；清除所有標註與重新編號所有步驟使用）。[UndoRedoStack](../ScreenshotApp/Editor/Commands/UndoRedoStack.cs) 只保存命令、不保存點陣圖，預設上限 100 筆，超過時捨棄最舊的一筆；執行新命令時清除可重做的紀錄，命令拋出例外時不記錄。每個狀態有一個版本：執行新命令產生新版本，復原與重做回到該狀態原本的版本；捨棄最舊一筆時，最底層狀態的版本改為那筆命令執行後的版本。
 
+### 磁碟歷史還原
+
+[HistorySnapshot／HistoryJson](../ScreenshotApp/History/HistorySnapshot.cs) 保存原圖參考、標註陣列、裁切與建立時間。版本 1 JSON 使用明確資料欄位，避免 WPF 計算屬性進入格式。全部九種標註及裁切驗證成功後，`ImageDocument` 還原建構式直接設定初始狀態，復原堆疊及匯出版本皆為 0；尺規邊界由原圖尺寸重建。
+
 ## 7. 編輯器
 
 [EditorWindow](../ScreenshotApp/Editor/EditorWindow.xaml.cs)（版面見 [EditorWindow.xaml](../ScreenshotApp/Editor/EditorWindow.xaml)）是唯一的編輯視窗，由 `AppController` 建立並重複使用，關閉後下次再建立新的。`Load(document)` 先解除舊工作階段的事件，再以新文件建立新的 `EditorSession`，工具回到選取、縮放回到符合視窗。視窗由上而下是工具列（十二種工具、復原與重做、開啟、複製、另存）、屬性列（八種常用色與自訂色、線寬、效果強度、字型、字級、步驟編號）、畫布與狀態列（圖片尺寸、裁切尺寸、游標所在像素、訊息、縮放）。
@@ -296,6 +300,7 @@ sequenceDiagram
 | `ImageFileLoader.Load`（開檔與解碼） | `AppController.OpenImage`，`Task.Run` | 回傳凍結的 `BitmapSource` |
 | `ClipboardPayload.Create`（DIB 與 PNG 位元組） | `EditorWindow.CopyImageAsync`，`Task.Run` | 輸入凍結的合成結果，輸出 `byte[]` |
 | `PngFileService.Save`（編碼與寫檔） | `EditorWindow.SaveImageAsync`，`Task.Run` | 輸入凍結的合成結果 |
+| `HistoryStore` 序列背景佇列 | `AppController.History` | 凍結原圖及不可變標註快照；PNG／縮圖編碼、JSON 及所有磁碟讀寫／刪除依序執行 |
 | 等待第二個執行個體的喚醒 | `SingleInstanceGuard`，執行緒集區 | 以 `Dispatcher.BeginInvoke` 轉回 UI 執行緒 |
 
 - 在執行緒之間傳遞的點陣圖（開啟的圖片、合成結果）一律先凍結；快照與選取的裁切結果同樣在建立後 `Freeze()`，`ImageDocument` 也只接受凍結的原圖。背景工作內部的暫時物件（例如格式轉換用的 `FormatConvertedBitmap`）不離開該執行緒。`AnnotationPainter` 與兩個自繪層建立的筆刷、畫筆與幾何同樣先凍結。
@@ -335,6 +340,8 @@ sequenceDiagram
 
 快捷鍵的訊息視窗在模態對話框期間仍會收到 `WM_HOTKEY`，所以這個檢查不可省略。詢問期間若遇到登出，`OnSessionEnding` 仍會拒絕結束工作階段，但 `RequestCloseEditor` 因忙碌而不會再開第二個對話框。設定視窗與第二個執行個體的喚醒不受 `IsBusy` 限制，只在截圖或選取中不顯示。
 
+歷史保存不呼叫 `MarkExported`；[AppController.History](../ScreenshotApp/AppController.History.cs) 在開啟歷史前確認未匯出變更，並透過 `LoadHistoryReplacementAsync` 保護解碼期間新增的修改。有效還原關聯原條目，損毀 JSON 的原圖還原不建立可寫關聯。歷史視窗、複製與刪除入口忙碌時忽略，擷取期間不顯示歷史視窗。
+
 ## 11. 設定與本機資料
 
 | 項目 | 位置 | 負責類別 |
@@ -354,6 +361,14 @@ sequenceDiagram
 
 **故障日誌**：每筆為時間戳記、呼叫端提供的情境說明與例外的 `ToString()`（訊息與堆疊），不接受也不寫入圖像或使用者輸入的文字。目前檔案達 256 KiB 時改名為 `error.1.log`（覆寫舊的）後再寫，共保留兩份；單筆超過上限的四分之一個字元時截斷並加上「…」；啟動時刪除最後寫入時間超過 30 天的檔案。寫入失敗時靜默略過，不影響主要功能。
 
+### 截圖歷史儲存
+
+設定新增 `HistoryEnabled`（預設 true）與 `HistoryLimit`（預設 50，1～500）。缺少欄位使用預設，無效欄位只重設自身。設定視窗顯示固定歷史位置及確認後清除；縮小工作區時可捲動。
+
+[HistoryStore](../ScreenshotApp/History/HistoryStore.cs) 根目錄由設定檔所在目錄衍生，測試可注入暫存根目錄。每筆以 UTC 時間與 GUID 命名，包含 original.png、thumb.png 與最後原子提交的 document.json。更新只取代 JSON；同一佇列協調新增、更新、讀取、刪除及保留淘汰。關閉歷史使待寫入世代失效、解除文件關聯並停用維護；重新啟用不補存。刪除後更新只在完整條目仍存在時寫入，不會重建。
+
+背景作業取得磁碟錯誤時回傳繁體中文原因；控制器每次執行至多一次背景失敗通知，日誌只記錄固定作業種類，不含文件內容。初次建立根目錄以系統通知說明隱私。歷史視窗只持有凍結縮圖，原圖於開啟／複製時解碼；無法還原 JSON 時僅開原圖。詳見 [ADR-0022](adr/0022-capture-history.md)。
+
 ## 12. 資源管理
 
 | 資源 | 擁有者與釋放 |
@@ -368,6 +383,8 @@ sequenceDiagram
 | 顯示器快照 | `DesktopSnapshot.Crop` 複製出獨立的點陣圖，不讓裁切結果留住整張快照的記憶體 |
 
 **事件訂閱**：`EditorWindow.Load` 換文件時先解除舊 `EditorSession` 的三個事件（`Changed`、`StyleDefaultsChanged`、`StepNumberEditRequested`）；覆蓋層的事件沒有逐一解除，覆蓋層與 `SelectionController` 在選取結束後一起被捨棄；`AppController` 對快捷鍵與系統匣事件的訂閱隨這兩個服務在結束時釋放；全域例外處理的訂閱持續到處理程序結束。設定視窗與編輯視窗的 `Closed` 事件會清除控制器對它們的參考，編輯視窗關閉時也停止狀態列訊息的計時器。
+
+歷史文件關聯使用弱參照表，不因條目保留原圖。編輯器取代與關閉前擷取快照，成功匯出後更新；正常結束先關閉編輯器，再有限等待背景佇列 3 秒，失敗或逾時提示。歷史視窗結束時解除控制器參考。
 
 ## 13. 文字資源
 
@@ -389,6 +406,7 @@ sequenceDiagram
 | DPI 感知、顯示器列舉、GDI 擷取與 SafeHandle | `DpiAwarenessTests`、`MonitorServiceTests`、`CaptureServiceTests`、`SafeHandleTests` |
 | 狀態機與截圖流程 | `AppStateMachineTests`、`CaptureFlowTests` |
 | 選取幾何、十字游標、座標換算 | `SelectionLogicTests`（`DragSelection`）、`CrosshairCursorTests`、`CoordinateMapperTests`、`PixelRectTests` |
+| 磁碟截圖歷史 | `HistoryTests`、`HistoryFlowTests`：全部標註往返、輸出、損毀、淘汰、關閉、不復活、未匯出保護、逾時與介面元件 |
 | 文件模型、命令與歷史 | `EditCommandTests`、`CropCommandTests`、`UndoRedoStackTests`、`DirtyTrackingTests`、`AnnotationGeometryTests` |
 | 編輯工作階段與縮放、右鍵選單 | `EditorSessionTests`、`TextAnnotationTests`、`EditorZoomTests`、`EditorWindowTests`（建立但不顯示編輯視窗） |
 | 合成與輸出、開啟圖片 | `ImageRendererTests`、`ClipboardServiceTests`、`PngFileServiceTests`、`ImageFileLoaderTests` |

@@ -18,7 +18,7 @@ internal sealed record SettingsApplyResult(bool Succeeded, IReadOnlyList<string>
 /// <summary>
 /// 建立並連接常駐服務：設定、全域快捷鍵、系統匣、開機啟動、截圖流程與唯一的編輯視窗。只在 UI 執行緒上使用。
 /// </summary>
-internal sealed class AppController : IDisposable
+internal sealed partial class AppController : IDisposable
 {
     private readonly SettingsStore _store;
     private readonly StartupService _startup;
@@ -35,17 +35,19 @@ internal sealed class AppController : IDisposable
     // 詢問未匯出的變更或顯示開啟檔案對話框期間（含等待複製、儲存或載入完成），不處理新的截圖、開啟圖片與結束要求。
     private bool _prompting;
 
-    public AppController(SettingsStore store, StartupService startup, ErrorLog log)
+    public AppController(SettingsStore store, StartupService startup, ErrorLog log, History.HistoryStore? history = null)
     {
         _store = store;
         _startup = startup;
         _log = log;
+        _history = history ?? new History.HistoryStore(Path.Combine(Path.GetDirectoryName(store.FilePath)!, "history"));
         _captureFlow = new CaptureFlow(_state, new DesktopCaptureEnvironment());
         _hotkey = new HotkeyService();
         _hotkey.Pressed += (_, _) => StartCapture();
         _tray = new TrayService();
         _tray.CaptureRequested += (_, _) => RunAfterMenuCloses(StartCapture);
         _tray.OpenRequested += (_, _) => RunAfterMenuCloses(OpenImage);
+        _tray.HistoryRequested += (_, _) => RunAfterMenuCloses(ShowHistory);
         _tray.SettingsRequested += (_, _) => ShowSettings();
         _tray.ExitRequested += (_, _) => RunAfterMenuCloses(RequestExit);
     }
@@ -61,11 +63,13 @@ internal sealed class AppController : IDisposable
     // 正在詢問、編輯器正在背景匯出，或編輯器開著自己的對話框（存檔、色彩、錯誤訊息；Windows 會停用擁有者視窗）：
     // 此時忽略新的截圖、開啟圖片與結束要求，避免對話框重疊或在途中更換文件。
     private bool IsBusy =>
-        _prompting || (_editor is not null && (_editor.IsExporting || !NativeMethods.IsWindowEnabled(new WindowInteropHelper(_editor).Handle)));
+        _prompting || (_editor is not null && (_editor.IsExporting || (new WindowInteropHelper(_editor).Handle != IntPtr.Zero && !NativeMethods.IsWindowEnabled(new WindowInteropHelper(_editor).Handle))));
 
     public void Start(SettingsLoadResult loaded)
     {
         _settings = loaded.Settings;
+        _started = true;
+        ConfigureHistory(_settings.HistoryEnabled, _settings.HistoryLimit);
         var notices = new List<string>();
 
         switch (loaded.Status)
@@ -187,6 +191,7 @@ internal sealed class AppController : IDisposable
         }
 
         _settings = effective;
+        ConfigureHistory(_settings.HistoryEnabled, _settings.HistoryLimit);
         var save = _store.Save(_settings);
         if (!save.Succeeded)
         {
@@ -308,10 +313,25 @@ internal sealed class AppController : IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
+        _historyWindow?.Close();
         _settingsWindow?.Close();
 
         // 結束前已處理未匯出的變更；此時無法再詢問。
         _editor?.CloseWithoutConfirmation();
+        _historyShuttingDown = true;
+        if (!_historyDrainAttempted)
+        {
+            if (!_history.Pending.Wait(TimeSpan.FromSeconds(3)))
+            {
+                _log.Write("歷史寫入等待逾時");
+                if (_started) ShowError(null, Strings.Get("History_Timeout"));
+            }
+            else if (_started && _history.LastError is not null)
+            {
+                ShowError(null, Strings.Format("History_Failed", _history.LastError));
+            }
+        }
         _hotkey.Dispose();
         _tray.Dispose();
     }
@@ -341,6 +361,10 @@ internal sealed class AppController : IDisposable
         }
 
         _editor?.CloseWithoutConfirmation();
+        _prompting = true;
+        if (!await DrainHistoryAsync(TimeSpan.FromSeconds(3)))
+            ShowError(null, Strings.Get("History_Timeout"));
+        else if (_history.LastError is not null) ShowError(null, Strings.Format("History_Failed", _history.LastError));
         Application.Current.Shutdown();
     }
 
@@ -375,7 +399,9 @@ internal sealed class AppController : IDisposable
         switch (outcome.Status)
         {
             case CaptureStatus.Completed:
-                OpenEditor(new ImageDocument(outcome.Image!));
+                var document = new ImageDocument(outcome.Image!);
+                RecordCapture(document);
+                OpenEditor(document);
                 break;
             case CaptureStatus.ColorPicked:
                 var copied = ClipboardService.TrySetText(outcome.ColorCode!, out var errorCode);

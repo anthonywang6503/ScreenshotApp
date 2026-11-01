@@ -558,6 +558,8 @@ try {
     Add-Info '剪貼簿備份' ("格式 {0} 種{1}" -f $clipboardFormats.Count, $(if ($clipboardSkipped) { '；無法讀取而不會還原：' + ($clipboardSkipped -join '、') } else { '' }))
 
     # 0. 已知圖樣視窗：先確認螢幕上的像素與圖樣完全一致，後續比對才有意義。
+    New-Item -ItemType Directory -Force -Path $DataDirectory | Out-Null
+    [IO.File]::WriteAllText($SettingsPath, '{"Hotkey":"Ctrl+Shift+2","StartWithWindows":false,"HistoryEnabled":false}')
     $patternProcess = Start-Process pwsh -PassThru -WindowStyle Hidden -ArgumentList @(
         '-NoProfile', '-File', (Join-Path $PSScriptRoot 'Show-TestPattern.ps1'),
         '-X', $Pattern.X, '-Y', $Pattern.Y, '-Width', $Pattern.Width, '-Height', $Pattern.Height)

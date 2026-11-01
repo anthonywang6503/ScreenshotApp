@@ -121,6 +121,7 @@ internal partial class EditorWindow : Window
     /// <summary>以新文件取代目前的文件：工具回到選取、縮放回到符合視窗，進行中的文字輸入直接捨棄。</summary>
     public void Load(ImageDocument document)
     {
+        SaveHistory();
         if (_session is not null)
         {
             _session.Changed -= Session_Changed;
@@ -166,6 +167,24 @@ internal partial class EditorWindow : Window
 
     /// <summary>複製或儲存的背景編碼是否正在進行。</summary>
     public bool IsExporting => _exporting;
+
+    internal ImageDocument? CurrentDocument => _session?.Document;
+
+    internal void SaveHistory()
+    {
+        CommitTextEdit();
+        if (_session is not null) _controller.SaveHistory(_session.Document);
+    }
+
+    internal async Task<History.HistoryLoaded?> LoadHistoryReplacementAsync(Func<Task<History.HistoryLoaded?>> load)
+    {
+        CommitTextEdit();
+        var version = _session?.Document.History.Version;
+        var loaded = await load();
+        return loaded is not null && HasUnexportedChanges() && _session?.Document.History.Version != version ? null : loaded;
+    }
+
+    private void History_Click(object sender, RoutedEventArgs e) => _controller.ShowHistory();
 
     /// <summary>完成進行中的文字輸入後，文件是否有未匯出的變更。</summary>
     public bool HasUnexportedChanges()
@@ -253,6 +272,7 @@ internal partial class EditorWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        SaveHistory();
         _messageTimer.Stop();
         base.OnClosed(e);
     }
@@ -1213,6 +1233,7 @@ internal partial class EditorWindow : Window
         }
 
         document.MarkExported(version);
+        _controller.SaveHistory(document);
         ShowMessage(Strings.Format("Editor_Copied", image.PixelWidth, image.PixelHeight));
         return true;
     }
@@ -1263,6 +1284,7 @@ internal partial class EditorWindow : Window
         }
 
         document.MarkExported(version);
+        _controller.SaveHistory(document);
         var remembered = _controller.SaveLastSaveDirectory(Path.GetDirectoryName(path)!);
         ShowMessage(remembered.Succeeded
             ? Strings.Format("Editor_Saved", path)

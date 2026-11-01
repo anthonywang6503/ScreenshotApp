@@ -28,6 +28,7 @@ internal sealed class TrayService : IDisposable
         _menu = new Forms.ContextMenuStrip();
         _menu.Items.Add(Strings.Get("Tray_StartCapture"), null, (_, _) => CaptureRequested?.Invoke(this, EventArgs.Empty));
         _menu.Items.Add(Strings.Get("Tray_OpenImage"), null, (_, _) => OpenRequested?.Invoke(this, EventArgs.Empty));
+        _menu.Items.Add(Strings.Get("Tray_History"), null, (_, _) => HistoryRequested?.Invoke(this, EventArgs.Empty));
         _menu.Items.Add(Strings.Get("Tray_Settings"), null, (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty));
         _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add(Strings.Get("Tray_Exit"), null, (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty));
@@ -50,6 +51,8 @@ internal sealed class TrayService : IDisposable
     public event EventHandler? CaptureRequested;
 
     public event EventHandler? OpenRequested;
+
+    public event EventHandler? HistoryRequested;
 
     public event EventHandler? SettingsRequested;
 
