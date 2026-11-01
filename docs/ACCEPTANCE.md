@@ -2,15 +2,15 @@
 
 記錄自動化測試、Agent 端實機煙霧驗證與使用者實機驗收（MT）的結果。未經實際操作確認的項目一律標示「尚未驗證」，不以「編譯成功」取代操作驗收。
 
-## v1.2 目標範圍（2026-11-01，Phase 8～9）
+## v1.2 目標範圍（2026-11-01，Phase 8～10）
 
-Phase 8 完成 [規格](ScreenshotApp.Spec.md) 修訂；Phase 9 已實作放大鏡與覆蓋層取色，尚未發佈。下方既有測試結果屬於其記載的版本與日期，不能代表 v1.2 新需求已通過；既有 AT-04／05／07／08 的新增範圍也須於對應 Phase 重新驗證。
+Phase 8 完成 [規格](ScreenshotApp.Spec.md) 修訂；Phase 9 已實作放大鏡與覆蓋層取色，Phase 10 已實作馬賽克與模糊，均尚未發佈。下方既有測試結果屬於其記載的版本與日期，不能代表 v1.2 新需求已通過；既有 AT-04／05／07／08 的新增範圍也須於對應 Phase 重新驗證。
 
 | 新增範圍 | 實作階段 | 驗收 | 本次狀態 |
 |---|---|---|---|
 | 放大鏡 | 9 | AT-11、MT-12 | 已實作，AT-11 通過；實機操作與 MT-12 尚未驗證 |
 | 覆蓋層與編輯器取色 | 9、11 | AT-12、MT-12／14 | 覆蓋層已實作、AT-12 覆蓋層部分通過；實機尚未驗證，編輯器部分尚未實作 |
-| 馬賽克、模糊 | 10 | AT-13、MT-14 | 尚未實作／尚未驗證 |
+| 馬賽克、模糊 | 10 | AT-13、MT-14 | 已實作，AT-13 與 AT-04／05／07 延伸通過；實機與 MT-14 尚未驗證 |
 | 尺規與量測 | 11 | AT-14、MT-12／14 | 尚未實作／尚未驗證 |
 | 磁碟截圖歷史 | 12 | AT-15、MT-15 | 尚未實作／尚未驗證 |
 | 手動與自動長截圖 | 13 | AT-16、MT-13 | 尚未實作／尚未驗證 |
@@ -25,6 +25,16 @@ Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差�
 - [Phase 9 煙霧腳本](../tools/smoke/Invoke-Phase9Smoke.ps1) 已完成並通過 PowerShell 語法檢查；實際啟動時偵測到使用者既有 ScreenshotApp，未啟動另一份程式、未送出鍵鼠輸入。結果為 [NOT_RUN](evidence/phase-09/phase9-results.txt)，不能算實機通過。
 - **尚未驗證**：實際快捷鍵 Ctrl 抑制、鍵鼠拖曳／取消／C 取色、剪貼簿通知、桌面 PrintWindow 每格比對、多螢幕切換與混合 DPI；MT-12 各縮放的桌面驗收仍待執行。編輯器取色在 Phase 11。
 - 續作與執行方式見 [Phase 9 交接](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-09-overlay-magnifier.md)。
+
+### Phase 10 驗證（2026-11-01）
+
+- `tools/Invoke-Quality.ps1` 通過：鎖定相依還原、Release **0 警告／0 錯誤**、**1036／1036 測試通過**，無跳過；新增 45 個案例。[摘要與組件 SHA-256](evidence/phase-10/automated-validation.json)。
+- 獨立參考演算法比對區塊平均、三輪模糊、四捨五入、不完整區塊、強度上下界、均勻色、1×1、負座標及右下超界。確認原圖不變、不透明覆蓋下層、上層正常繪製、範圍外不變、裁切前後像素一致。
+- 未顯示的 WPF 標註層在 100% 時逐像素等於匯出；其他縮放的繪製不影響匯出。PNG 存檔／剪貼簿 PNG 位元組相同，DIB 可視像素相同，僅提供合成影像格式；測試不存取使用者剪貼簿。
+- 模型／工作階段／未顯示視窗測試涵蓋八個控制點、翻轉、零位移、拖曳預覽、取消、移動、調整、強度、再製、層序、刪除與逐筆復原／重做；驗證適用控制項、右鍵選單、強度不寫入設定，以及快取鍵與筆數淘汰。
+- [4K 量測](evidence/phase-10/performance.json)：3840×2160、Release、.NET 10.0.14、16 邏輯處理器、單一 STA 執行緒，各 5 次移動邊界重算；馬賽克 12px 中位數 51.1ms，模糊 6px 424.3ms。含取樣／建立凍結點陣圖，不含 WPF 呈現與桌面操作；**大範圍模糊可能停頓，不宣稱拖曳流暢**。可用 `dotnet run --project tools/benchmarks/Effects.csproj -c Release -- docs/evidence/phase-10/performance.json` 重測。
+- [煙霧腳本](../tools/smoke/Invoke-Phase10Smoke.ps1) 通過 AST 語法與參考演算法編譯；執行時因既有 ScreenshotApp 而在輸入前停止，結果 [NOT_RUN](evidence/phase-10/phase10-results.txt)。實機建立效果、移動／調整操作、剪貼簿／另存對話框、PrintWindow、GDI／USER 趨勢與 MT-14 PowerPoint 貼上仍**尚未驗證**。
+- [Phase 10 交接](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-10-mosaic-blur.md) 記錄重跑方式、限制與下一階段入口。
 
 ## 1. 自動化測試
 

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ScreenshotApp.Editor.Model;
 
 namespace ScreenshotApp.Editor.Rendering;
@@ -14,12 +15,21 @@ internal static class AnnotationPainter
     private static readonly Typeface StepNumberTypeface =
         new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
 
-    public static void Paint(DrawingContext context, Annotation annotation)
+    public static void Paint(DrawingContext context, Annotation annotation, BitmapSource source)
     {
         var brush = new SolidColorBrush(annotation.Color);
         brush.Freeze();
         switch (annotation)
         {
+            case EffectAnnotation effect:
+                var image = EffectBitmapCache.Get(source, effect);
+                if (image is not null)
+                {
+                    var rect = effect.Rect.Intersect(new PixelRect(0, 0, source.PixelWidth, source.PixelHeight));
+                    context.DrawImage(image, new Rect(rect.X, rect.Y, rect.Width, rect.Height));
+                }
+
+                break;
             case RectangleAnnotation rectangle:
                 PaintRectangle(context, rectangle, brush);
                 break;

@@ -15,11 +15,11 @@
 
 ## Next Step
 
-Phase 9 已完成並停在控制點；Phase 10 維持 pending。續作先讀 handoffs/phase-09-overlay-magnifier.md。實機煙霧因既有 ScreenshotApp 執行中而尚未驗證，後續閒置時補跑。
+Phase 10 已完成並停在控制點；Phase 11 維持 pending。續作先讀 handoffs/phase-10-mosaic-blur.md。實機煙霧因既有 ScreenshotApp 而尚未驗證；4K 大範圍模糊同步重算可能停頓，已揭露量測及限制。
 
 ## Current Phase
 
-Phase 9 完成（2026-11-01）；分支 `feature/phase-09-overlay-magnifier`，基準 `main@6556bab`。Phase 8 已提交 b48b6fe；本階段依使用者授權在目前分支提交。Release 0 警告、991／991 測試通過；實機 NOT_RUN 已記錄。不合併、不建立 PR、不推送。
+Phase 10 完成（2026-11-01）；分支 `feature/phase-10-mosaic-blur`，基準 `e57ef62`。Release 0 警告／0 錯誤、1036／1036 測試通過。依使用者指令在本分支提交，不合併、不建立 PR、不推送。
 
 ## 使用者決定（2026-11-01）
 
@@ -61,7 +61,7 @@ Phase 9 完成（2026-11-01）；分支 `feature/phase-09-overlay-magnifier`，�
 2. 煙霧驗證只在使用者閒置時執行（AGENTS.md「實機煙霧驗證」）；無法執行的項目標示「尚未驗證」。Phase 12 之後，所有煙霧腳本都不得把測試圖樣留在使用者的截圖歷史中。
 3. 更新 `CHANGELOG.md` 的 `[Unreleased]`、相關 `docs/`（ARCHITECTURE、USER_GUIDE、KNOWN_LIMITATIONS、ACCEPTANCE）。
 4. 建立 `handoffs/phase-<NN>-<slug>.md`；更新本檔案、`progress.md`、`findings.md`；Phase 標記 `complete`（下一 Phase 維持 `pending`）並重新 attest。
-5. 每個 Phase 完成後停在控制點。使用者已於 2026-11-01 明確授權每個 Phase 完成後在目前分支 commit（`phase-<NN>: <摘要>`，內文條列變更與驗證結果）。不建立 PR、不推送 `upstream`；本次只實作至 Phase 9。
+5. 每個 Phase 完成後停在控制點。使用者已於 2026-11-01 明確授權每個 Phase 完成後在目前分支 commit（`phase-<NN>: <摘要>`，內文條列變更與驗證結果）。不建立 PR、不推送 `upstream`；本次依 2026-11-01 使用者指令實作 Phase 10 並提交，不合併、不推送。
 
 ## Phases
 
@@ -123,22 +123,24 @@ Checklist
 **分支**：`feature/phase-10-mosaic-blur`。
 
 Checklist
-- [ ] P10-00 ADR-0020 效果標註；修訂 ADR-0010（新增標註種類）與 ADR-0011（繪製碼可取得原圖）：效果只取樣原圖、不透明覆蓋、整數像素對齊、強度參數範圍、效果點陣圖快取與失效條件、模糊的隱私限制｜Phase 8｜high｜ADR Accepted、修訂段落存在
-- [ ] P10-01 模型：抽象 `EffectAnnotation`（`Rect`、`Strength`，整塊命中、八個控制點、平移與調整大小沿用 `BoxHandles`）與 `MosaicAnnotation`、`BlurAnnotation`；顏色對效果不適用｜P10-00｜high｜AT-13 模型測試（命中、控制點、平移、調整大小、最小 1×1）
-- [ ] P10-02 `Editor/Rendering/PixelEffects`（純函式，位元組陣列）：馬賽克（區塊平均，邊緣不完整區塊只平均範圍內像素）、模糊（可分離的盒狀模糊三次近似高斯，只取範圍內像素並重新計算邊界權重）；輸出凍結的 `Bgr32`；以「原圖、範圍、種類、強度」為鍵的小型快取｜P10-00｜xhigh｜AT-13：獨立計算的期望值、範圍與原圖邊界相交時夾取、均勻色與 1×1 邊界；不要求每個像素都改色
-- [ ] P10-03 繪製整合：`AnnotationPainter.Paint` 增加原圖參數（或繪製內容物件），`AnnotationLayer` 與 `ImageRenderer` 傳入同一張原圖；效果以整數像素矩形繪製；未知種類仍拋出例外｜P10-01、P10-02｜xhigh｜AT-07 延伸：同一文件在不同縮放下輸出一致；裁切交界上的效果與未裁切輸出的同一範圍相同
-- [ ] P10-04 編輯器：工具列兩個工具（圖示＋文字、存取鍵、工具提示）、拖曳建立（零尺寸不建立）、屬性列「強度」欄位（選取效果時修改＝一筆命令；選取效果時停用顏色與線寬）、右鍵選單適用項目（再製、層序、刪除）、拖曳移動或調整時預覽即時重算｜P10-03｜high｜AT-04、AT-05 延伸：建立、移動、調整、再製、強度、復原／重做各一筆命令；實機操作流暢（4K 範圍附量測條件）
-- [ ] P10-05 文件：USER_GUIDE（兩種效果的用途差異）、KNOWN_LIMITATIONS（模糊可能被部分還原；編輯期間原圖仍在記憶體、可復原；效果不含其下的標註）、ARCHITECTURE 第 6、8 節｜P10-04｜medium｜文件與程式碼一致
-- [ ] P10-06 自動化測試整理：`PixelEffectsTests`、`EffectAnnotationTests`、`ImageRendererTests` 與 `EditorSessionTests` 的新增案例、`StringsResourceTests`｜P10-01～P10-04｜high｜完整測試通過（觸及共用繪製碼）
-- [ ] P10-07 煙霧腳本 `Invoke-Phase10Smoke.ps1`：已知圖樣截圖 → 建立馬賽克與模糊 → 複製 → 效果範圍內符合期望（馬賽克每個區塊單一顏色且等於區塊平均）、範圍外與原圖相同、另存與剪貼簿位元組相同 → 復原後恢復原圖；資源量測；證據 `docs/evidence/phase-10/`｜P10-04｜high｜全部通過或標示「尚未驗證」
-- [ ] P10-08 Phase 收尾儀式（handoff `handoffs/phase-10-mosaic-blur.md`）｜全部｜low｜commit 與合併
+- [x] P10-00 ADR-0020 效果標註；修訂 ADR-0010（新增標註種類）與 ADR-0011（繪製碼可取得原圖）：效果只取樣原圖、不透明覆蓋、整數像素對齊、強度參數範圍、效果點陣圖快取與失效條件、模糊的隱私限制｜Phase 8｜high｜ADR Accepted、修訂段落存在
+- [x] P10-01 模型：抽象 `EffectAnnotation`（`Rect`、`Strength`，整塊命中、八個控制點、平移與調整大小沿用 `BoxHandles`）與 `MosaicAnnotation`、`BlurAnnotation`；顏色對效果不適用｜P10-00｜high｜AT-13 模型測試（命中、控制點、平移、調整大小、最小 1×1）
+- [x] P10-02 `Editor/Rendering/PixelEffects`（純函式，位元組陣列）：馬賽克（區塊平均，邊緣不完整區塊只平均範圍內像素）、模糊（可分離的盒狀模糊三次近似高斯，只取範圍內像素並重新計算邊界權重）；輸出凍結的 `Bgr32`；以「原圖、範圍、種類、強度」為鍵的小型快取｜P10-00｜xhigh｜AT-13：獨立計算的期望值、範圍與原圖邊界相交時夾取、均勻色與 1×1 邊界；不要求每個像素都改色
+- [x] P10-03 繪製整合：`AnnotationPainter.Paint` 增加原圖參數（或繪製內容物件），`AnnotationLayer` 與 `ImageRenderer` 傳入同一張原圖；效果以整數像素矩形繪製；未知種類仍拋出例外｜P10-01、P10-02｜xhigh｜AT-07 延伸：同一文件在不同縮放下輸出一致；裁切交界上的效果與未裁切輸出的同一範圍相同
+- [x] P10-04 編輯器：工具列兩個工具（圖示＋文字、存取鍵、工具提示）、拖曳建立（零尺寸不建立）、屬性列「強度」欄位（選取效果時修改＝一筆命令；選取效果時停用顏色與線寬）、右鍵選單適用項目（再製、層序、刪除）、拖曳移動或調整時預覽即時重算｜P10-03｜high｜AT-04、AT-05 延伸：建立、移動、調整、再製、強度、復原／重做各一筆命令；實機操作流暢（4K 範圍附量測條件）
+- [x] P10-05 文件：USER_GUIDE（兩種效果的用途差異）、KNOWN_LIMITATIONS（模糊可能被部分還原；編輯期間原圖仍在記憶體、可復原；效果不含其下的標註）、ARCHITECTURE 第 6、8 節｜P10-04｜medium｜文件與程式碼一致
+- [x] P10-06 自動化測試整理：`PixelEffectsTests`、`EffectAnnotationTests`、`ImageRendererTests` 與 `EditorSessionTests` 的新增案例、`StringsResourceTests`｜P10-01～P10-04｜high｜完整測試通過（觸及共用繪製碼）
+- [x] P10-07 煙霧腳本 `Invoke-Phase10Smoke.ps1`：已知圖樣截圖 → 建立馬賽克與模糊 → 複製 → 效果範圍內符合期望（馬賽克每個區塊單一顏色且等於區塊平均）、範圍外與原圖相同、另存與剪貼簿位元組相同 → 復原後恢復原圖；資源量測；證據 `docs/evidence/phase-10/`｜P10-04｜high｜全部通過或標示「尚未驗證」
+- [x] P10-08 Phase 收尾儀式（handoff `handoffs/phase-10-mosaic-blur.md`）｜全部｜low｜驗證、交接、attest 與目前分支提交
+
+**驗證界線**：P10-04 的互動程式與自動化完成，實機流暢度尚未驗證；4K 模糊重算中位數 424.3ms，可能停頓。P10-07 依允許的「尚未驗證」路徑結案，既有 ScreenshotApp 執行中，未送出模擬輸入；MT-14 與資源循環仍待驗證。
 
 **Acceptance Criteria**
 1. FR-39、FR-40 可操作；AT-13 通過；既有 AT-07（輸出與縮放無關）仍通過。
 2. 輸出效果範圍符合演算法期望值、不透明且成品不附帶原圖（測試證據）；畫面與輸出共用繪製碼。
 3. 使用者需驗證：MT-14（貼入 PowerPoint 的輸出一致性與可辨識度紀錄，不宣稱不可還原）。
 
-- **Status:** pending
+- **Status:** complete
 
 ### Phase 11: 尺規、截圖時量測與編輯器取色（FR-41、FR-38 編輯器部分）
 
@@ -278,3 +280,14 @@ Checklist
 |-------|---------|------------|
 | 搜尋根目錄 `handoffs/` 不存在 | 1 | 依封存慣例改用目前計畫下的 `handoffs/` |
 | 收尾 patch 的 Checklist 行未包含完整原文，套用遭拒 | 1 | 確認整批未套用，拆開完整行修訂與限定 P8-01～04 的勾選更新 |
+
+## Phase 10 執行錯誤與處理
+
+| 錯誤／觀察 | 處理 |
+|---|---|
+| 測試缺少 StaRunner 匯入導致 CS0103 | 補上 TestSupport 匯入後建置通過 |
+| 2 個幾何測試預期控制點越過對邊停止 | 依既有 BoxHandles 翻轉規則修正獨立期望，另測精確 1×1 |
+| 探索路徑 ClipboardImageData.cs、.editorconfig 不存在 | 確認實際型別在 ClipboardService.cs；沿用現有格式，不新增設定 |
+| 4K 模糊首次約 630ms | 改善垂直記憶體存取後約 424ms；完整像素測試通過，殘餘停頓已記錄 |
+| 實機前置守衛發現使用者程式仍執行 | 記錄 NOT_RUN，不操作使用者文件或桌面 |
+| 收尾錯誤紀錄標題被解析為新 Phase；量測 JSON 使用 CRLF | 改為二級章節；量測工具與既有證據統一 LF，重新驗證 |

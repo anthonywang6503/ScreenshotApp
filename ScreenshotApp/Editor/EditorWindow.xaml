@@ -140,6 +140,21 @@
                     </StackPanel>
                 </RadioButton>
 
+                <RadioButton x:Name="MosaicToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolMosaicToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M2,2 H14 V14 H2 Z M6,2 V14 M10,2 V14 M2,6 H14 M2,10 H14" />
+                        <AccessText Text="{res:Str Editor_ToolMosaic}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="BlurToolButton" Style="{StaticResource ToolButton}"
+                             ToolTip="{res:Str Editor_ToolBlurToolTip}" Checked="ToolButton_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon}" Data="M2,4 H14 M3,8 H13 M4,12 H12" />
+                        <AccessText Text="{res:Str Editor_ToolBlur}" />
+                    </StackPanel>
+                </RadioButton>
+
                 <Rectangle Style="{StaticResource BarSeparator}" />
 
                 <Button x:Name="UndoButton" Style="{StaticResource ActionButton}" ToolTip="{res:Str Editor_UndoToolTip}">
@@ -220,6 +235,12 @@
                           ItemStringFormat="{res:Str Settings_PixelFormat}" ToolTip="{res:Str Editor_StrokeWidthToolTip}"
                           SelectionChanged="StrokeWidthBox_SelectionChanged" />
 
+                <Rectangle Style="{StaticResource BarSeparator}" />
+
+                <Label Style="{StaticResource BarLabel}" Content="{res:Str Editor_EffectStrengthLabel}" Target="{Binding ElementName=EffectStrengthBox}" />
+                <ComboBox x:Name="EffectStrengthBox" MinWidth="72" VerticalAlignment="Center"
+                          ItemStringFormat="{res:Str Settings_PixelFormat}" ToolTip="{res:Str Editor_EffectStrengthToolTip}"
+                          SelectionChanged="EffectStrengthBox_SelectionChanged" />
                 <Rectangle Style="{StaticResource BarSeparator}" />
 
                 <Label Style="{StaticResource BarLabel}" Content="{res:Str Editor_FontFamilyLabel}" Target="{Binding ElementName=FontFamilyBox}" />

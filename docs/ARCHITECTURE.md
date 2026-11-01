@@ -202,7 +202,7 @@ sequenceDiagram
 | `ExportedVersion`／`IsDirty` | 最後一次成功複製或儲存時的歷史版本；`IsDirty` 即目前版本與它不同。剛建立的文件兩者都是 0，視為沒有修改；修改後復原回匯出時的狀態也不算修改。`MarkExported(version)` 傳入合成圖片當時的版本 |
 | `NextStepNumber` | 現有最大編號加 1；刪除不重排，也不另存計數器 |
 
-**標註**（[Annotation.cs](../ScreenshotApp/Editor/Model/Annotation.cs)）是以 `Guid` 識別的不可變 record：幾何為整數圖片像素、以原圖左上角為原點，裁切不改寫座標；修改標註就是產生一份 Id 相同的新 record。每種標註都有 `Color`，並提供 `Bounds`、`Handles`、`HitTest`、`Translate` 與 `Resize`。
+**標註**（[Annotation.cs](../ScreenshotApp/Editor/Model/Annotation.cs)）是以 `Guid` 識別的不可變 record：幾何為整數圖片像素、以原圖左上角為原點，裁切不改寫座標；修改標註就是產生一份 Id 相同的新 record。每種標註都繼承 `Color`（效果不使用），並提供 `Bounds`、`Handles`、`HitTest`、`Translate` 與 `Resize`。
 
 | 種類 | 幾何 | 備註 |
 |---|---|---|
@@ -210,14 +210,15 @@ sequenceDiagram
 | `LineAnnotation`、`ArrowAnnotation`（`SegmentAnnotation`） | `Start`、`End` 像素（繪製時通過像素中心）、`StrokeWidth` | 箭頭頭部位於終點，大小隨線寬增加 |
 | `TextAnnotation` | `Origin`、`Text`、`FontFamily`、`FontSize` | 範圍由與繪製碼共用的 [TextLayout](../ScreenshotApp/Editor/Model/TextLayout.cs) 量測；只依明確的換行分行；沒有控制點 |
 | `StepNumberAnnotation` | `Center`、`Radius`（6～500）、`Number` | 拖曳外接正方形的四角調整半徑 |
+| `MosaicAnnotation`、`BlurAnnotation`（[EffectAnnotation](../ScreenshotApp/Editor/Model/EffectAnnotation.cs)） | `Rect`、`Strength` | 整塊命中、八個控制點；顏色與線寬不適用 |
 
-`PixelRect` 是半開區間（含左上、不含右下），建構子拒絕負的寬高，`default` 是原點的空矩形。[BoxHandles](../ScreenshotApp/Editor/Model/BoxHandles.cs) 提供矩形範圍的八個控制點與以控制點調整範圍（拖過對邊時翻轉、至少 1×1），矩形、橢圓與裁切範圍共用；[Geometry2D](../ScreenshotApp/Editor/Model/Geometry2D.cs) 提供命中判定的距離計算。
+`PixelRect` 是半開區間（含左上、不含右下），建構子拒絕負的寬高，`default` 是原點的空矩形。[BoxHandles](../ScreenshotApp/Editor/Model/BoxHandles.cs) 提供矩形範圍的八個控制點與以控制點調整範圍（拖過對邊時翻轉、至少 1×1），矩形、橢圓、效果與裁切範圍共用；[Geometry2D](../ScreenshotApp/Editor/Model/Geometry2D.cs) 提供命中判定的距離計算。
 
 **命令與歷史**：[EditCommands](../ScreenshotApp/Editor/Commands/EditCommands.cs) 實作 `IEditCommand`（只有 `Execute` 與 `Undo`，兩者都是把文件設為某個狀態，重複執行無害），共六類：`AddAnnotationCommand`、`RemoveAnnotationCommand`（復原時放回原層序）、`ReplaceAnnotationCommand`（移動、調整大小或端點、樣式、文字、編號都是替換）、`ReorderAnnotationCommand`、`SetCropCommand`，以及把多個命令當成一筆的 `CompositeCommand`（依序執行、以相反順序復原；清除所有標註與重新編號所有步驟使用）。[UndoRedoStack](../ScreenshotApp/Editor/Commands/UndoRedoStack.cs) 只保存命令、不保存點陣圖，預設上限 100 筆，超過時捨棄最舊的一筆；執行新命令時清除可重做的紀錄，命令拋出例外時不記錄。每個狀態有一個版本：執行新命令產生新版本，復原與重做回到該狀態原本的版本；捨棄最舊一筆時，最底層狀態的版本改為那筆命令執行後的版本。
 
 ## 7. 編輯器
 
-[EditorWindow](../ScreenshotApp/Editor/EditorWindow.xaml.cs)（版面見 [EditorWindow.xaml](../ScreenshotApp/Editor/EditorWindow.xaml)）是唯一的編輯視窗，由 `AppController` 建立並重複使用，關閉後下次再建立新的。`Load(document)` 先解除舊工作階段的事件，再以新文件建立新的 `EditorSession`，工具回到選取、縮放回到符合視窗。視窗由上而下是工具列（八種工具、復原與重做、開啟、複製、另存）、屬性列（八種常用色與自訂色、線寬、字型、字級、步驟編號）、畫布與狀態列（圖片尺寸、裁切尺寸、游標所在像素、訊息、縮放）。
+[EditorWindow](../ScreenshotApp/Editor/EditorWindow.xaml.cs)（版面見 [EditorWindow.xaml](../ScreenshotApp/Editor/EditorWindow.xaml)）是唯一的編輯視窗，由 `AppController` 建立並重複使用，關閉後下次再建立新的。`Load(document)` 先解除舊工作階段的事件，再以新文件建立新的 `EditorSession`，工具回到選取、縮放回到符合視窗。視窗由上而下是工具列（十種工具、復原與重做、開啟、複製、另存）、屬性列（八種常用色與自訂色、線寬、效果強度、字型、字級、步驟編號）、畫布與狀態列（圖片尺寸、裁切尺寸、游標所在像素、訊息、縮放）。
 
 **右鍵選單**：`EditorWindow.xaml` 的資源中有三份 `ContextMenu`，放開滑鼠右鍵時由 `PrepareContextMenu` 依位置與工具選一份。
 
@@ -270,6 +271,14 @@ sequenceDiagram
 **PNG 另存**（[PngFileService](../ScreenshotApp/Export/PngFileService.cs)）：`EditorWindow.SaveImageAsync` 在 UI 執行緒提交文字輸入、顯示 `SaveFileDialog`（開啟覆寫確認；預設檔名一律為 `Screenshot_yyyyMMdd_HHmmss_fff.png`；初始資料夾為仍存在的上次儲存位置，否則為「圖片」資料夾），記下版本並合成。`PngFileService.Save` 在背景執行緒編碼，先以 `FileMode.CreateNew` 寫入同資料夾的 `<檔名>.<GUID>.tmp`，完整寫入後才以 `File.Move(..., overwrite: true)` 取代目標；任何失敗都刪除暫存檔再把例外往上拋，編輯器捕捉 I/O 與權限類的例外後顯示原因，文件不變。成功後標記匯出版本並記住資料夾。`Encode` 也供剪貼簿的 PNG 格式使用，兩者的位元組相同。
 
 **開啟圖片**（[ImageFileLoader](../ScreenshotApp/Export/ImageFileLoader.cs)）：`AppController.OpenImage` 在背景執行緒呼叫 `Load`；所有失敗都以 `ImageLoadResult.Error`（可直接顯示的繁體中文）回報，不拋出例外，也不寫日誌或磁碟。流程是：以允許其他程式讀寫與刪除的共用模式開檔 → 只讀標頭，依檔案內容判斷格式（只接受 PNG、JPEG、BMP 解碼器，與副檔名無關）並檢查尺寸（寬 × 高不得超過 1 億像素）→ 整張解碼第一個影格（忽略色彩描述檔，不套用 EXIF 方向）→ 轉成 `Pbgra32` 後以「預乘值 + (255 − Alpha)」合成到白色背景，輸出凍結的不透明 `Bgr32`、96 DPI 圖片，與截圖的格式相同。載入失敗時原本的文件不變。
+
+### 原圖效果的繪製與快取
+
+`AnnotationPainter.Paint(context, annotation, source)` 同時供 `AnnotationLayer` 與 `ImageRenderer` 使用。效果只取樣原圖與矩形的相交範圍；[PixelEffects](../ScreenshotApp/Editor/Rendering/PixelEffects.cs) 以位元組陣列做區塊平均或三輪可分離盒狀模糊，平均值每次四捨五入。馬賽克格線固定在完整標註左上角，超出原圖時不重新定位；模糊只在相交區域重新計算邊界權重。
+
+[EffectBitmapCache](../ScreenshotApp/Editor/Rendering/EffectBitmapCache.cs) 以凍結原圖的弱參照分組，完整矩形、種類與強度為鍵，每圖最多 8 筆／64 MiB 的 LRU 結果，超大單筆不保存；Id、Color、層序及畫布縮放不參與鍵值。輸出凍結 Bgr32，以整數矩形不透明繪製。快取與繪製在 UI 執行緒；快取不進入復原歷史，原圖釋放後可回收整組。
+
+強度預設只存在 `EditorSession`：馬賽克 12px（2～64）、模糊 6px（1～32），選取效果時以一筆替換命令修改。拖曳預覽沿用 `VisibleAnnotations`，不改文件。實際規則與限制見 [ADR-0020](adr/0020-effect-annotations.md)。
 
 ## 9. 執行緒模型
 

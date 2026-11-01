@@ -444,6 +444,43 @@ public sealed class EditorWindowTests : IDisposable
         });
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AT13_EffectControls_ApplyStrengthAndDisableInapplicableProperties(bool blur)
+    {
+        RunWithWindow(CreateDocument, (window, document) =>
+        {
+            var button = blur ? window.BlurToolButton : window.MosaicToolButton;
+            button.IsChecked = true;
+            Assert.True(window.EffectStrengthBox.IsEnabled);
+            Assert.False(window.ColorList.IsEnabled);
+            Assert.False(window.CustomColorButton.IsEnabled);
+            Assert.False(window.StrokeWidthBox.IsEnabled);
+            Assert.Equal(blur ? 32 : 63, window.EffectStrengthBox.Items.Count);
+            window.EffectStrengthBox.SelectedItem = 8;
+            Assert.Equal(0, document.History.UndoCount);
+            var effect = EffectAnnotationTests.Create(blur, new PixelRect(20, 20, 40, 30));
+            document.History.Execute(new AddAnnotationCommand(document, effect));
+            var menu = window.PrepareContextMenu(new Point(40, 30), Tolerance);
+            Assert.Same(window.Resources["AnnotationMenu"], menu);
+            Assert.False(Shown(Item(menu, "EditTextMenuItem")));
+            Assert.False(Shown(Item(menu, "EditStepNumberMenuItem")));
+            Assert.False(Shown(Item(menu, "ReverseArrowMenuItem")));
+            Assert.False(Shown(Item(menu, "RenumberStepsMenuItem")));
+            Assert.Equal(3, window.EffectStrengthBox.SelectedItem);
+            window.EffectStrengthBox.SelectedItem = 9;
+            Assert.Equal(2, document.History.UndoCount);
+            Assert.Equal(9, Assert.IsAssignableFrom<EffectAnnotation>(document.Annotations[0]).Strength);
+            window.SelectToolButton.IsChecked = true;
+            window.PrepareContextMenu(new Point(170, 80), Tolerance);
+            Assert.True(window.ColorList.IsEnabled);
+            Assert.True(window.CustomColorButton.IsEnabled);
+            Assert.True(window.StrokeWidthBox.IsEnabled);
+            Assert.False(window.EffectStrengthBox.IsEnabled);
+        });
+    }
+
     private void RunWithWindow(Func<ImageDocument> createDocument, Action<EditorWindow, ImageDocument> test) =>
         StaRunner.Run(() =>
         {

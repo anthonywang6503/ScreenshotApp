@@ -34,7 +34,7 @@ internal sealed class AnnotationLayer : FrameworkElement
 
         foreach (var annotation in _session.VisibleAnnotations)
         {
-            AnnotationPainter.Paint(drawingContext, annotation);
+            AnnotationPainter.Paint(drawingContext, annotation, _session.Document.Source);
         }
 
         if (_session.PendingCrop is { } crop)

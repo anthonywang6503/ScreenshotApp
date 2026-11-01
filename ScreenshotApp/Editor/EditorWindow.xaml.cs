@@ -95,6 +95,8 @@ internal partial class EditorWindow : Window
             [ArrowToolButton] = EditorTool.Arrow,
             [TextToolButton] = EditorTool.Text,
             [StepToolButton] = EditorTool.StepNumber,
+            [MosaicToolButton] = EditorTool.Mosaic,
+            [BlurToolButton] = EditorTool.Blur,
         };
         ColorList.ItemsSource = _colors;
         FontFamilyBox.ItemsSource = StyleChoices.FontFamilies;
@@ -568,6 +570,15 @@ internal partial class EditorWindow : Window
         _syncing = true;
         try
         {
+            var effectTarget = _session.IsEffectTarget;
+            ColorList.IsEnabled = CustomColorButton.IsEnabled = !effectTarget;
+            strokeApplies &= !effectTarget;
+            fontApplies &= !effectTarget;
+            EffectStrengthBox.IsEnabled = effectTarget && !_session.IsDragging;
+            var strengths = _session.IsBlurTarget
+                ? Enumerable.Range(BlurAnnotation.MinimumStrength, BlurAnnotation.MaximumStrength - BlurAnnotation.MinimumStrength + 1).ToArray()
+                : Enumerable.Range(MosaicAnnotation.MinimumStrength, MosaicAnnotation.MaximumStrength - MosaicAnnotation.MinimumStrength + 1).ToArray();
+            SelectChoice(EffectStrengthBox, strengths, _session.EffectStrength);
             ShowColor(color);
             SelectChoice(StrokeWidthBox, StyleChoices.StrokeWidths, strokeWidth);
             StrokeWidthBox.IsEnabled = strokeApplies;
@@ -771,6 +782,14 @@ internal partial class EditorWindow : Window
         }
 
         ReturnFocusToTextEditor();
+    }
+
+    private void EffectStrengthBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_syncing && EffectStrengthBox.SelectedItem is int strength)
+        {
+            _session?.SetEffectStrength(strength);
+        }
     }
 
     private void StrokeWidthBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1249,7 +1268,8 @@ internal partial class EditorWindow : Window
 
     // 狀態列訊息：最近一次操作結果優先，數秒後消失；裁切工具中持續顯示操作提示。
     private void UpdateMessage() =>
-        MessageText.Text = _message ?? (_session?.Tool == EditorTool.Crop ? Strings.Get("Editor_CropHint") : string.Empty);
+        MessageText.Text = _message ?? (_session?.Tool == EditorTool.Crop ? Strings.Get("Editor_CropHint") :
+            _session?.IsEffectTarget == true ? Strings.Get("Editor_EffectHint") : string.Empty);
 
     private void BringToFront_Click(object sender, RoutedEventArgs e) => _session?.Reorder(ZOrderChange.BringToFront);
 

@@ -1,3 +1,4 @@
+using ScreenshotApp.Tests.TestSupport;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -1348,6 +1349,123 @@ public class EditorSessionTests
         Assert.False(session.EditSelected());
         Assert.False(session.Duplicate());
         Assert.False(session.ReverseArrow());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AT04_AT05_Effects_CreateMoveResizeStrengthDuplicateAndUndoAreSingleCommands(bool blur)
+    {
+        StaRunner.Run(() =>
+        {
+            var session = CreateSession();
+            var history = session.Document.History;
+            session.SetTool(blur ? EditorTool.Blur : EditorTool.Mosaic);
+            session.SetEffectStrength(5);
+            Assert.Equal(0, history.UndoCount);
+            Drag(session, new Point(20, 20), new Point(20, 20));
+            Assert.Empty(session.Document.Annotations);
+            session.PointerDown(new Point(20, 20), Tolerance, 1);
+            session.PointerMove(new Point(60, 60));
+            Assert.Empty(session.Document.Annotations);
+            Assert.IsAssignableFrom<EffectAnnotation>(Assert.Single(session.VisibleAnnotations));
+            session.PointerUp(new Point(60, 60));
+            var created = Assert.IsAssignableFrom<EffectAnnotation>(session.Selected);
+            Assert.Equal(new PixelRect(20, 20, 41, 41), created.Rect);
+            Assert.Equal(5, created.Strength);
+            Assert.Equal(1, history.UndoCount);
+
+            session.SetTool(EditorTool.Select);
+            session.PointerDown(new Point(40, 40), Tolerance, 1);
+            session.PointerMove(new Point(45, 43));
+            Assert.Equal(created, session.Document.Annotations[0]);
+            Assert.NotEqual(created, session.SelectionDisplay);
+            session.PointerUp(new Point(45, 43));
+            var moved = Assert.IsAssignableFrom<EffectAnnotation>(session.Selected);
+            Assert.Equal(created.Rect.Offset(5, 3), moved.Rect);
+            Assert.Equal(2, history.UndoCount);
+            Assert.True(session.Undo());
+            Assert.Equal(created, session.Document.Annotations[0]);
+            Assert.True(session.Redo());
+            Assert.Equal(moved, session.Document.Annotations[0]);
+
+            var corner = moved.Handles.Single(h => h.Kind == HandleKind.BottomRight).Position;
+            Drag(session, corner, corner + new Vector(8, 9));
+            var resized = Assert.IsAssignableFrom<EffectAnnotation>(session.Selected);
+            Assert.Equal(new PixelRect(25, 23, 49, 50), resized.Rect);
+            Assert.Equal(3, history.UndoCount);
+            session.SetEffectStrength(7);
+            Assert.Equal(4, history.UndoCount);
+            Assert.Equal(7, Assert.IsAssignableFrom<EffectAnnotation>(session.Selected).Strength);
+            session.SetEffectStrength(7);
+            session.SetColor(Colors.Blue);
+            session.SetStrokeWidth(9);
+            Assert.Equal(4, history.UndoCount);
+            Assert.True(session.Undo());
+            Assert.Equal(resized, session.Document.Annotations[0]);
+            Assert.True(session.Redo());
+            Assert.True(session.Duplicate());
+            Assert.Equal(5, history.UndoCount);
+            var copy = Assert.IsAssignableFrom<EffectAnnotation>(session.Selected);
+            Assert.NotEqual(created.Id, copy.Id);
+            Assert.Equal(7, copy.Strength);
+            session.Reorder(ZOrderChange.SendToBack);
+            Assert.Equal(6, history.UndoCount);
+            Assert.Equal(copy.Id, session.Document.Annotations[0].Id);
+            session.DeleteSelected();
+            Assert.Equal(7, history.UndoCount);
+            Assert.Single(session.Document.Annotations);
+            for (var i = 0; i < 7; i++)
+            {
+                Assert.True(session.Undo());
+            }
+
+            Assert.Empty(session.Document.Annotations);
+            for (var i = 0; i < 7; i++)
+            {
+                Assert.True(session.Redo());
+            }
+
+            Assert.Single(session.Document.Annotations);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AT13_EffectDefaultsAreTransientAndCancelledDragDoesNotModifyDocument(bool blur)
+    {
+        StaRunner.Run(() =>
+        {
+            var session = CreateSession();
+            var defaultsChanged = 0;
+            session.StyleDefaultsChanged += (_, _) => defaultsChanged++;
+            session.SetTool(blur ? EditorTool.Blur : EditorTool.Mosaic);
+            var originalDefault = blur ? BlurAnnotation.DefaultStrength : MosaicAnnotation.DefaultStrength;
+            Assert.Equal(originalDefault, session.EffectStrength);
+            session.SetEffectStrength(9);
+            session.SetColor(Colors.Blue);
+            session.SetStrokeWidth(9);
+            Assert.Equal(0, defaultsChanged);
+            Assert.Equal(DefaultStyle, session.Style);
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.SetEffectStrength(0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.SetEffectStrength(blur ? 33 : 65));
+            session.PointerDown(new Point(20, 20), Tolerance, 1);
+            session.PointerMove(new Point(60, 60));
+            session.SetEffectStrength(12);
+            Assert.Equal(9, session.EffectStrength);
+            session.AbortDrag();
+            Assert.Empty(session.VisibleAnnotations);
+            Assert.Equal(0, session.Document.History.UndoCount);
+            Drag(session, new Point(20, 20), new Point(60, 60));
+            var effect = Assert.IsAssignableFrom<EffectAnnotation>(session.Selected);
+            session.SetEffectStrength(7);
+            session.Select(null);
+            Assert.Equal(9, session.EffectStrength);
+            var next = CreateSession();
+            next.SetTool(blur ? EditorTool.Blur : EditorTool.Mosaic);
+            Assert.Equal(originalDefault, next.EffectStrength);
+        });
     }
 
     private static ImageDocument CreateDocument(int width = 200, int height = 100)

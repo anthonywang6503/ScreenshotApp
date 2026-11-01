@@ -25,7 +25,7 @@ internal static class ImageRenderer
             context.DrawImage(document.Source, new Rect(0, 0, document.PixelWidth, document.PixelHeight));
             foreach (var annotation in document.Annotations)
             {
-                AnnotationPainter.Paint(context, annotation);
+                AnnotationPainter.Paint(context, annotation, document.Source);
             }
         }
 

@@ -1,0 +1,49 @@
+{
+  "width": 3840,
+  "height": 2160,
+  "iterations": 5,
+  "runtime": ".NET 10.0.14",
+  "os": "Microsoft Windows 10.0.26300",
+  "logicalProcessors": 16,
+  "processor": "Intel64 Family 6 Model 141 Stepping 1, GenuineIntel",
+  "assemblySha256": "E474972B7BDFD07BF50267FAC825A7F226AF3B17B81E209C94834C030EE1D424",
+  "scope": "Release\uFF1B\u55AE\u4E00 STA \u57F7\u884C\u7DD2\uFF1B\u542B\u539F\u5716\u53D6\u6A23\u3001\u6548\u679C\u8A08\u7B97\u3001Bitmap \u5EFA\u7ACB\uFF0FFreeze\uFF1B\u6BCF\u8F2A\u79FB\u52D5\u5DE6\u908A\u754C 1px\uFF1B\u4E0D\u542B WPF \u5448\u73FE\u3001\u684C\u9762\u8F38\u5165\u8207\u532F\u51FA\u7DE8\u78BC\u3002",
+  "results": [
+    {
+      "effect": "mosaic",
+      "strength": 12,
+      "recomputeMs": [
+        51.1165,
+        47.9491,
+        49.3217,
+        52.6548,
+        54.104
+      ],
+      "cacheHitMs": [
+        0.7917,
+        0.0206,
+        0.0083,
+        0.0066,
+        0.0063
+      ]
+    },
+    {
+      "effect": "blur",
+      "strength": 6,
+      "recomputeMs": [
+        424.3231,
+        447.4714,
+        440.5667,
+        363.0388,
+        396.5865
+      ],
+      "cacheHitMs": [
+        0.0096,
+        0.0091,
+        0.0084,
+        0.0085,
+        0.0111
+      ]
+    }
+  ]
+}

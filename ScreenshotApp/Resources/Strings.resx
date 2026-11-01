@@ -628,4 +628,25 @@
   <data name="Notify_ColorCopyFailed" xml:space="preserve">
     <value>無法複製色碼：{0}</value>
   </data>
+  <data name="Editor_ToolMosaic" xml:space="preserve">
+    <value>馬賽克(_J)</value>
+  </data>
+  <data name="Editor_ToolBlur" xml:space="preserve">
+    <value>模糊(_H)</value>
+  </data>
+  <data name="Editor_ToolMosaicToolTip" xml:space="preserve">
+    <value>拖曳建立馬賽克，強度為區塊大小（2～64px）</value>
+  </data>
+  <data name="Editor_ToolBlurToolTip" xml:space="preserve">
+    <value>拖曳建立模糊，強度為半徑（1～32px）；內容仍可能被辨識或還原</value>
+  </data>
+  <data name="Editor_EffectStrengthLabel" xml:space="preserve">
+    <value>強度(_U)</value>
+  </data>
+  <data name="Editor_EffectStrengthToolTip" xml:space="preserve">
+    <value>馬賽克為區塊邊長，模糊為半徑；選取效果時修改可復原，不儲存到設定</value>
+  </data>
+  <data name="Editor_EffectHint" xml:space="preserve">
+    <value>效果只取樣原圖；原圖仍保留。模糊可能被還原，降低可辨識度時優先使用馬賽克並檢查匯出。</value>
+  </data>
 </root>

@@ -16,6 +16,8 @@ internal enum EditorTool
     Arrow,
     Text,
     StepNumber,
+    Mosaic,
+    Blur,
 }
 
 internal enum ZOrderChange
@@ -66,6 +68,45 @@ internal sealed class EditorSession
     public EditorTool Tool { get; private set; } = EditorTool.Select;
 
     public AnnotationStyle Style { get; private set; }
+
+    private int _mosaicStrength = MosaicAnnotation.DefaultStrength;
+    private int _blurStrength = BlurAnnotation.DefaultStrength;
+
+    public int EffectStrength => Selected is EffectAnnotation effect ? effect.Strength :
+        Tool == EditorTool.Blur ? _blurStrength : _mosaicStrength;
+
+    public bool IsEffectTarget => TextEdit is null && (Selected is EffectAnnotation ||
+        (Selected is null && Tool is EditorTool.Mosaic or EditorTool.Blur));
+
+    public bool IsBlurTarget => Selected is BlurAnnotation || (Selected is null && Tool == EditorTool.Blur);
+
+    public void SetEffectStrength(int strength)
+    {
+        if (IsBusy || !IsEffectTarget)
+        {
+            return;
+        }
+
+        ArgumentOutOfRangeException.ThrowIfLessThan(strength, IsBlurTarget ? BlurAnnotation.MinimumStrength : MosaicAnnotation.MinimumStrength);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(strength, IsBlurTarget ? BlurAnnotation.MaximumStrength : MosaicAnnotation.MaximumStrength);
+        if (Selected is EffectAnnotation effect)
+        {
+            Replace(effect, effect with { Strength = strength });
+        }
+        else
+        {
+            if (IsBlurTarget)
+            {
+                _blurStrength = strength;
+            }
+            else
+            {
+                _mosaicStrength = strength;
+            }
+
+            OnChanged();
+        }
+    }
 
     public TextEdit? TextEdit { get; private set; }
 
@@ -449,6 +490,11 @@ internal sealed class EditorSession
 
     public void SetColor(Color color)
     {
+        if (IsEffectTarget)
+        {
+            return;
+        }
+
         if (TextEdit is { } edit)
         {
             UpdateTextEdit(edit with { Color = color }, Style with { Color = color });
@@ -465,7 +511,7 @@ internal sealed class EditorSession
 
     public void SetStrokeWidth(int strokeWidth)
     {
-        if (TextEdit is not null)
+        if (TextEdit is not null || IsEffectTarget)
         {
             return;
         }
@@ -627,7 +673,7 @@ internal sealed class EditorSession
                 break;
             default:
                 _selectedId = null;
-                _drag = new CreateShapeDrag(Tool, pixel, Style);
+                _drag = new CreateShapeDrag(Tool, pixel, Style, EffectStrength);
                 break;
         }
     }
@@ -830,7 +876,7 @@ internal sealed class EditorSession
     }
 
     /// <summary>拖曳建立矩形框、橢圓、直線或箭頭；指標沒有離開起點像素時是零尺寸，不建立。</summary>
-    private sealed class CreateShapeDrag(EditorTool tool, PixelPoint start, AnnotationStyle style) : Drag
+    private sealed class CreateShapeDrag(EditorTool tool, PixelPoint start, AnnotationStyle style, int strength) : Drag
     {
         private readonly Guid _id = Guid.NewGuid();
         private Annotation? _preview;
@@ -861,6 +907,14 @@ internal sealed class EditorSession
         // 矩形範圍與區域選取相同，包含起點與終點兩個像素。
         private Annotation Create(PixelPoint end) => tool switch
         {
+            EditorTool.Mosaic => new MosaicAnnotation
+            {
+                Id = _id, Color = Colors.Transparent, Rect = BoxHandles.Spanning(start, end), Strength = strength,
+            },
+            EditorTool.Blur => new BlurAnnotation
+            {
+                Id = _id, Color = Colors.Transparent, Rect = BoxHandles.Spanning(start, end), Strength = strength,
+            },
             EditorTool.Rectangle => new RectangleAnnotation
             {
                 Id = _id, Color = style.Color, Rect = BoxHandles.Spanning(start, end), StrokeWidth = style.StrokeWidth,
