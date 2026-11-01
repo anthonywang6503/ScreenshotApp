@@ -157,6 +157,10 @@ sequenceDiagram
 
 **十字游標**：系統的十字游標以反相像素繪製，在暗化成 50% 灰的白色畫面上幾乎看不見。[CrosshairCursor](../ScreenshotApp/Capture/CrosshairCursor.cs) 以 `CreateCursor` 自繪單色游標：黑色十字外圍一圈 1 像素白邊，不使用反相像素；尺寸取 `GetSystemMetricsForDpi(SM_CXCURSOR, dpi)`，與系統游標在該 DPI 的標準尺寸相同。快取方式見第 12 節。
 
+**放大鏡與螢幕取色**：[MagnifierGeometry](../ScreenshotApp/Capture/MagnifierGeometry.cs) 以實體像素決定 15×15 取樣範圍、每格 12 像素與面板的邊緣翻轉；`MonitorSnapshot.Sample` 保留邊界外灰格，`ColorCodeAt` 讀取未暗化快照。`SelectionOverlay` 以最近鄰繪製，中心有黑白框，標籤位置也計入面板尺寸。`MagnifierInput` 抑制仍按著的啟動 Ctrl 與重複按鍵，控制器在滑鼠移動、Ctrl 按下／放開時只更新游標所在覆蓋層；捕捉遺失或焦點離開時隱藏。
+
+[OverlayResult](../ScreenshotApp/Capture/OverlayResult.cs) 區分 `RegionSelected` 與 `ColorPicked`，取消為 null。無修飾鍵的 C 產生色碼後，先關閉覆蓋層，再由 `CaptureFlow` 回傳 `ColorPicked` 並恢復先前狀態與視窗；`AppController` 使用 `ClipboardService.TrySetText` 複製 Unicode 純文字並通知。此分支不裁切、不替換文件、不記錄色碼，也不標記文件為已匯出。鍵盤事件的游標位置由 `GetCursorPos` 取得；滑鼠選取仍使用事件本身的座標。詳見 [ADR-0019](adr/0019-overlay-magnifier-and-color-pick.md)。
+
 ## 5. 座標系統
 
 實體像素是唯一真值。[app.manifest](../ScreenshotApp/app.manifest) 宣告 Per-Monitor V2（`dpiAware` 為 `true/pm`、`dpiAwareness` 為 `PerMonitorV2`），Win32 API 回傳未經虛擬化的實體像素，每個視窗依所在顯示器的 DPI 繪製。座標空間之間的換算集中於 [CoordinateMapper](../ScreenshotApp/Capture/CoordinateMapper.cs)，全部是純函式：
@@ -413,3 +417,4 @@ sequenceDiagram
 | [ADR-0015](adr/0015-file-writing-and-background-encoding.md) | 檔案寫入與背景編碼：凍結的合成結果交給背景執行緒編碼，寫入同資料夾的暫存檔後取代目標 |
 | [ADR-0016](adr/0016-unexported-changes-protection.md) | 未匯出變更保護：以歷史版本判斷是否未匯出，新截圖、開啟圖片、關閉、結束與登出前詢問 |
 | [ADR-0017](adr/0017-release-packaging.md) | 發佈與封裝：自包含 win-x64 資料夾版為主、單檔版為輔、不簽章，只保留繁體中文的框架附屬組件 |
+| [ADR-0019](adr/0019-overlay-magnifier-and-color-pick.md) | 選取放大鏡與螢幕取色：靜態快照、實體像素格、Ctrl 輸入抑制、獨立取色結果與文字剪貼簿 |

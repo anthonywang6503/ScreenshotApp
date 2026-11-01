@@ -38,7 +38,8 @@ param(
     [string]$EvidenceDirectory = (Join-Path ([IO.Path]::GetTempPath()) 'ScreenshotApp.Smoke4'),
     [int]$Cycles = 30,
     [int]$IdleSeconds = 60,
-    [int]$MaxIdleWaitMinutes = 30
+    [int]$MaxIdleWaitMinutes = 30,
+    [switch]$LibraryOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -244,6 +245,8 @@ public static class Phase4Native
     }
 
     public static uint LeftDown() { return Send(MouseInput(0x0002, 0)); }
+    public static uint KeyDown(ushort key) { return Send(KeyInput(key, 0, 0)); }
+    public static uint KeyUp(ushort key) { return Send(KeyInput(key, 0, 2)); }
     public static uint LeftUp() { return Send(MouseInput(0x0004, 0)); }
     public static uint LeftClick() { return Send(MouseInput(0x0002, 0), MouseInput(0x0004, 0)); }
 
@@ -1114,6 +1117,8 @@ function Close-EditorWindow([int]$ProcessId, [IntPtr]$Editor) {
     if ($state) { return $state }
     return 'open'
 }
+
+if ($LibraryOnly) { return }
 
 New-Item -ItemType Directory -Force -Path $EvidenceDirectory | Out-Null
 $ExePath = (Resolve-Path $ExePath).Path

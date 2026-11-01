@@ -13,7 +13,7 @@ internal interface ICaptureEnvironment
     DesktopSnapshot TakeSnapshot();
 
     /// <summary>顯示覆蓋層讓使用者選取；取消時回傳 null，選取期間顯示設定變更時拋出 <see cref="CaptureException"/>。</summary>
-    Task<SelectionResult?> SelectRegionAsync(DesktopSnapshot snapshot);
+    Task<OverlayResult?> SelectRegionAsync(DesktopSnapshot snapshot);
 }
 
 internal enum CaptureStatus
@@ -26,10 +26,12 @@ internal enum CaptureStatus
     Failed,
 
     Completed,
+
+    ColorPicked,
 }
 
 /// <summary>截圖流程的結果：完成時附裁切後的圖片，失敗時附原因。</summary>
-internal sealed record CaptureOutcome(CaptureStatus Status, BitmapSource? Image = null, CaptureException? Error = null);
+internal sealed record CaptureOutcome(CaptureStatus Status, BitmapSource? Image = null, CaptureException? Error = null, string? ColorCode = null);
 
 /// <summary>
 /// 截圖流程：隱藏自家視窗 → 快照 → 區域選取 → 裁切。截圖或選取進行中的要求一律忽略；
@@ -60,9 +62,13 @@ internal sealed class CaptureFlow
                 var snapshot = _environment.TakeSnapshot();
                 _state.BeginSelecting();
                 var selection = await _environment.SelectRegionAsync(snapshot);
-                return selection is { } chosen
-                    ? new CaptureOutcome(CaptureStatus.Completed, snapshot.Crop(chosen))
-                    : new CaptureOutcome(CaptureStatus.Cancelled);
+                return selection switch
+                {
+                    RegionSelected chosen => new CaptureOutcome(CaptureStatus.Completed, snapshot.Crop(chosen.Selection)),
+                    ColorPicked color => new CaptureOutcome(CaptureStatus.ColorPicked, ColorCode: color.ColorCode),
+                    null => new CaptureOutcome(CaptureStatus.Cancelled),
+                    _ => throw new InvalidOperationException("未知的覆蓋層結果。"),
+                };
             }
         }
         catch (CaptureException ex)

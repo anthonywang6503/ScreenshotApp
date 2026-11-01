@@ -16,7 +16,8 @@ internal sealed class SelectionController
     private readonly List<SelectionOverlay> _overlays = [];
 
     // 結果以非同步方式交給等待者，覆蓋層的輸入事件處理先完整結束，之後才繼續截圖流程。
-    private readonly TaskCompletionSource<SelectionResult?> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<OverlayResult?> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly MagnifierInput _magnifier = new((Keyboard.Modifiers & ModifierKeys.Control) != 0);
     private DragSelection? _drag;
     private SelectionOverlay? _dragOverlay;
 
@@ -34,6 +35,8 @@ internal sealed class SelectionController
                 overlay.LostMouseCapture += OnLostMouseCapture;
                 overlay.MouseRightButtonUp += OnMouseRightButtonUp;
                 overlay.KeyDown += OnKeyDown;
+                overlay.KeyUp += OnKeyUp;
+                overlay.LostKeyboardFocus += OnLostKeyboardFocus;
                 overlay.DisplayChanged += OnDisplayChanged;
                 _overlays.Add(overlay);
             }
@@ -46,7 +49,7 @@ internal sealed class SelectionController
     }
 
     /// <summary>顯示覆蓋層並等待選取結果；取消時為 null，選取期間顯示設定變更時拋出 <see cref="CaptureException"/>。</summary>
-    public static Task<SelectionResult?> SelectAsync(DesktopSnapshot snapshot)
+    public static Task<OverlayResult?> SelectAsync(DesktopSnapshot snapshot)
     {
         var controller = new SelectionController(snapshot);
         controller.Show();
@@ -82,6 +85,7 @@ internal sealed class SelectionController
 
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
+        UpdateMagnifier(((SelectionOverlay)sender).DesktopPosition(e));
         if (_drag is { } drag && _dragOverlay is { } overlay)
         {
             overlay.ShowSelection(drag.RectTo(overlay.DesktopPosition(e)));
@@ -103,7 +107,7 @@ internal sealed class SelectionController
         overlay.ReleaseMouseCapture();
         if (result is not null)
         {
-            Finish(result);
+            Finish(new RegionSelected(result.Value));
             return;
         }
 
@@ -113,6 +117,7 @@ internal sealed class SelectionController
 
     private void OnLostMouseCapture(object sender, MouseEventArgs e)
     {
+        HideMagnifiers();
         // 拖曳途中被其他視窗奪走滑鼠捕捉時放棄這次拖曳，覆蓋層維持在選取狀態。
         if (_dragOverlay is { } overlay)
         {
@@ -136,12 +141,80 @@ internal sealed class SelectionController
             e.Handled = true;
             Finish(null);
         }
+        else if (e.Key is Key.LeftCtrl or Key.RightCtrl)
+        {
+            e.Handled = true;
+            _magnifier.ControlDown(e.IsRepeat);
+            if (TryGetCursor(out var cursor))
+            {
+                UpdateMagnifier(cursor);
+            }
+        }
+        else if (e.Key == Key.C && !e.IsRepeat && Keyboard.Modifiers == ModifierKeys.None
+            && TryGetCursor(out var cursor))
+        {
+            var overlay = _overlays.FirstOrDefault(candidate => candidate.Monitor.Bounds.Contains(cursor));
+            if (overlay is not null)
+            {
+                e.Handled = true;
+                Finish(new ColorPicked(overlay.ColorCodeAt(cursor)));
+            }
+        }
+    }
+
+    private void OnKeyUp(object sender, KeyEventArgs e)
+    {
+        if (e.Key is Key.LeftCtrl or Key.RightCtrl)
+        {
+            e.Handled = true;
+            _magnifier.ControlUp(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl));
+            HideMagnifiers();
+        }
+    }
+
+    private void OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        if (e.NewFocus is not SelectionOverlay)
+        {
+            HideMagnifiers();
+        }
+    }
+
+    private static bool TryGetCursor(out PixelPoint cursor)
+    {
+        var succeeded = NativeMethods.GetCursorPos(out var position);
+        cursor = new PixelPoint(position.X, position.Y);
+        return succeeded;
+    }
+
+    private void UpdateMagnifier(PixelPoint cursor)
+    {
+        foreach (var overlay in _overlays)
+        {
+            if (_magnifier.IsVisible && overlay.Monitor.Bounds.Contains(cursor))
+            {
+                overlay.ShowMagnifier(cursor);
+            }
+            else
+            {
+                overlay.HideMagnifier();
+            }
+        }
+    }
+
+    private void HideMagnifiers()
+    {
+        _magnifier.Hide();
+        foreach (var overlay in _overlays)
+        {
+            overlay.HideMagnifier();
+        }
     }
 
     private void OnDisplayChanged(object? sender, EventArgs e) =>
         Fail(new CaptureException(Strings.Get("Capture_DisplayChanged")));
 
-    private void Finish(SelectionResult? result)
+    private void Finish(OverlayResult? result)
     {
         Close();
         _completion.TrySetResult(result);

@@ -28,7 +28,7 @@ internal sealed class DesktopCaptureEnvironment : ICaptureEnvironment
             .Select(monitor => new MonitorSnapshot(monitor, CaptureService.Capture(monitor.Bounds)))
             .ToList());
 
-    public Task<SelectionResult?> SelectRegionAsync(DesktopSnapshot snapshot) => SelectionController.SelectAsync(snapshot);
+    public Task<OverlayResult?> SelectRegionAsync(DesktopSnapshot snapshot) => SelectionController.SelectAsync(snapshot);
 
     private static void SetTransitionsDisabled(Window window, bool disabled)
     {

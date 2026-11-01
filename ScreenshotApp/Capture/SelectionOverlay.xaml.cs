@@ -18,6 +18,7 @@ internal sealed partial class SelectionOverlay : UserControl, IDisposable
     private const double LabelGap = 4;
 
     private readonly HwndSource _source;
+    private readonly MonitorSnapshot _snapshot;
     private readonly Rect _area;
     private readonly RectangleGeometry _hole = new(Rect.Empty);
     private readonly RectangleGeometry _frameOuter = new(Rect.Empty);
@@ -25,6 +26,7 @@ internal sealed partial class SelectionOverlay : UserControl, IDisposable
 
     public SelectionOverlay(MonitorSnapshot snapshot)
     {
+        _snapshot = snapshot;
         Monitor = snapshot.Monitor;
         InitializeComponent();
         SnapshotImage.Source = snapshot.Image;
@@ -117,6 +119,49 @@ internal sealed partial class SelectionOverlay : UserControl, IDisposable
         Canvas.SetTop(SizeLabel, top >= _area.Top ? top : view.Y + LabelGap);
         Canvas.SetLeft(SizeLabel, Math.Max(_area.Left, Math.Min(view.X, _area.Right - label.Width)));
     }
+
+    public string ColorCodeAt(PixelPoint desktop) =>
+        _snapshot.ColorCodeAt(CoordinateMapper.DesktopToMonitorLocal(desktop, Monitor.Bounds));
+
+    public void HideMagnifier() => MagnifierPanel.Visibility = Visibility.Collapsed;
+
+    public void ShowMagnifier(PixelPoint desktop)
+    {
+        var local = CoordinateMapper.DesktopToMonitorLocal(desktop, Monitor.Bounds);
+        MagnifierText.Text = Strings.Format("Selection_Pixel", local.X, local.Y, _snapshot.ColorCodeAt(local));
+        MagnifierText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        var label = CoordinateMapper.ViewDipToMonitorLocal(
+            new Point(MagnifierText.DesiredSize.Width, MagnifierText.DesiredSize.Height), DpiScale);
+        var layout = MagnifierGeometry.Calculate(Monitor.Bounds.Width, Monitor.Bounds.Height, local,
+            MagnifierGeometry.SampleCount, MagnifierGeometry.CellPixels, label.X + 1, label.Y + 1);
+        var panel = CoordinateMapper.MonitorLocalToViewDip(layout.Panel, DpiScale);
+        Canvas.SetLeft(MagnifierPanel, panel.X);
+        Canvas.SetTop(MagnifierPanel, panel.Y);
+        MagnifierPanel.Width = panel.Width;
+        MagnifierPanel.Height = panel.Height;
+
+        var gridPixels = MagnifierGeometry.SampleCount * MagnifierGeometry.CellPixels;
+        var grid = CoordinateMapper.MonitorLocalToViewDip(new PixelRect(0, 0, gridPixels, gridPixels), DpiScale);
+        MagnifierImage.Width = grid.Width;
+        MagnifierImage.Height = grid.Height;
+        MagnifierImage.Source = _snapshot.Sample(layout.Sample);
+        Canvas.SetTop(MagnifierText, grid.Height);
+
+        var center = MagnifierGeometry.SampleCount / 2 * MagnifierGeometry.CellPixels;
+        MagnifierOuterFrame.Data = Frame(center, MagnifierGeometry.CellPixels);
+        MagnifierInnerFrame.Data = Frame(center + 1, MagnifierGeometry.CellPixels - 2);
+        MagnifierPanel.Visibility = Visibility.Visible;
+    }
+
+    private Geometry Frame(int origin, int size) => new GeometryGroup
+    {
+        FillRule = FillRule.EvenOdd,
+        Children =
+        {
+            new RectangleGeometry(CoordinateMapper.MonitorLocalToViewDip(new PixelRect(origin, origin, size, size), DpiScale)),
+            new RectangleGeometry(CoordinateMapper.MonitorLocalToViewDip(new PixelRect(origin + 1, origin + 1, size - 2, size - 2), DpiScale)),
+        },
+    };
 
     public void Dispose() => _source.Dispose();
 

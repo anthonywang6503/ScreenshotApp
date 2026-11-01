@@ -60,6 +60,25 @@ internal static class ClipboardService
         }
     }
 
+    /// <summary>複製 Unicode 純文字，內容在程式結束後仍保留。</summary>
+    public static bool TrySetText(string text, out int errorCode) =>
+        TrySetText(text, data => Clipboard.SetDataObject(data, copy: true), out errorCode);
+
+    internal static bool TrySetText(string text, Action<DataObject> setDataObject, out int errorCode)
+    {
+        try
+        {
+            setDataObject(new DataObject(DataFormats.UnicodeText, text));
+            errorCode = 0;
+            return true;
+        }
+        catch (ExternalException ex)
+        {
+            errorCode = ex.HResult;
+            return false;
+        }
+    }
+
     /// <summary>複製失敗時給使用者的說明。</summary>
     public static string DescribeError(int errorCode) =>
         errorCode == CLIPBRD_E_CANT_OPEN ? Strings.Get("Editor_CopyFailedBusy") : Strings.Format("Editor_CopyFailed", errorCode);

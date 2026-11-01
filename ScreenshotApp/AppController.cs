@@ -377,6 +377,13 @@ internal sealed class AppController : IDisposable
             case CaptureStatus.Completed:
                 OpenEditor(new ImageDocument(outcome.Image!));
                 break;
+            case CaptureStatus.ColorPicked:
+                var copied = ClipboardService.TrySetText(outcome.ColorCode!, out var errorCode);
+                _tray.ShowNotification(Strings.Get("App_Name"),
+                    copied ? Strings.Format("Notify_ColorCopied", outcome.ColorCode)
+                        : Strings.Format("Notify_ColorCopyFailed", ClipboardService.DescribeError(errorCode)),
+                    copied ? NotificationKind.Info : NotificationKind.Error);
+                break;
             case CaptureStatus.Failed:
                 _log.Write("截圖失敗", outcome.Error);
                 _tray.ShowNotification(

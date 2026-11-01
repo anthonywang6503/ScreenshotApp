@@ -615,4 +615,17 @@
   <data name="ImageLoad_OutOfMemory" xml:space="preserve">
     <value>記憶體不足，無法開啟這張圖片。</value>
   </data>
+  <data name="Selection_Help" xml:space="preserve">
+    <value>拖曳選取 · 按住 Ctrl 放大 · C 複製色碼 · Esc／右鍵取消</value>
+  </data>
+  <data name="Selection_Pixel" xml:space="preserve">
+    <value>({0}, {1}) px
+{2}</value>
+  </data>
+  <data name="Notify_ColorCopied" xml:space="preserve">
+    <value>已複製色碼 {0}</value>
+  </data>
+  <data name="Notify_ColorCopyFailed" xml:space="preserve">
+    <value>無法複製色碼：{0}</value>
+  </data>
 </root>

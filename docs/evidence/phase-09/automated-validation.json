@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-01",
+  "command": "pwsh -NoProfile -File tools/Invoke-Quality.ps1",
+  "configuration": "Release",
+  "build_warnings": 0,
+  "build_errors": 0,
+  "tests": {
+    "total": 991,
+    "executed": 991,
+    "passed": 991,
+    "failed": 0,
+    "notExecuted": 0
+  },
+  "assembly_sha256": "e37a32bf436a4b2fe27982ede34da42d2937f652cb8a10e3c295330e80c3fe20",
+  "overlay_render_cases": 5,
+  "pixels_per_render_case": 32400,
+  "live_smoke": "NOT_RUN: existing user ScreenshotApp process; no simulated input sent",
+  "source_report": "../../../artifacts/quality/abd42783c6ba4cb6a08b3fb249fa709b/tests.trx"
+}

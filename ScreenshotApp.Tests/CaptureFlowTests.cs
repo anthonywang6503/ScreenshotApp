@@ -16,7 +16,7 @@ public class CaptureFlowTests
     {
         var environment = new FakeEnvironment();
         var state = new AppStateMachine();
-        environment.Selection.SetResult(new SelectionResult(1, new PixelRect(2, 1, 3, 2)));
+        environment.Selection.SetResult(new RegionSelected(new SelectionResult(1, new PixelRect(2, 1, 3, 2))));
 
         var outcome = await new CaptureFlow(state, environment).RunAsync();
 
@@ -116,6 +116,31 @@ public class CaptureFlowTests
         Assert.Throws<ArgumentOutOfRangeException>(() => snapshot.Crop(new SelectionResult(0, new PixelRect(0, 0, 0, 1))));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AT12_ColorPicked_RestoresPriorStateAndWindowsWithoutCreatingImage(bool editing)
+    {
+        var environment = new FakeEnvironment();
+        var state = new AppStateMachine();
+        if (editing)
+        {
+            state.BeginEditing();
+        }
+
+        var task = new CaptureFlow(state, environment).RunAsync();
+        Assert.Equal(AppState.Selecting, state.Current);
+        environment.Selection.SetResult(new ColorPicked("#01ABEF"));
+        var outcome = await task;
+
+        Assert.Equal(CaptureStatus.ColorPicked, outcome.Status);
+        Assert.Equal("#01ABEF", outcome.ColorCode);
+        Assert.Null(outcome.Image);
+        Assert.Null(outcome.Error);
+        Assert.Equal(new[] { "hide", "snapshot", "select", "restore" }, environment.Calls);
+        Assert.Equal(editing ? AppState.Editing : AppState.Resident, state.Current);
+    }
+
     // 每個像素的值由顯示器序號與座標決定，裁切位置錯一格就會不同。
     private static byte[] PatternPixels(int monitorIndex, PixelRect rect)
     {
@@ -147,7 +172,7 @@ public class CaptureFlowTests
 
         public Func<DesktopSnapshot> Snapshot { get; init; } = CreateSnapshot;
 
-        public TaskCompletionSource<SelectionResult?> Selection { get; } = new();
+        public TaskCompletionSource<OverlayResult?> Selection { get; } = new();
 
         public static DesktopSnapshot CreateSnapshot() => new(
         [
@@ -167,7 +192,7 @@ public class CaptureFlowTests
             return Snapshot();
         }
 
-        public Task<SelectionResult?> SelectRegionAsync(DesktopSnapshot snapshot)
+        public Task<OverlayResult?> SelectRegionAsync(DesktopSnapshot snapshot)
         {
             Calls.Add("select");
             return Selection.Task;

@@ -170,6 +170,35 @@ public sealed partial class ClipboardServiceTests : IDisposable
         }
     }
 
+    [Fact]
+    public void AT12_TrySetText_ProvidesUnicodeTextWithoutImageFormats()
+    {
+        DataObject? received = null;
+        Assert.True(ClipboardService.TrySetText("#01ABEF", data => received = data, out var error));
+        Assert.Equal(0, error);
+        Assert.NotNull(received);
+        Assert.Equal("#01ABEF", received.GetData(DataFormats.UnicodeText));
+        Assert.False(received.GetDataPresent(DataFormats.Dib));
+        Assert.False(received.GetDataPresent(ClipboardPayload.PngFormat));
+    }
+
+    [Theory]
+    [InlineData(ClipboardService.CLIPBRD_E_CANT_OPEN)]
+    [InlineData(unchecked((int)0x80004005))]
+    public void AT12_TrySetText_FailureReportsReasonWithoutOuterRetries(int hresult)
+    {
+        var attempts = 0;
+        var succeeded = ClipboardService.TrySetText("#01ABEF", _ =>
+        {
+            attempts++;
+            throw new COMException("剪貼簿失敗", hresult);
+        }, out var error);
+        Assert.False(succeeded);
+        Assert.Equal(hresult, error);
+        Assert.Equal(1, attempts);
+        Assert.False(string.IsNullOrWhiteSpace(ClipboardService.DescribeError(error)));
+    }
+
     // 每個像素的藍、綠、紅值；用來比較不同像素格式的圖片內容。
     private static byte[] Bgr(BitmapSource image)
     {

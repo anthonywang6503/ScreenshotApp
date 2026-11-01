@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ScreenshotApp.Editor.Model;
 using ScreenshotApp.Platform;
@@ -6,7 +7,33 @@ using ScreenshotApp.Platform;
 namespace ScreenshotApp.Capture;
 
 /// <summary>單一顯示器的快照；影像像素與該顯示器的本地實體像素一一對應。</summary>
-internal sealed record MonitorSnapshot(MonitorInfo Monitor, BitmapSource Image);
+internal sealed record MonitorSnapshot(MonitorInfo Monitor, BitmapSource Image)
+{
+    public string ColorCodeAt(PixelPoint local)
+    {
+        var pixel = new byte[4];
+        Image.CopyPixels(new Int32Rect(local.X, local.Y, 1, 1), pixel, 4, 0);
+        return $"#{pixel[2]:X2}{pixel[1]:X2}{pixel[0]:X2}";
+    }
+
+    /// <summary>保留完整取樣格；顯示器外填灰色，不複製邊緣像素。</summary>
+    public BitmapSource Sample(PixelRect sample)
+    {
+        var stride = sample.Width * 4;
+        var pixels = new byte[stride * sample.Height];
+        Array.Fill(pixels, (byte)128);
+        var inside = sample.Intersect(new PixelRect(0, 0, Image.PixelWidth, Image.PixelHeight));
+        if (!inside.IsEmpty)
+        {
+            Image.CopyPixels(new Int32Rect(inside.X, inside.Y, inside.Width, inside.Height), pixels, stride,
+                (inside.Y - sample.Y) * stride + (inside.X - sample.X) * 4);
+        }
+
+        var image = BitmapSource.Create(sample.Width, sample.Height, 96, 96, PixelFormats.Bgr32, null, pixels, stride);
+        image.Freeze();
+        return image;
+    }
+}
 
 /// <summary>同一時刻全部顯示器的快照。</summary>
 internal sealed class DesktopSnapshot
