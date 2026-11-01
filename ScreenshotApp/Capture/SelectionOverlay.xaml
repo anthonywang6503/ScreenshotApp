@@ -17,7 +17,13 @@
                 <TextBlock x:Name="SizeText" Foreground="White" />
             </Border>
         </Canvas>
-        <TextBlock Text="{res:Str Selection_Help}" Foreground="White" Background="#E6202020"
+        <Canvas IsHitTestVisible="False">
+            <Line x:Name="MeasurementLine" Stroke="Yellow" StrokeThickness="2" Visibility="Collapsed" />
+            <Border x:Name="MeasurementLabel" Background="#E6202020" CornerRadius="3" Padding="6,2" Visibility="Collapsed">
+                <TextBlock x:Name="MeasurementText" Foreground="White" />
+            </Border>
+        </Canvas>
+        <TextBlock x:Name="HelpText" Text="{res:Str Selection_Help}" Foreground="White" Background="#E6202020"
                    Padding="8,4" HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False" />
         <Canvas IsHitTestVisible="False">
             <Canvas x:Name="MagnifierPanel" Background="#FF202020" Visibility="Collapsed">

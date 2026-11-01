@@ -3,7 +3,7 @@
 ## Session: 2026-11-01
 
 ### Current Status
-- **Phase:** 10 - 馬賽克與模糊（complete）；Phase 11 pending，停在階段控制點
+- **Phase:** 11 - 尺規、量測與編輯器取色（complete）；Phase 12 pending，停在階段控制點
 - **Started:** 2026-11-01
 
 ### Actions Taken
@@ -103,3 +103,25 @@
 - 收尾檢查 35 份檔案、12 份 Markdown／154 個本機連結均有效；發現量測 JSON 的序列化換行為 CRLF，已修正工具輸出與證據為 LF。最終格式、計畫驗證及 git diff --check 通過後提交。
 
 - 納入新增檔案後，暫存差異檢查指出交接文件兩處 Markdown 換行用的尾端空白；已改成空白行並更新同一筆提交。提交前驗證與實機未驗證界線均保留。
+
+## Phase 11 開始（2026-11-02）
+- 已以 resolver 載入三份規劃與 Phase 10 交接；基準 352b53a，工作目錄乾淨，建立 feature/phase-11-ruler-eyedropper。
+- 範圍為尺寸標註、覆蓋層量測及編輯器取色；先讀規格與相關 ADR，使用 CodeGraph 取得模型、繪製、覆蓋層影響範圍。
+
+- 新增 ADR-0021、共用 PixelMeasurement、尺規模型及共用繪製；完成編輯器尺規／暫時取色與文字輸入保留路徑，接續覆蓋層量測與測試。
+
+- Release 建置 0 警告／0 錯誤。新增量測、尺規命令／輸出、取色與隱藏覆蓋層狀態測試。定向測試 38 通過／1 失敗：文字資源掃描不辨識條件式鍵，改成兩個明確 Strings.Get 呼叫。
+
+- 定向 74／74 與第一輪品質檢查 1071／1071 通過。煙霧腳本 AST 通過，執行時因既有 ScreenshotApp PID 28076 停在守衛，NOT_RUN，未操作桌面。
+- 收尾檢查發現右下邊界浮點容差可能將圖片內點轉為越界像素；先新增回歸案例確認 CopyPixels 例外，再於座標換算後驗證像素範圍，拒絕而不夾取。準備重跑最終品質檢查。
+
+- 右下邊界回歸與完整 1072／1072 測試通過；另發現 Alt+I 已由字級使用，取色改 Alt+D，尺規 Alt+Q。使用者指南、限制、架構、模型／文字 ADR 與 CHANGELOG 已同步，執行資源更新後的最終品質檢查。
+
+## Phase 11 完成（2026-11-02）
+
+- P11-00～P11-08 完成；交接 handoffs/phase-11-ruler-eyedropper.md。P11-07 以 NOT_RUN 明列實機尚未驗證。
+- 最終品質檢查 Release 0 警告／0 錯誤、1072／1072 測試通過，新增 36 案例、無跳過。TRX：artifacts/quality/9272029a78fc4b2c8c2f554ac5795657/tests.trx。
+- 規格行為沿用既有 FR-38／41，新增 ADR-0021、修訂模型／文字 ADR，USER_GUIDE、ARCHITECTURE、KNOWN_LIMITATIONS、ACCEPTANCE 與 CHANGELOG 已同步。
+- Phase 12 未開始；依使用者要求在目前分支提交，不建立 PR、不推送。
+
+- 最終靜態收尾：31 份檔案 UTF-8／LF、12 份 Markdown／164 個本機相對連結、受測組件 SHA-256 與 git diff --check 通過；計畫原生格式驗證及 attest 完成。

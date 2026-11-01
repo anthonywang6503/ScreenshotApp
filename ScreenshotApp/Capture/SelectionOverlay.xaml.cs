@@ -120,6 +120,30 @@ internal sealed partial class SelectionOverlay : UserControl, IDisposable
         Canvas.SetLeft(SizeLabel, Math.Max(_area.Left, Math.Min(view.X, _area.Right - label.Width)));
     }
 
+    public void SetMeasurementMode(bool measuring) =>
+        HelpText.Text = measuring ? Strings.Get("Selection_MeasureHelp") : Strings.Get("Selection_Help");
+
+    public void ShowMeasurement(PixelMeasurement? measurement)
+    {
+        MeasurementLine.Visibility = MeasurementLabel.Visibility = measurement is null ? Visibility.Collapsed : Visibility.Visible;
+        if (measurement is not { } value)
+        {
+            return;
+        }
+
+        var view = new ImageViewTransform(CoordinateMapper.ImageToViewScale(1, DpiScale), new Point());
+        var start = CoordinateMapper.ImageToViewDip(new Point(value.Start.X + 0.5, value.Start.Y + 0.5), view);
+        var end = CoordinateMapper.ImageToViewDip(new Point(value.End.X + 0.5, value.End.Y + 0.5), view);
+        MeasurementLine.X1 = start.X;
+        MeasurementLine.Y1 = start.Y;
+        MeasurementLine.X2 = end.X;
+        MeasurementLine.Y2 = end.Y;
+        MeasurementText.Text = Strings.Format("Selection_Measurement", value.DisplayLength, value.DeltaX, value.DeltaY, value.Width, value.Height);
+        MeasurementLabel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        Canvas.SetLeft(MeasurementLabel, Math.Clamp((start.X + end.X) / 2, 0, Math.Max(0, _area.Width - MeasurementLabel.DesiredSize.Width)));
+        Canvas.SetTop(MeasurementLabel, Math.Clamp((start.Y + end.Y) / 2 + LabelGap, 0, Math.Max(0, _area.Height - MeasurementLabel.DesiredSize.Height)));
+    }
+
     public string ColorCodeAt(PixelPoint desktop) =>
         _snapshot.ColorCodeAt(CoordinateMapper.DesktopToMonitorLocal(desktop, Monitor.Bounds));
 

@@ -21,7 +21,13 @@ internal sealed class SelectionController
     private DragSelection? _drag;
     private SelectionOverlay? _dragOverlay;
 
-    private SelectionController(DesktopSnapshot snapshot)
+    private bool _measuring;
+    private PixelPoint _measurementStart;
+
+    internal IReadOnlyList<SelectionOverlay> Overlays => _overlays;
+    internal Task<OverlayResult?> Completion => _completion.Task;
+
+    internal SelectionController(DesktopSnapshot snapshot)
     {
         _monitors = snapshot.Monitors.Select(monitor => monitor.Monitor).ToList();
         try
@@ -72,39 +78,80 @@ internal sealed class SelectionController
     {
         e.Handled = true;
         var overlay = (SelectionOverlay)sender;
-        _drag = DragSelection.Begin(_monitors, overlay.DesktopPosition(e));
+        BeginDrag(overlay, overlay.DesktopPosition(e));
+        if (_drag is not null)
+        {
+            overlay.CaptureMouse();
+        }
+    }
+
+    internal void BeginDrag(SelectionOverlay overlay, PixelPoint desktop)
+    {
+        _drag = DragSelection.Begin(_monitors, desktop);
         if (_drag is null)
         {
             return;
         }
 
         _dragOverlay = overlay;
-        overlay.ShowSelection(null);
-        overlay.CaptureMouse();
+        foreach (var candidate in _overlays)
+        {
+            candidate.ShowSelection(null);
+            candidate.ShowMeasurement(null);
+        }
+        _measurementStart = CoordinateMapper.DesktopToMonitorLocal(desktop, overlay.Monitor.Bounds);
+        if (_measuring)
+        {
+            UpdateDrag(desktop);
+        }
     }
 
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
         UpdateMagnifier(((SelectionOverlay)sender).DesktopPosition(e));
+        UpdateDrag(((SelectionOverlay)sender).DesktopPosition(e));
+    }
+
+    internal void UpdateDrag(PixelPoint desktop)
+    {
         if (_drag is { } drag && _dragOverlay is { } overlay)
         {
-            overlay.ShowSelection(drag.RectTo(overlay.DesktopPosition(e)));
+            if (_measuring)
+            {
+                var end = CoordinateMapper.DesktopToMonitorLocal(overlay.Monitor.Bounds.Clamp(desktop), overlay.Monitor.Bounds);
+                overlay.ShowMeasurement(new PixelMeasurement(_measurementStart, end));
+            }
+            else
+            {
+                overlay.ShowSelection(drag.RectTo(desktop));
+            }
         }
     }
 
     private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         e.Handled = true;
+        EndDrag(((SelectionOverlay)sender).DesktopPosition(e));
+    }
+
+    internal void EndDrag(PixelPoint desktop)
+    {
         if (_drag is not { } drag || _dragOverlay is not { } overlay)
         {
             return;
         }
 
         // 先結束拖曳再釋放捕捉，讓失去捕捉的處理知道這是正常結束。
-        var result = drag.Complete(overlay.DesktopPosition(e));
+        UpdateDrag(desktop);
+        var result = drag.Complete(desktop);
         _drag = null;
         _dragOverlay = null;
         overlay.ReleaseMouseCapture();
+        if (_measuring)
+        {
+            return;
+        }
+
         if (result is not null)
         {
             Finish(new RegionSelected(result.Value));
@@ -118,12 +165,18 @@ internal sealed class SelectionController
     private void OnLostMouseCapture(object sender, MouseEventArgs e)
     {
         HideMagnifiers();
+        AbortDrag();
+    }
+
+    internal void AbortDrag()
+    {
         // 拖曳途中被其他視窗奪走滑鼠捕捉時放棄這次拖曳，覆蓋層維持在選取狀態。
         if (_dragOverlay is { } overlay)
         {
             _drag = null;
             _dragOverlay = null;
             overlay.ShowSelection(null);
+            overlay.ShowMeasurement(null);
         }
     }
 
@@ -140,6 +193,11 @@ internal sealed class SelectionController
         {
             e.Handled = true;
             Finish(null);
+        }
+        else if (e.Key == Key.R && !e.IsRepeat && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            e.Handled = true;
+            ToggleMeasurement();
         }
         else if (e.Key is Key.LeftCtrl or Key.RightCtrl)
         {
@@ -159,6 +217,20 @@ internal sealed class SelectionController
                 e.Handled = true;
                 Finish(new ColorPicked(overlay.ColorCodeAt(cursor)));
             }
+        }
+    }
+
+    internal void ToggleMeasurement()
+    {
+        var captured = _dragOverlay;
+        AbortDrag();
+        captured?.ReleaseMouseCapture();
+        _measuring = !_measuring;
+        foreach (var overlay in _overlays)
+        {
+            overlay.ShowSelection(null);
+            overlay.ShowMeasurement(null);
+            overlay.SetMeasurementMode(_measuring);
         }
     }
 
@@ -214,7 +286,7 @@ internal sealed class SelectionController
     private void OnDisplayChanged(object? sender, EventArgs e) =>
         Fail(new CaptureException(Strings.Get("Capture_DisplayChanged")));
 
-    private void Finish(OverlayResult? result)
+    internal void Finish(OverlayResult? result)
     {
         Close();
         _completion.TrySetResult(result);

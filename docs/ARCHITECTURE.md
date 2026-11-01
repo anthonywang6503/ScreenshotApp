@@ -161,6 +161,8 @@ sequenceDiagram
 
 [OverlayResult](../ScreenshotApp/Capture/OverlayResult.cs) 區分 `RegionSelected` 與 `ColorPicked`，取消為 null。無修飾鍵的 C 產生色碼後，先關閉覆蓋層，再由 `CaptureFlow` 回傳 `ColorPicked` 並恢復先前狀態與視窗；`AppController` 使用 `ClipboardService.TrySetText` 複製 Unicode 純文字並通知。此分支不裁切、不替換文件、不記錄色碼，也不標記文件為已匯出。鍵盤事件的游標位置由 `GetCursorPos` 取得；滑鼠選取仍使用事件本身的座標。詳見 [ADR-0019](adr/0019-overlay-magnifier-and-color-pick.md)。
 
+**覆蓋層量測**：R 切換只改變 `SelectionController` 的模式，清除進行中選取／量測並釋放捕捉；`BeginDrag`、`UpdateDrag`、`EndDrag` 共用事件座標。量測端點夾取到起始顯示器，交給 [PixelMeasurement](../ScreenshotApp/Editor/Model/PixelMeasurement.cs) 計算；`SelectionOverlay.ShowMeasurement` 畫線、定位數值標籤。正常放開保留，下一次按下清除全部顯示器的舊量測；捕捉遺失丟棄進行中的量測。此路徑不回傳 `RegionSelected`，因此不建立文件。Esc／右鍵及顯示設定變更沿用既有取消流程。
+
 ## 5. 座標系統
 
 實體像素是唯一真值。[app.manifest](../ScreenshotApp/app.manifest) 宣告 Per-Monitor V2（`dpiAware` 為 `true/pm`、`dpiAwareness` 為 `PerMonitorV2`），Win32 API 回傳未經虛擬化的實體像素，每個視窗依所在顯示器的 DPI 繪製。座標空間之間的換算集中於 [CoordinateMapper](../ScreenshotApp/Capture/CoordinateMapper.cs)，全部是純函式：
@@ -208,6 +210,7 @@ sequenceDiagram
 |---|---|---|
 | `RectangleAnnotation`、`EllipseAnnotation`（`BoxAnnotation`） | `Rect`（`PixelRect`）、`StrokeWidth` | 筆劃畫在範圍內側；只有筆劃可點選；寬或高不超過兩倍線寬時為實心 |
 | `LineAnnotation`、`ArrowAnnotation`（`SegmentAnnotation`） | `Start`、`End` 像素（繪製時通過像素中心）、`StrokeWidth` | 箭頭頭部位於終點，大小隨線寬增加 |
+| [RulerAnnotation](../ScreenshotApp/Editor/Model/RulerAnnotation.cs)（`SegmentAnnotation`） | `Start`、`End`、`StrokeWidth`、`ImageBounds` | 兩端界線與長度標籤；保留原圖邊界讓繪製、命中與輸出共用同一標籤位置 |
 | `TextAnnotation` | `Origin`、`Text`、`FontFamily`、`FontSize` | 範圍由與繪製碼共用的 [TextLayout](../ScreenshotApp/Editor/Model/TextLayout.cs) 量測；只依明確的換行分行；沒有控制點 |
 | `StepNumberAnnotation` | `Center`、`Radius`（6～500）、`Number` | 拖曳外接正方形的四角調整半徑 |
 | `MosaicAnnotation`、`BlurAnnotation`（[EffectAnnotation](../ScreenshotApp/Editor/Model/EffectAnnotation.cs)） | `Rect`、`Strength` | 整塊命中、八個控制點；顏色與線寬不適用 |
@@ -218,7 +221,7 @@ sequenceDiagram
 
 ## 7. 編輯器
 
-[EditorWindow](../ScreenshotApp/Editor/EditorWindow.xaml.cs)（版面見 [EditorWindow.xaml](../ScreenshotApp/Editor/EditorWindow.xaml)）是唯一的編輯視窗，由 `AppController` 建立並重複使用，關閉後下次再建立新的。`Load(document)` 先解除舊工作階段的事件，再以新文件建立新的 `EditorSession`，工具回到選取、縮放回到符合視窗。視窗由上而下是工具列（十種工具、復原與重做、開啟、複製、另存）、屬性列（八種常用色與自訂色、線寬、效果強度、字型、字級、步驟編號）、畫布與狀態列（圖片尺寸、裁切尺寸、游標所在像素、訊息、縮放）。
+[EditorWindow](../ScreenshotApp/Editor/EditorWindow.xaml.cs)（版面見 [EditorWindow.xaml](../ScreenshotApp/Editor/EditorWindow.xaml)）是唯一的編輯視窗，由 `AppController` 建立並重複使用，關閉後下次再建立新的。`Load(document)` 先解除舊工作階段的事件，再以新文件建立新的 `EditorSession`，工具回到選取、縮放回到符合視窗。視窗由上而下是工具列（十二種工具、復原與重做、開啟、複製、另存）、屬性列（八種常用色與自訂色、線寬、效果強度、字型、字級、步驟編號）、畫布與狀態列（圖片尺寸、裁切尺寸、游標所在像素、訊息、縮放）。
 
 **右鍵選單**：`EditorWindow.xaml` 的資源中有三份 `ContextMenu`，放開滑鼠右鍵時由 `PrepareContextMenu` 依位置與工具選一份。
 
@@ -256,13 +259,15 @@ sequenceDiagram
   - 可否執行由 `CanResetCrop`、`CanClearAnnotations`、`CanRenumberSteps` 判斷。
 - 拖曳或文字輸入進行中，復原、重做、刪除、調整層序、替換樣式與右鍵選單的操作等會產生命令的操作一律不執行。
 
+**尺規與取色**：尺規沿用線段拖曳／端點／替換命令，`RulerMeasurement` 提供預覽或選取的數值給狀態列。取色為暫時工具，保存原工具與文字編輯；先檢查實數座標與換算後像素範圍，轉 Bgra32 讀原圖 RGB，再走 `SetColor`，選取標註一筆命令、無選取走既有 `StyleDefaultsChanged` 設定儲存。`EditorWindow.PickColor` 顯示色碼並恢復文字焦點。只有取色切換不提交文字；Esc 優先退出取色。取色時不以圖片邊界夾取外部點。
+
 **文字輸入**：`TextEditor` 是放在縮放容器內的 WPF `TextBox`，字級即圖片像素並隨縮放一起縮放；透明背景、無框線、不自動換行，輸入法組字、選取、複製貼上與輸入框內的復原都由 `TextBox` 處理。開始輸入時先清除輸入框的復原紀錄；版面完成後量測第一個字元的位置，把輸入框放在「標註起點減去內部偏移」處，提交後由繪製碼畫出的文字才不會位移。重新編輯期間標註層不畫原本的標註，改由輸入框顯示。`Ctrl+Enter`、在輸入框外按下滑鼠、切換工具、複製、另存，以及詢問未匯出的變更之前都會提交；`Esc` 取消。`CommitTextEdit` 至多產生一筆命令：新文字非空白時新增，既有文字有變更時替換、清空時刪除，新文字為空白時不建立。編輯器快捷鍵以視窗的 `CommandBindings`／`InputBindings` 註冊。文字輸入框有焦點時，`Ctrl+C`、`Ctrl+Z`、`Ctrl+Y`、`Delete` 等按鍵先由 `TextBox` 自己的編輯命令處理並標記為已處理，不會到達視窗的快捷鍵，因此作用在文字上；`Esc` 由輸入框的 `PreviewKeyDown` 取消輸入；其他會修改文件的命令在文字輸入中由 `EditorSession` 的忙碌保護擋下（縮放等不修改文件的命令照常作用）。`Ctrl+S` 與 `Ctrl+O` 在輸入中仍可使用，兩者在開始前都會先提交文字輸入。從屬性列變更樣式後，以 `Dispatcher` 把焦點交回輸入框。
 
 **縮放**：[EditorZoom](../ScreenshotApp/Editor/EditorZoom.cs) 定義階段 25%、33%、50%、67%、100%、150%、200%、300%、400%；「符合視窗」取放得下的最大比例（下限 1%，超大圖片可低於 25%）：顯示整張圖片時不超過 100%；只顯示裁切範圍時可放大到 400%（`EditorZoom.Fit` 的 `enlarge`），讓裁切範圍填滿畫布。`EditorWindow` 以 `_shownCrop` 記住上次在裁切工具以外顯示的裁切範圍，`UpdateDisplayedRegion` 回到一般狀態時若不同（套用、復原、重做、還原完整圖片），就切回符合視窗模式；只進出裁切工具而範圍沒有改變時維持原本的縮放。復原裁切時對恢復的範圍重新符合視窗，不還原裁切前的縮放與捲動位置。`Ctrl+滾輪` 以游標下的圖片位置為錨點，快捷鍵、縮放選單與右鍵選單的縮放以可視區域中央為錨點，縮放後錨點下的圖片位置不變（`ScrollOffsetToKeep`）。符合視窗模式下調整視窗大小會重新計算；按住空白鍵或滑鼠中鍵拖曳可平移。縮放只改變顯示，不修改文件。
 
 ## 8. 繪製與輸出
 
-**[AnnotationPainter](../ScreenshotApp/Editor/Rendering/AnnotationPainter.cs)** 是唯一的標註繪製碼：`Paint(DrawingContext, Annotation)` 以圖片像素座標繪製單一標註，不知道螢幕 DPI 或畫布縮放。編輯畫布的標註層（在縮放容器內）與匯出的 `ImageRenderer` 呼叫同一個函式，因此畫面、PNG 與剪貼簿的圖形一致。文字標註以 `TextLayout` 建立（pixelsPerDip 固定為 1、文化為 zh-TW），畫布與匯出都使用灰階文字平滑。新增標註種類時，模型與 `Paint` 的 `switch` 各擴充一處；未知的種類會拋出例外。
+**[AnnotationPainter](../ScreenshotApp/Editor/Rendering/AnnotationPainter.cs)** 是唯一的標註繪製碼：`Paint(DrawingContext, Annotation, BitmapSource)` 以圖片像素座標繪製單一標註，不知道螢幕 DPI 或畫布縮放。編輯畫布的標註層（在縮放容器內）與匯出的 `ImageRenderer` 呼叫同一個函式，因此畫面、PNG 與剪貼簿的圖形一致。文字標註以 `TextLayout` 建立（pixelsPerDip 固定為 1、文化為 zh-TW），畫布與匯出都使用灰階文字平滑。新增標註種類時，模型與 `Paint` 的 `switch` 各擴充一處；未知的種類會拋出例外。
 
 **[ImageRenderer](../ScreenshotApp/Export/ImageRenderer.cs)** 是 PNG 與剪貼簿共用的唯一合成器，必須在 UI（STA）執行緒呼叫：以 `DrawingVisual` 依原始像素尺寸繪製底圖（最近鄰取樣，不使用圖檔記錄的 DPI）與依層序的全部標註，繪製到原圖大小、96 DPI、`Pbgra32` 的 `RenderTargetBitmap`，再複製出 `CropRect` 範圍並凍結（裁切範圍是整張圖時直接凍結回傳）。一律先合成整張再取出，是因為平滑像素會隨繪製位置改變，若平移到裁切原點再繪製，範圍內的內容會與未裁切時不同。輸出寬高嚴格等於裁切範圍，與畫布縮放無關。
 
@@ -271,6 +276,8 @@ sequenceDiagram
 **PNG 另存**（[PngFileService](../ScreenshotApp/Export/PngFileService.cs)）：`EditorWindow.SaveImageAsync` 在 UI 執行緒提交文字輸入、顯示 `SaveFileDialog`（開啟覆寫確認；預設檔名一律為 `Screenshot_yyyyMMdd_HHmmss_fff.png`；初始資料夾為仍存在的上次儲存位置，否則為「圖片」資料夾），記下版本並合成。`PngFileService.Save` 在背景執行緒編碼，先以 `FileMode.CreateNew` 寫入同資料夾的 `<檔名>.<GUID>.tmp`，完整寫入後才以 `File.Move(..., overwrite: true)` 取代目標；任何失敗都刪除暫存檔再把例外往上拋，編輯器捕捉 I/O 與權限類的例外後顯示原因，文件不變。成功後標記匯出版本並記住資料夾。`Encode` 也供剪貼簿的 PNG 格式使用，兩者的位元組相同。
 
 **開啟圖片**（[ImageFileLoader](../ScreenshotApp/Export/ImageFileLoader.cs)）：`AppController.OpenImage` 在背景執行緒呼叫 `Load`；所有失敗都以 `ImageLoadResult.Error`（可直接顯示的繁體中文）回報，不拋出例外，也不寫日誌或磁碟。流程是：以允許其他程式讀寫與刪除的共用模式開檔 → 只讀標頭，依檔案內容判斷格式（只接受 PNG、JPEG、BMP 解碼器，與副檔名無關）並檢查尺寸（寬 × 高不得超過 1 億像素）→ 整張解碼第一個影格（忽略色彩描述檔，不套用 EXIF 方向）→ 轉成 `Pbgra32` 後以「預乘值 + (255 − Alpha)」合成到白色背景，輸出凍結的不透明 `Bgr32`、96 DPI 圖片，與截圖的格式相同。載入失敗時原本的文件不變。
+
+尺寸標註的界線與文字都在 `AnnotationPainter` 繪製，標籤白底黑字、字級隨線寬，在原圖邊界內置中或夾取，極小圖片等比例縮小。裁切仍是合成整張後取出範圍，不重新定位標籤；顯示文字不回寫到幾何計算。
 
 ### 原圖效果的繪製與快取
 
@@ -427,3 +434,4 @@ sequenceDiagram
 | [ADR-0016](adr/0016-unexported-changes-protection.md) | 未匯出變更保護：以歷史版本判斷是否未匯出，新截圖、開啟圖片、關閉、結束與登出前詢問 |
 | [ADR-0017](adr/0017-release-packaging.md) | 發佈與封裝：自包含 win-x64 資料夾版為主、單檔版為輔、不簽章，只保留繁體中文的框架附屬組件 |
 | [ADR-0019](adr/0019-overlay-magnifier-and-color-pick.md) | 選取放大鏡與螢幕取色：靜態快照、實體像素格、Ctrl 輸入抑制、獨立取色結果與文字剪貼簿 |
+| [ADR-0021](adr/0021-ruler-and-eyedropper.md) | 共用中心距離量測、尺寸標註、覆蓋層 R 模式與原圖取色 |

@@ -481,6 +481,66 @@ public sealed class EditorWindowTests : IDisposable
         });
     }
 
+    [Fact]
+    public void AT12_EyedropperButton_PreservesPendingChineseTextAndRestoresTool()
+    {
+        RunWithWindow(CreateAnnotatedCroppedDocument, (window, document) =>
+        {
+            Click(Item(window.PrepareContextMenu(OnText, Tolerance), "EditTextMenuItem"));
+            window.TextEditor.Text = "尚未提交的中文";
+            var count = document.History.UndoCount;
+            window.EyedropperToolButton.IsChecked = true;
+            Assert.Equal("尚未提交的中文", window.TextEditor.Text);
+            Assert.Equal(Visibility.Visible, window.TextEditor.Visibility);
+            Assert.False(window.TextEditor.IsHitTestVisible);
+            Assert.True(window.PickColor(new Point(50, 50)));
+            Assert.Equal(count, document.History.UndoCount);
+            Assert.Equal("尚未提交的中文", window.TextEditor.Text);
+            Assert.True(window.TextEditor.IsHitTestVisible);
+            Assert.True(window.SelectToolButton.IsChecked);
+            Assert.Contains("#000000", window.MessageText.Text);
+            Assert.Equal(Colors.Black, ((SolidColorBrush)window.TextEditor.Foreground).Color);
+            window.RectangleToolButton.IsChecked = true;
+            Assert.Equal(count + 1, document.History.UndoCount);
+            Assert.Equal("尚未提交的中文", document.Annotations.OfType<TextAnnotation>().Single().Text);
+        });
+    }
+
+    [Fact]
+    public void AT12_EyedropperDefault_IsSavedThroughExistingSettingsPath()
+    {
+        RunWithWindow(CreateDocument, (window, document) =>
+        {
+            window.RulerToolButton.IsChecked = true;
+            window.EyedropperToolButton.IsChecked = true;
+            Assert.False(window.PickColor(new Point(-1, 0)));
+            Assert.True(window.EyedropperToolButton.IsChecked);
+            Assert.True(window.PickColor(new Point(10, 20)));
+            Assert.True(window.RulerToolButton.IsChecked);
+            Assert.Equal(0, document.History.UndoCount);
+            Assert.Contains("#000000", File.ReadAllText(_temp.Combine("settings.json")));
+        });
+    }
+
+    [Fact]
+    public void AT14_RulerSelection_EnablesLinePropertiesAndPickedColorMessage()
+    {
+        RunWithWindow(CreateDocument, (window, document) =>
+        {
+            var ruler = RulerTests.CreateRuler(new(10, 50), new(150, 50), document.Bounds);
+            document.History.Execute(new AddAnnotationCommand(document, ruler));
+            window.PrepareContextMenu(new Point(30, 50.5), Tolerance);
+            Assert.True(window.ColorList.IsEnabled);
+            Assert.True(window.StrokeWidthBox.IsEnabled);
+            Assert.False(window.FontFamilyBox.IsEnabled);
+            Assert.Contains("140 px", window.MessageText.Text);
+            window.EyedropperToolButton.IsChecked = true;
+            Assert.True(window.PickColor(new Point(10, 10)));
+            Assert.Contains("#000000", window.MessageText.Text);
+            Assert.Equal(2, document.History.UndoCount);
+        });
+    }
+
     private void RunWithWindow(Func<ImageDocument> createDocument, Action<EditorWindow, ImageDocument> test) =>
         StaRunner.Run(() =>
         {

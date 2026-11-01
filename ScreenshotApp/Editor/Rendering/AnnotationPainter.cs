@@ -39,6 +39,9 @@ internal static class AnnotationPainter
             case ArrowAnnotation arrow:
                 PaintArrow(context, arrow, brush);
                 break;
+            case RulerAnnotation ruler:
+                PaintRuler(context, ruler, brush);
+                break;
             case LineAnnotation line:
                 PaintLine(context, line, brush);
                 break;
@@ -91,6 +94,22 @@ internal static class AnnotationPainter
         }
 
         context.DrawLine(CreatePen(brush, line.StrokeWidth, PenLineCap.Round, PenLineCap.Round), line.StartPoint, line.EndPoint);
+    }
+
+    private static void PaintRuler(DrawingContext context, RulerAnnotation ruler, Brush brush)
+    {
+        var pen = CreatePen(brush, ruler.StrokeWidth, PenLineCap.Flat, PenLineCap.Flat);
+        context.DrawLine(pen, ruler.StartPoint, ruler.EndPoint);
+        context.DrawLine(pen, ruler.StartPoint - ruler.TickOffset, ruler.StartPoint + ruler.TickOffset);
+        context.DrawLine(pen, ruler.EndPoint - ruler.TickOffset, ruler.EndPoint + ruler.TickOffset);
+        var bounds = ruler.LabelBounds;
+        var scale = bounds.Width / ruler.LabelSize.Width;
+        context.DrawRectangle(Brushes.White, null, bounds);
+        context.PushTransform(new TranslateTransform(bounds.X, bounds.Y));
+        context.PushTransform(new ScaleTransform(scale, scale));
+        context.DrawText(TextLayout.Create(ruler.Label, "Segoe UI", ruler.FontSize, Brushes.Black), new Point(4, 2));
+        context.Pop();
+        context.Pop();
     }
 
     private static void PaintArrow(DrawingContext context, ArrowAnnotation arrow, Brush brush)

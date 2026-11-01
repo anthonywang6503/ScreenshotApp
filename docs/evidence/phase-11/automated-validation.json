@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-02",
+  "phase": 11,
+  "baseCommit": "352b53a",
+  "branch": "feature/phase-11-ruler-eyedropper",
+  "command": "pwsh -NoProfile -File tools/Invoke-Quality.ps1",
+  "build": {
+    "configuration": "Release",
+    "warnings": 0,
+    "errors": 0
+  },
+  "tests": {
+    "total": "1072",
+    "executed": "1072",
+    "passed": "1072",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "addedTestCases": 36,
+  "trx": "artifacts/quality/9272029a78fc4b2c8c2f554ac5795657/tests.trx",
+  "assemblySha256": "6051489CD0F04B4A41531E705892E22B97500206A0E4D89F8D0082D5FE7B70D6",
+  "smoke": {
+    "status": "NOT_RUN",
+    "reason": "既有 ScreenshotApp PID 28076 執行中；未送出鍵鼠輸入",
+    "evidence": "phase11-results.txt"
+  },
+  "limitations": [
+    "真實鍵鼠、混合 DPI、多螢幕切換、PrintWindow 與 PowerPoint 貼上尚未驗證",
+    "微軟注音組字中暫時取色尚未實機驗證；隱藏文字輸入框保留測試通過"
+  ]
+}

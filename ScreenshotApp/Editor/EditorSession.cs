@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ScreenshotApp.Capture;
 using ScreenshotApp.Editor.Commands;
 using ScreenshotApp.Editor.Model;
@@ -18,6 +19,8 @@ internal enum EditorTool
     StepNumber,
     Mosaic,
     Blur,
+    Ruler,
+    Eyedropper,
 }
 
 internal enum ZOrderChange
@@ -47,6 +50,49 @@ internal sealed class EditorSession
     private Drag? _drag;
     private Guid? _selectedId;
     private PixelRect? _pendingCrop;
+    private EditorTool _previousTool;
+
+    public string? PickedColorCode { get; private set; }
+    public PixelMeasurement? RulerMeasurement => (_drag?.Preview as RulerAnnotation ?? Selected as RulerAnnotation)?.Measurement;
+
+    public void BeginEyedropper()
+    {
+        if (IsDragging || Tool == EditorTool.Eyedropper)
+        {
+            return;
+        }
+
+        _previousTool = Tool;
+        Tool = EditorTool.Eyedropper;
+        PickedColorCode = null;
+        OnChanged();
+    }
+
+    public bool PickColor(Point point)
+    {
+        if (Tool != EditorTool.Eyedropper || !double.IsFinite(point.X) || !double.IsFinite(point.Y)
+            || point.X < 0 || point.Y < 0 || point.X >= Document.PixelWidth || point.Y >= Document.PixelHeight)
+        {
+            return false;
+        }
+
+        var pixel = CoordinateMapper.ImageToPixel(point);
+        // 座標換算含浮點容差；右下邊界附近可能被捨入到圖片外。
+        if (!Document.Bounds.Contains(pixel))
+        {
+            return false;
+        }
+
+        var source = new FormatConvertedBitmap(Document.Source, PixelFormats.Bgra32, null, 0);
+        var bytes = new byte[4];
+        source.CopyPixels(new Int32Rect(pixel.X, pixel.Y, 1, 1), bytes, 4, 0);
+        var color = Color.FromRgb(bytes[2], bytes[1], bytes[0]);
+        Tool = _previousTool;
+        SetColor(color);
+        PickedColorCode = $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+        OnChanged();
+        return true;
+    }
 
     public EditorSession(ImageDocument document, AnnotationStyle style)
     {
@@ -171,6 +217,12 @@ internal sealed class EditorSession
     /// <summary>切換工具。文字輸入中不切換（呼叫端應先提交或取消）；進入裁切工具時以目前的裁切範圍開始，離開時捨棄未套用的變更。</summary>
     public void SetTool(EditorTool tool)
     {
+        if (tool == EditorTool.Eyedropper)
+        {
+            BeginEyedropper();
+            return;
+        }
+
         if (TextEdit is not null || tool == Tool)
         {
             return;
@@ -218,6 +270,12 @@ internal sealed class EditorSession
 
     public void PointerDown(Point point, double tolerance, int clickCount)
     {
+        if (Tool == EditorTool.Eyedropper)
+        {
+            PickColor(point);
+            return;
+        }
+
         if (IsBusy)
         {
             return;
@@ -275,6 +333,13 @@ internal sealed class EditorSession
     /// <summary>Esc：依序取消拖曳、離開裁切工具（捨棄未套用的範圍）或取消選取；沒有可取消的操作時回傳 false。</summary>
     public bool CancelOperation()
     {
+        if (Tool == EditorTool.Eyedropper)
+        {
+            Tool = _previousTool;
+            OnChanged();
+            return true;
+        }
+
         if (TextEdit is not null)
         {
             return false;
@@ -673,7 +738,7 @@ internal sealed class EditorSession
                 break;
             default:
                 _selectedId = null;
-                _drag = new CreateShapeDrag(Tool, pixel, Style, EffectStrength);
+                _drag = new CreateShapeDrag(Tool, pixel, Style, EffectStrength, Document.Bounds);
                 break;
         }
     }
@@ -876,7 +941,7 @@ internal sealed class EditorSession
     }
 
     /// <summary>拖曳建立矩形框、橢圓、直線或箭頭；指標沒有離開起點像素時是零尺寸，不建立。</summary>
-    private sealed class CreateShapeDrag(EditorTool tool, PixelPoint start, AnnotationStyle style, int strength) : Drag
+    private sealed class CreateShapeDrag(EditorTool tool, PixelPoint start, AnnotationStyle style, int strength, PixelRect imageBounds) : Drag
     {
         private readonly Guid _id = Guid.NewGuid();
         private Annotation? _preview;
@@ -922,6 +987,10 @@ internal sealed class EditorSession
             EditorTool.Ellipse => new EllipseAnnotation
             {
                 Id = _id, Color = style.Color, Rect = BoxHandles.Spanning(start, end), StrokeWidth = style.StrokeWidth,
+            },
+            EditorTool.Ruler => new RulerAnnotation
+            {
+                Id = _id, Color = style.Color, Start = start, End = end, StrokeWidth = style.StrokeWidth, ImageBounds = imageBounds,
             },
             EditorTool.Line => new LineAnnotation
             {

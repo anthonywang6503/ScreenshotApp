@@ -97,6 +97,8 @@ internal partial class EditorWindow : Window
             [StepToolButton] = EditorTool.StepNumber,
             [MosaicToolButton] = EditorTool.Mosaic,
             [BlurToolButton] = EditorTool.Blur,
+            [RulerToolButton] = EditorTool.Ruler,
+            [EyedropperToolButton] = EditorTool.Eyedropper,
         };
         ColorList.ItemsSource = _colors;
         FontFamilyBox.ItemsSource = StyleChoices.FontFamilies;
@@ -638,6 +640,7 @@ internal partial class EditorWindow : Window
 
         var brush = new SolidColorBrush(edit.Color);
         brush.Freeze();
+        TextEditor.IsHitTestVisible = _session.Tool != EditorTool.Eyedropper;
         TextEditor.FontFamily = new FontFamily(edit.FontFamily);
         TextEditor.FontSize = edit.FontSize;
         TextEditor.Foreground = brush;
@@ -713,6 +716,13 @@ internal partial class EditorWindow : Window
 
     private void TextEditor_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (_session?.Tool == EditorTool.Eyedropper && e.Key == Key.Escape)
+        {
+            _session.CancelOperation();
+            e.Handled = true;
+            return;
+        }
+
         // 輸入法組字中的按鍵由輸入法處理（Key 為 ImeProcessed），不會走到這裡。
         if (e.Key == Key.Escape)
         {
@@ -752,8 +762,16 @@ internal partial class EditorWindow : Window
             return;
         }
 
-        CommitTextEdit();
-        _session.SetTool(_toolButtons[(RadioButton)sender]);
+        var tool = _toolButtons[(RadioButton)sender];
+        if (tool != EditorTool.Eyedropper)
+        {
+            CommitTextEdit();
+        }
+        _session.SetTool(tool);
+        if (tool == EditorTool.Eyedropper)
+        {
+            ContentRoot.Focus();
+        }
         SyncToolButtons();
     }
 
@@ -909,6 +927,12 @@ internal partial class EditorWindow : Window
         e.Handled = true;
         ContentRoot.Focus();
 
+        if (_session.Tool == EditorTool.Eyedropper && CurrentTransform() is { } pickView)
+        {
+            PickColor(CoordinateMapper.ViewDipToImage(e.GetPosition(ContentRoot), pickView));
+            return;
+        }
+
         // 在文字輸入框外按下滑鼠即完成輸入；這次按下只用來結束輸入，不再開始其他操作。
         if (_session.TextEdit is not null)
         {
@@ -933,6 +957,18 @@ internal partial class EditorWindow : Window
         {
             ContentRoot.CaptureMouse();
         }
+    }
+
+    internal bool PickColor(Point point)
+    {
+        if (_session?.PickColor(point) != true)
+        {
+            return false;
+        }
+
+        ShowMessage(Strings.Format("Editor_PickedColor", _session.PickedColorCode));
+        ReturnFocusToTextEditor();
+        return true;
     }
 
     private void ContentRoot_MouseMove(object sender, MouseEventArgs e)
@@ -1141,6 +1177,7 @@ internal partial class EditorWindow : Window
     private void CancelOperation()
     {
         _session?.CancelOperation();
+        ReturnFocusToTextEditor();
         if (ContentRoot.IsMouseCaptured && _panStart is null)
         {
             ContentRoot.ReleaseMouseCapture();
@@ -1268,8 +1305,14 @@ internal partial class EditorWindow : Window
 
     // 狀態列訊息：最近一次操作結果優先，數秒後消失；裁切工具中持續顯示操作提示。
     private void UpdateMessage() =>
-        MessageText.Text = _message ?? (_session?.Tool == EditorTool.Crop ? Strings.Get("Editor_CropHint") :
+        MessageText.Text = _session?.Tool == EditorTool.Eyedropper ? Strings.Get("Editor_EyedropperHint") :
+            _session is { IsDragging: true, RulerMeasurement: { } dragging } ? MeasurementMessage(dragging) :
+            _message ?? (_session?.RulerMeasurement is { } measurement ? MeasurementMessage(measurement) :
+            _session?.Tool == EditorTool.Crop ? Strings.Get("Editor_CropHint") :
             _session?.IsEffectTarget == true ? Strings.Get("Editor_EffectHint") : string.Empty);
+
+    private static string MeasurementMessage(PixelMeasurement value) =>
+        Strings.Format("Ruler_Details", value.DisplayLength, value.DeltaX, value.DeltaY);
 
     private void BringToFront_Click(object sender, RoutedEventArgs e) => _session?.Reorder(ZOrderChange.BringToFront);
 

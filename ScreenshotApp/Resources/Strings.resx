@@ -616,7 +616,7 @@
     <value>記憶體不足，無法開啟這張圖片。</value>
   </data>
   <data name="Selection_Help" xml:space="preserve">
-    <value>拖曳選取 · 按住 Ctrl 放大 · C 複製色碼 · Esc／右鍵取消</value>
+    <value>拖曳選取 · 按住 Ctrl 放大 · C 複製色碼 · Esc／右鍵取消；R 切換量測</value>
   </data>
   <data name="Selection_Pixel" xml:space="preserve">
     <value>({0}, {1}) px
@@ -648,5 +648,35 @@
   </data>
   <data name="Editor_EffectHint" xml:space="preserve">
     <value>效果只取樣原圖；原圖仍保留。模糊可能被還原，降低可辨識度時優先使用馬賽克並檢查匯出。</value>
+  </data>
+  <data name="Ruler_Length" xml:space="preserve">
+    <value>{0} px</value>
+  </data>
+  <data name="Ruler_Details" xml:space="preserve">
+    <value>長度 {0} px　Δx {1}　Δy {2}</value>
+  </data>
+  <data name="Selection_Measurement" xml:space="preserve">
+    <value>長度 {0} px　Δx {1}　Δy {2}　{3} × {4} px</value>
+  </data>
+  <data name="Selection_MeasureHelp" xml:space="preserve">
+    <value>量測模式：拖曳量測；R 回到區域選取；Ctrl 放大鏡；C 取色；Esc／右鍵取消</value>
+  </data>
+  <data name="Editor_ToolRuler" xml:space="preserve">
+    <value>尺規(_Q)</value>
+  </data>
+  <data name="Editor_ToolRulerToolTip" xml:space="preserve">
+    <value>拖曳建立可輸出的尺寸標註；長度為兩端像素中心距離</value>
+  </data>
+  <data name="Editor_ToolEyedropper" xml:space="preserve">
+    <value>取色(_D)</value>
+  </data>
+  <data name="Editor_ToolEyedropperToolTip" xml:space="preserve">
+    <value>點擊原圖取色，完成後回到原工具；Esc 取消</value>
+  </data>
+  <data name="Editor_EyedropperHint" xml:space="preserve">
+    <value>點擊原圖取色；Esc 返回原工具</value>
+  </data>
+  <data name="Editor_PickedColor" xml:space="preserve">
+    <value>已取色：{0}</value>
   </data>
 </root>
