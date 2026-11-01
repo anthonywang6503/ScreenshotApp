@@ -16,6 +16,7 @@
 - README：特點、畫面截圖（取自實機煙霧驗證的證據）、從 GitHub Releases 下載，以及授權段落。
 
 ### Changed
+- Phase 8 規格：將 v1.2.0 的放大鏡、取色器、馬賽克、模糊、尺規、磁碟截圖歷史與手動／自動長截圖納入 FR-37～FR-43，補齊 AT-11～AT-16、MT-12～MT-15 與追蹤矩陣；同步隱私例外及相關 ADR。此項僅為需求與驗收基準修訂，功能尚未實作或發佈。
 - `THIRD-PARTY-NOTICES.md` 註明本專案的授權；`AGENTS.md` 的規格檔路徑改為實際位置 `docs/ScreenshotApp.Spec.md`。
 - 驗收紀錄：記錄 v1.1.0 發佈版的實機煙霧驗證（資料夾版 Phase 3 43／43，含裁切後填滿與右鍵還原完整圖片；單檔版 Phase 1 31／31、Phase 2 38／38），依 ADR-0017 提供單檔版；證據放在 `docs/evidence/phase-07/`。
 
