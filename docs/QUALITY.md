@@ -29,3 +29,5 @@ The resource tests require every referenced key to exist, every key to be used, 
 Update global.json deliberately, install that SDK and rerun the gate. For dependency changes, update the project, run `dotnet restore ScreenshotApp.sln --use-lock-file --force-evaluate`, review and commit the lock diff. Do not hand-edit hashes. Keep text UTF-8 with LF. Formatting checks can use `dotnet format ScreenshotApp.sln --verify-no-changes --no-restore`.
 
 Interactive scripts in [tools/smoke/](../tools/smoke/) drive the real desktop. Run only when the user is idle, with the correct `-ExePath`, input interruption guards and clipboard restoration. Record unrun desktop checks as **NOT_RUN** in [acceptance](ACCEPTANCE.md).
+
+The historical smoke scripts contain Traditional Chinese window-title/text expectations. Their language assumptions need adaptation before validating an English-default build; they have not been certified for this bilingual release. Do not interpret a label mismatch as a product failure or mark these scripts passed without running the adapted checks.

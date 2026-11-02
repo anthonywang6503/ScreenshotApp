@@ -34,3 +34,5 @@
 - Evidence docs/evidence/phase-15/validation.md; final tagged rebuild will have its own digest checked against GitHub after upload. No ScreenshotApp process started or user data modified.
 
 - Release blocker found before creating GitHub Release: single-file publish rewrites source packages.lock.json with implicit ILLink dependency/RID; it was accidentally included in 4b2b487. Subsequent locked restore fails NU1004. v1.3.0 tag already pushed; do not overwrite it. Correct source lock and isolate query/variant locks in publish/. Publish corrected 1.3.1 instead, rerunning full gate and post-package locked restore/hash check. User informed.
+
+- 1.3.1 post-commit packaging PASS at fe31ce9: both variants generated, source lock unchanged, post-package locked restore PASS; ZIP and English/zh-TW resource/version probes PASS. Historical Chinese-label smoke assumptions documented as unvalidated, no desktop script run.

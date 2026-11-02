@@ -39,3 +39,5 @@
 
 - Corrected 1.3.1 full gate PASS: 1189/1189, zero skipped, Release zero warnings/errors; TRX artifacts/quality/b3415effc54f4078b7f1e70fd366e889/tests.trx.
 - v1.3.0 remote CI failed as expected; no Release was created. Separate packaging lock paths and source-lock hash guard implemented.
+
+- 1.3.1 post-commit packaging PASS at fe31ce9: both variants generated, source lock unchanged, post-package locked restore PASS; ZIP and English/zh-TW resource/version probes PASS. Historical Chinese-label smoke assumptions documented as unvalidated, no desktop script run.

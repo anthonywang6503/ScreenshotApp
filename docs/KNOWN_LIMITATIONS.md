@@ -10,6 +10,7 @@ Applies to 1.3.1. Automated WPF/model tests are not a substitute for interactive
 - Unsigned portable binaries may be blocked by SmartScreen or organizational policy. No installer, automatic updater, Store package or elevated execution.
 - Folder distribution is the published download. Single-file packaging extracts native WPF libraries to temporary storage and is withheld until its version passes interactive smoke checks. Clean Windows without an installed .NET runtime remains unverified.
 - English (default) and Traditional Chinese are supported. Save a language selection, exit from the tray and restart to apply it. Windows/framework dialogs and unexpected exception text may follow the operating-system language. Other languages and live switching are not supported.
+- Historical interactive smoke scripts assume Traditional Chinese labels and need adaptation for English-default builds. They have not been validated for this bilingual release; automated language tests and packaging checks do not replace those desktop checks.
 
 ## Capture and selection
 
