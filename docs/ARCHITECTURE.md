@@ -4,7 +4,7 @@
 
 ## 1. 總覽
 
-ScreenshotApp 是常駐 Windows 11 系統匣的截圖與圖片標註工具：以全域快捷鍵或系統匣選單凍結桌面、在單一顯示器內拖曳選取範圍，在編輯器加入矩形、橢圓、直線、箭頭、文字、步驟編號或裁切後，複製到剪貼簿或另存 PNG；也可以開啟既有的 PNG、JPEG、BMP 圖片編輯。程式沒有任何網路存取，以目前使用者的權限執行（`app.manifest` 宣告 `asInvoker`）。
+ScreenshotApp v1.2.0 是常駐 Windows 11 系統匣的截圖與圖片標註工具：支援一般／垂直長截圖、放大鏡與取色、基本標註、馬賽克／模糊及尺規，複製到剪貼簿或另存 PNG；也可以開啟既有的 PNG、JPEG、BMP 圖片編輯。截圖歷史預設開啟，以未加密原圖、縮圖與內部 JSON 保存於本機磁碟，可關閉與清除。程式沒有任何網路存取，以目前使用者的權限執行（`app.manifest` 宣告 `asInvoker`）。
 
 方案只有兩個專案：
 
@@ -15,12 +15,13 @@ ScreenshotApp 是常駐 Windows 11 系統匣的截圖與圖片標註工具：以
 |---|---|
 | 根目錄 | [App.xaml.cs](../ScreenshotApp/App.xaml.cs)（啟動、結束、登出）、[AppController](../ScreenshotApp/AppController.cs)（建立並連接常駐服務、協調各流程）、[AppStateMachine](../ScreenshotApp/AppStateMachine.cs)、[GlobalExceptionHandler](../ScreenshotApp/GlobalExceptionHandler.cs) |
 | `Platform/` | Win32 互操作（宣告集中於 [NativeMethods](../ScreenshotApp/Platform/NativeMethods.cs)，使用 `LibraryImport`）、全域快捷鍵、系統匣、顯示器列舉、GDI 擷取與 SafeHandle、單一執行個體、登入時啟動、DPI 感知檢查、故障日誌、色彩對話框 |
-| `Capture/` | 截圖流程、選取覆蓋層與拖曳幾何、自繪十字游標、座標換算 [CoordinateMapper](../ScreenshotApp/Capture/CoordinateMapper.cs) |
+| `Capture/` | 截圖流程、選取覆蓋層與拖曳幾何、放大鏡／量測、自繪十字游標、[CoordinateMapper](../ScreenshotApp/Capture/CoordinateMapper.cs)、長截圖影格／拼接／穩定工作階段及控制面板 |
 | `Editor/` | 編輯視窗、編輯工作階段（工具邏輯）、標註層與控制點層、縮放階段、未匯出變更對話框 |
 | `Editor/Model/` | 圖片文件、不可變的標註 record、`PixelRect`／`PixelPoint`、控制點、命中幾何、文字版面 |
 | `Editor/Commands/` | 六種編輯命令（含把多個命令當成一筆的複合命令）與 `UndoRedoStack` |
-| `Editor/Rendering/` | [AnnotationPainter](../ScreenshotApp/Editor/Rendering/AnnotationPainter.cs)：畫面與輸出共用的標註繪製碼 |
+| `Editor/Rendering/` | [AnnotationPainter](../ScreenshotApp/Editor/Rendering/AnnotationPainter.cs)：畫面與輸出共用的標註繪製碼；原圖像素效果與受限快取 |
 | `Export/` | 圖片合成、剪貼簿、PNG 存檔、開啟圖片 |
+| `History/` | [HistoryStore](../ScreenshotApp/History/HistoryStore.cs) 序列背景儲存／保留淘汰、[HistorySnapshot／HistoryJson](../ScreenshotApp/History/HistorySnapshot.cs) 格式及歷史視窗 |
 | `Settings/` | 設定模型與 JSON 持久化、快捷鍵組合、顏色與樣式選項、設定視窗 |
 | `Resources/` | `Strings.resx`、`Strings` 存取類別、XAML 標記延伸、常見錯誤的繁體中文說明（`ErrorText`）、應用程式圖示 |
 
@@ -36,6 +37,7 @@ flowchart TD
     Root --> Editor
     Root --> Model["Editor/Model"]
     Root --> Export
+    Root --> History
     Root --> Settings
     Root --> Platform
     GEH --> Platform
@@ -55,6 +57,10 @@ flowchart TD
     Rendering --> Model
     Export --> Rendering
     Export --> Model
+    History --> Model
+    History --> Export
+    History --> Settings
+    History -.->|視窗回呼| Root
     Platform -->|PixelRect| Model
     Platform -->|HotkeyGesture| Settings
     Settings -->|ColorPicker| Platform
@@ -421,6 +427,9 @@ sequenceDiagram
 | DPI 感知、顯示器列舉、GDI 擷取與 SafeHandle | `DpiAwarenessTests`、`MonitorServiceTests`、`CaptureServiceTests`、`SafeHandleTests` |
 | 狀態機與截圖流程 | `AppStateMachineTests`、`CaptureFlowTests` |
 | 選取幾何、十字游標、座標換算 | `SelectionLogicTests`（`DragSelection`）、`CrosshairCursorTests`、`CoordinateMapperTests`、`PixelRectTests` |
+| 放大鏡、取色與覆蓋層量測 | `MagnifierGeometryTests`、`MeasurementOverlayTests`、`CaptureFlowTests`、`RulerTests` |
+| 馬賽克、模糊、尺規與輸出一致 | `PixelEffectsTests`、`EffectAnnotationTests`、`EffectRenderingTests`、`RulerTests`、`ImageRendererTests`、`EditorSessionTests` |
+| 長截圖 | `ScrollStitcherTests`、`ScrollCaptureSessionTests`、`ScrollCaptureIntegrationTests`：逐像素拼接、固定帶／歧義／上限、自動節奏、輸入中止、流程恢復、快捷鍵及長圖歷史／合成 |
 | 磁碟截圖歷史 | `HistoryTests`、`HistoryFlowTests`：全部標註往返、輸出、損毀、淘汰、關閉、不復活、未匯出保護、逾時與介面元件 |
 | 文件模型、命令與歷史 | `EditCommandTests`、`CropCommandTests`、`UndoRedoStackTests`、`DirtyTrackingTests`、`AnnotationGeometryTests` |
 | 編輯工作階段與縮放、右鍵選單 | `EditorSessionTests`、`TextAnnotationTests`、`EditorZoomTests`、`EditorWindowTests`（建立但不顯示編輯視窗） |
@@ -438,6 +447,12 @@ sequenceDiagram
 | `Invoke-Phase2Smoke.ps1` | 覆蓋層貼合、選取結果逐像素比對、取消、零尺寸、重入、自家視窗與選單不被截入、顯示設定變更、資源量測 |
 | `Invoke-Phase3Smoke.ps1` | 十字游標、100% 畫布逐像素比對、Tab 鍵盤巡覽、標註、文字輸入、復原與重做、選取刪除、縮放後輸出不變、裁切（含裁切後填滿畫布、右鍵畫布選單的還原完整圖片）、資源量測 |
 | `Invoke-Phase4Smoke.ps1` | 剪貼簿兩種格式、另存與剪貼簿位元組相同、未匯出變更的詢問、開啟 BMP／JPEG 與損壞檔、另存失敗、剪貼簿被占用；`-Cycles` 次完整循環（取消、截圖、畫矩形、複製、另存、關閉）的資源量測，以及截圖、開啟大圖片、複製與另存的延遲量測 |
+| `Invoke-Phase9Smoke.ps1` | Ctrl 抑制／放大鏡顏色與隱藏、精準選取、C 色碼與剪貼簿還原 |
+| `Invoke-Phase10Smoke.ps1` | 馬賽克／模糊、獨立期望像素、複製與另存一致、復原及資源 |
+| `Invoke-Phase11Smoke.ps1` | 尺規匯出、端點、R 量測／取消、編輯器取色 |
+| `Invoke-Phase12Smoke.ps1` | 歷史保存、重新開啟、修改、停用、保留淘汰與清除；只允許空白歷史環境 |
+| `Invoke-Phase13Smoke.ps1` | 已知連續圖樣的手動／自動長截圖、固定標頭、取消、框線清理及資源 |
+| `Invoke-ScrollWheelProbe.ps1` | SendInput／PostMessage 的六種目標相容性與穩定時間；只記錄雜湊變化，不保存目標畫面 |
 
 判斷標註是否出現或被刪除時，一律比較「與已知圖樣不同的像素」而不用顏色條件：圖樣本身在部分區域就有符合「偏紅」條件的像素。
 
@@ -466,6 +481,9 @@ sequenceDiagram
 | [ADR-0015](adr/0015-file-writing-and-background-encoding.md) | 檔案寫入與背景編碼：凍結的合成結果交給背景執行緒編碼，寫入同資料夾的暫存檔後取代目標 |
 | [ADR-0016](adr/0016-unexported-changes-protection.md) | 未匯出變更保護：以歷史版本判斷是否未匯出，新截圖、開啟圖片、關閉、結束與登出前詢問 |
 | [ADR-0017](adr/0017-release-packaging.md) | 發佈與封裝：自包含 win-x64 資料夾版為主、單檔版為輔、不簽章，只保留繁體中文的框架附屬組件 |
+| [ADR-0018](adr/0018-reproducible-quality-checks.md) | 固定 SDK／NuGet lock、本機及 Windows CI 共用品質入口、零警告及不允許跳過測試 |
 | [ADR-0019](adr/0019-overlay-magnifier-and-color-pick.md) | 選取放大鏡與螢幕取色：靜態快照、實體像素格、Ctrl 輸入抑制、獨立取色結果與文字剪貼簿 |
+| [ADR-0020](adr/0020-effect-annotations.md) | 效果標註：原圖取樣、不透明結果、強度範圍、快取及遮蔽限制 |
 | [ADR-0021](adr/0021-ruler-and-eyedropper.md) | 共用中心距離量測、尺寸標註、覆蓋層 R 模式與原圖取色 |
+| [ADR-0022](adr/0022-capture-history.md) | 預設開啟磁碟歷史、格式往返、序列寫入、保留淘汰、停用及刪除不復活 |
 | [ADR-0023](adr/0023-scrolling-capture.md) | 長截圖：穩定影格、唯一重疊、固定帶、定向滾輪、輸入停止、視窗與記憶體上限 |

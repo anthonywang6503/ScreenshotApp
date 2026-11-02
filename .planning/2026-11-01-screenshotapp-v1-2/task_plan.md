@@ -15,11 +15,11 @@
 
 ## Next Step
 
-Phase 13 程式、測試與文件交付完成；Phase 14 維持 pending。續作讀 handoffs/phase-13-scrolling-capture.md，先補 P13-00 與桌面煙霧／MT-13；目前均尚未驗證。
+執行 Phase 14：完整品質檢查、文件總檢、版本 1.2.0、本機提交／標籤／封裝與發佈版煙霧紀錄。既有使用者程式執行時不操作桌面；P13-00 與 MT-12～MT-15 未實測項目繼續標示尚未驗證。
 
 ## Current Phase
 
-Phase 13 程式交付完成（2026-11-02）；分支 `feature/phase-13-scrolling-capture`，基準 `0d29a59`。Release 0 警告／0 錯誤、1176／1176 通過。依使用者授權提交目前分支；不合併、不建立 PR、不推送。P13-00 與桌面驗收尚未完成。
+Phase 14 執行中（2026-11-02）；分支 `feature/phase-14-release-1-2`，基準 `51011c2`，工作目錄起始乾淨。使用者已授權實作並提交；沿用目前分支提交、不合併、不建立 PR、不推送。既有 ScreenshotApp PID 35760 執行中，品質檢查採隔離 Release 輸出。
 
 ## 使用者決定（2026-11-01）
 
@@ -230,17 +230,17 @@ Checklist
 **分支**：`feature/phase-14-release-1-2`。
 
 Checklist
-- [ ] P14-01 完整測試、Release 建置 0 警告、`tools/Invoke-Quality.ps1`｜Phase 13｜medium｜全部通過
-- [ ] P14-02 文件總檢：ARCHITECTURE（模組表、相依圖、執行緒、資源、本機資料、測試對應、ADR 索引 0019～0023）、USER_GUIDE、KNOWN_LIMITATIONS、ACCEPTANCE、README 功能與隱私說明｜P14-01｜medium｜文件之間與程式碼一致
+- [x] P14-01 完整測試、Release 建置 0 警告、`tools/Invoke-Quality.ps1`｜Phase 13｜medium｜全部通過
+- [x] P14-02 文件總檢：ARCHITECTURE（模組表、相依圖、執行緒、資源、本機資料、測試對應、ADR 索引 0019～0023）、USER_GUIDE、KNOWN_LIMITATIONS、ACCEPTANCE、README 功能與隱私說明｜P14-01｜medium｜文件之間與程式碼一致
 - [ ] P14-03 版本 1.2.0：專案檔 `Version` 與 `app.manifest` 的 `assemblyIdentity` 一起更新，CHANGELOG `[Unreleased]` 改為 `[1.2.0]`；commit 後加本機標籤 `v1.2.0`，以該 commit 執行 `tools/Publish-Release.ps1`｜P14-02｜low｜`publish/` 有資料夾版與單檔版 ZIP，產品版本內嵌 commit
 - [ ] P14-04 發佈版煙霧驗證：先補 P13-00 滾輪探測，再跑 Phase 1～4 回歸與 Phase 9～13 新腳本（閒置時執行），結果記錄於 ACCEPTANCE｜P14-03｜high｜全部通過或標示「尚未驗證」
-- [ ] P14-05 使用者實機驗證請求：MT-12～MT-15｜P14-04｜low｜步驟寫入 ACCEPTANCE
-- [ ] P14-06 Phase 收尾儀式（handoff `handoffs/phase-14-release-1-2.md`；不推送 `upstream`，除非使用者要求）｜全部｜low｜commit、合併、暫停
+- [x] P14-05 使用者實機驗證請求：MT-12～MT-15｜P14-04｜low｜步驟寫入 ACCEPTANCE
+- [ ] P14-06 Phase 收尾儀式（handoff `handoffs/phase-14-release-1-2.md`；不推送 `upstream`，除非使用者要求）｜全部｜low｜目前分支 commit、暫停；依本次提交授權不合併
 
 **Acceptance Criteria**
 1. FR-37～FR-43 全部可操作；AT-01～AT-16 通過；發佈版煙霧驗證有證據；未驗證項目明確標示。
 
-- **Status:** pending
+- **Status:** in_progress
 
 ## 追蹤矩陣（FR → Phase → 測試 → 驗收）
 
@@ -315,3 +315,13 @@ Checklist
 | 清除長截圖快捷鍵後仍保留舊驗證錯誤，回歸 1 案失敗 | 集中重新顯示快捷鍵狀態並清除錯誤樣式，最終回歸通過 |
 | 未顯示 WPF 預覽的透明背景使黑字看似消失 | 驗證用暫存程式先繪製視窗背景；產品未因預覽假象修改 |
 | 既有使用者 ScreenshotApp PID 35760 鎖住 Release 並阻擋桌面煙霧 | 使用隔離輸出跑品質腳本；實機與 12 格滾輪矩陣保留 NOT_RUN，未操作桌面 |
+
+## Phase 14 執行錯誤與處理
+
+| 錯誤／觀察 | 處理 |
+|---|---|
+| 初次讀取品質腳本誤用不存在的 Check-Quality.ps1 | 已依交接改用實際入口 tools/Invoke-Quality.ps1 |
+| 舊版 PowerShell 以系統編碼讀取中文出現亂碼 | 後續統一 pwsh -NoProfile 與明確 UTF-8；檔案內容未改變 |
+
+| 架構煙霧表的完整行文字與 patch 預期不符 | 改採唯一行首定位插入，確認無部分修改後完成文件同步 |
+| 文件連結初檢時交接尚未建立、證據目錄尚未建立 | 建立本階段交接及證據後再做完整本機連結檢查 |

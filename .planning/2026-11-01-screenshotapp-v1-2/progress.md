@@ -178,3 +178,14 @@
 - 隱藏 WPF 版面、腳本 AST／內嵌 C#、長圖歷史與共用合成驗證通過；48 份修改／新增檔 UTF-8／LF、222 個本機文件連結與 git diff --check 通過，提交前再檢查新增交接及計畫。
 - P13-00 未實測，計畫保留未勾選；桌面煙霧與 MT-13 均尚未驗證。Phase 13 complete 僅表示本次程式與文件交付完成，Phase 14 pending，續作補齊實機證據。
 - 依使用者指令準備在目前 feature/phase-13-scrolling-capture 分支提交；不合併、不推送、不建立 PR。
+
+## Phase 14 開始（2026-11-02）
+
+- 依 planning-with-files resolver 載入本計畫、研究與 Phase 13 交接；確認 HEAD 51011c2、工作目錄乾淨，建立 feature/phase-14-release-1-2。
+- Phase 14 範圍為完整驗證、文件總檢、版本與本機封裝；使用者授權完成後提交。沿用目前分支提交、不合併、不推送、不建立 PR。
+- 既有 ScreenshotApp PID 35760 執行中；採 bin/phase14/ 隔離 Release 品質檢查，桌面腳本依守衛處理，未驗證不宣稱通過。
+
+- 版本已同步 1.2.0／1.2.0.0；完整品質檢查通過（1176／1176、0 跳過、Release 0 警告／0 錯誤），TRX artifacts/quality/e9d5a11736ab4f499239d5624ab9f7c3/tests.trx。
+- 文件總檢補齊歷史入口、效果工具／強度、長截圖快捷鍵、歷史可重新編輯例外、模組相依與測試對應、ADR 索引及 MT-12～MT-15 步驟；更正舊版 CHANGELOG 誤植的 Phase 11 項目。
+
+- P13-00 實際執行探測入口，既有程式守衛回傳 2，產生 12 格 NOT_RUN 矩陣；沒有桌面輸入。11 支煙霧腳本 AST 通過，準備版本提交及本機標籤，再從該 commit 封裝。

@@ -1,0 +1,28 @@
+{
+  "phase": 14,
+  "date": "2026-11-02",
+  "version": "1.2.0",
+  "configuration": "Release",
+  "command": "BaseOutputPath=bin/phase14/; pwsh -NoProfile -File tools/Invoke-Quality.ps1",
+  "status": "PASS",
+  "build": {
+    "warnings": 0,
+    "errors": 0
+  },
+  "tests": {
+    "total": 1176,
+    "executed": 1176,
+    "passed": 1176,
+    "failed": 0,
+    "notExecuted": 0
+  },
+  "trx": "artifacts/quality/e9d5a11736ab4f499239d5624ab9f7c3/tests.trx",
+  "assemblySHA256": {
+    "ScreenshotApp/bin/phase14/Release/net10.0-windows/ScreenshotApp.dll": "650ebc0de7e3520c54583b4ab53e038ab6cb5fb5ac4452d2439172338f5f6bad",
+    "ScreenshotApp.Tests/bin/phase14/Release/net10.0-windows/ScreenshotApp.Tests.dll": "8341cbfb42c9830719c618616443f791d54d64cb6f4767a152f85848ee083d3d"
+  },
+  "boundaries": [
+    "自動化受測組件在版本提交前建置；發佈封裝來源與雜湊另記於 release-validation.json。",
+    "桌面煙霧、P13-00 滾輪比較與 MT-12～MT-15 未驗證，不能視為實機通過。"
+  ]
+}
