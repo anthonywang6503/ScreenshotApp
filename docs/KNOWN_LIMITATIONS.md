@@ -2,7 +2,7 @@
 
 [繁體中文](KNOWN_LIMITATIONS_zh_TW.md) · [User guide](USER_GUIDE.md)
 
-Applies to 1.3.1. Automated WPF/model tests are not a substitute for interactive desktop acceptance. Current evidence and unrun checks are listed in [acceptance](ACCEPTANCE.md); preserved detailed findings remain available in [Traditional Chinese](ACCEPTANCE_zh_TW.md).
+Applies to 1.3.2. Automated WPF/model tests are not a substitute for interactive desktop acceptance. Current evidence and unrun checks are listed in [acceptance](ACCEPTANCE.md); preserved detailed findings remain available in [Traditional Chinese](ACCEPTANCE_zh_TW.md).
 
 ## Distribution and languages
 

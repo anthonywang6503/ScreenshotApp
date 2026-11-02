@@ -4,7 +4,14 @@
 
 ## [Unreleased]
 
-## [1.3.1] - 2026-11-02
+## [1.3.2] - 2026-11-02
+
+### Fixed
+
+- Enforce LF text checkout with .gitattributes so multiline resources are identical on developer and GitHub Windows builds. The five newline-sensitive overlay assertions now use the same resource bytes.
+- Public release follows successful local and remote quality gates; earlier 1.3.0/1.3.1 tags are retained without Releases.
+
+## [1.3.1] - 2026-11-02 (tag only; not released)
 
 ### Fixed
 

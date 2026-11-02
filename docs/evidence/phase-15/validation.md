@@ -1,4 +1,4 @@
-# 1.3.1 validation — 2026-11-02
+# 1.3.2 validation — 2026-11-02
 
 ## Source and automated checks
 
@@ -19,15 +19,19 @@
 - ZIP decompression/CRC and equality of required packaged files against output: PASS.
 - Included: executable/DLL/runtime configuration, `zh-TW/ScreenshotApp.resources.dll`, Apache license, actual runtime licenses/notices, bilingual user guide/limitations/notices and a download README.
 - Loaded the **published folder assembly** in an isolated .NET probe; ResourceManager returned `Exit (&X)` for English and `結束(&X)` for zh-TW.
-- File version `1.3.1.0`; informational product version `1.3.1+<build commit>` matched the committed source.
+- File version `1.3.2.0`; informational product version `1.3.2+<build commit>` matched the committed source.
 - `SHA256SUMS.txt` contains only the public folder ZIP. Its final digest is compared with the GitHub asset digest after the tagged rebuild/upload.
 
-These checks do not start ScreenshotApp, drive desktop input, change clipboard contents or write user preferences/history/startup settings. The final tagged package is rebuilt from the release commit and rechecked before upload. Exact asset sizes/digests and remote CI status are available from [GitHub Releases](https://github.com/anthonywang6503/ScreenshotApp/releases/tag/v1.3.1) and [Actions](https://github.com/anthonywang6503/ScreenshotApp/actions).
+These checks do not start ScreenshotApp, drive desktop input, change clipboard contents or write user preferences/history/startup settings. The final tagged package is rebuilt from the release commit and rechecked before upload. Exact asset sizes/digests and remote CI status are available from [GitHub Releases](https://github.com/anthonywang6503/ScreenshotApp/releases/tag/v1.3.2) and [Actions](https://github.com/anthonywang6503/ScreenshotApp/actions).
 
 ## Explicitly unverified
 
-Interactive tray/capture/export/language restart smoke, clean Windows without an installed runtime, mixed-DPI physical input, IME interaction and external application clipboard/scrolling compatibility: **NOT_RUN** for 1.3.1. Older desktop evidence is not reused as a current pass. The single-file download is **WITHHELD** until version-specific interactive smoke passes.
+Interactive tray/capture/export/language restart smoke, clean Windows without an installed runtime, mixed-DPI physical input, IME interaction and external application clipboard/scrolling compatibility: **NOT_RUN** for 1.3.2. Older desktop evidence is not reused as a current pass. The single-file download is **WITHHELD** until version-specific interactive smoke passes.
 
 ## Packaging lock regression
 
 The earlier v1.3.0 tag was not released: single-file publish rewrote the source lock with a RID and implicit ILLink task dependency, causing NU1004 in later locked restore and both GitHub CI runs. Version 1.3.1 uses isolated query/variant locks under publish/ and checks the source-lock SHA-256 before/after packaging. After generating both variants, the source lock remained byte-for-byte unchanged and `dotnet restore ScreenshotApp.sln --locked-mode --nologo -warnaserror` passed. The complete corrected source gate again passed 1189/1189 with zero warnings/skips. Historical smoke scripts still contain Chinese label assumptions and are explicitly unvalidated for this bilingual release.
+
+## Windows checkout regression
+
+GitHub run 41404048273 at the earlier v1.3.1 candidate passed locked restore/build but failed five of 1189 tests: multiline Selection_Pixel resources contained CRLF after Windows checkout while overlay assertions expected LF. The final 1.3.2 candidate adds .gitattributes (`* text=auto eol=lf`), preserving assertions and enforcing the project text policy. No Release was created for v1.3.0/v1.3.1. The final commit must pass main CI before tagging.

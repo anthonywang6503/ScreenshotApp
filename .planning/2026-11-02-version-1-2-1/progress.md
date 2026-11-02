@@ -41,3 +41,7 @@
 - v1.3.0 remote CI failed as expected; no Release was created. Separate packaging lock paths and source-lock hash guard implemented.
 
 - 1.3.1 post-commit packaging PASS at fe31ce9: both variants generated, source lock unchanged, post-package locked restore PASS; ZIP and English/zh-TW resource/version probes PASS. Historical Chinese-label smoke assumptions documented as unvalidated, no desktop script run.
+
+- 1.3.1 main CI 41404048273: 1184 pass/5 fail. All failures are LF-vs-CRLF in SelectionOverlayTests; resx checkout was converted on Windows due missing .gitattributes. Add text=auto eol=lf per repository policy; do not weaken assertions. Preserve unreleased 1.3.0/1.3.1 tags. Final release 1.3.2; await successful main CI BEFORE final tag. User informed.
+
+- 1.3.2 local full gate PASS: 1189/1189, 0 skipped, Release 0 warnings/errors. Added .gitattributes, retained all assertions/tests.

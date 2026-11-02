@@ -36,3 +36,5 @@
 - Release blocker found before creating GitHub Release: single-file publish rewrites source packages.lock.json with implicit ILLink dependency/RID; it was accidentally included in 4b2b487. Subsequent locked restore fails NU1004. v1.3.0 tag already pushed; do not overwrite it. Correct source lock and isolate query/variant locks in publish/. Publish corrected 1.3.1 instead, rerunning full gate and post-package locked restore/hash check. User informed.
 
 - 1.3.1 post-commit packaging PASS at fe31ce9: both variants generated, source lock unchanged, post-package locked restore PASS; ZIP and English/zh-TW resource/version probes PASS. Historical Chinese-label smoke assumptions documented as unvalidated, no desktop script run.
+
+- 1.3.1 main CI 41404048273: 1184 pass/5 fail. All failures are LF-vs-CRLF in SelectionOverlayTests; resx checkout was converted on Windows due missing .gitattributes. Add text=auto eol=lf per repository policy; do not weaken assertions. Preserve unreleased 1.3.0/1.3.1 tags. Final release 1.3.2; await successful main CI BEFORE final tag. User informed.

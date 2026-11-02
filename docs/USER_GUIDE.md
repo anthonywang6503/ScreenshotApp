@@ -2,7 +2,7 @@
 
 [繁體中文](USER_GUIDE_zh_TW.md) · [README](../README.md)
 
-Applies to ScreenshotApp 1.3.1. All image processing is local. **Capture history is enabled by default**, including upgrades: it saves unencrypted originals before cropping or masking. Turn it off in Settings if you do not want captures saved; disabling it does not remove existing entries.
+Applies to ScreenshotApp 1.3.2. All image processing is local. **Capture history is enabled by default**, including upgrades: it saves unencrypted originals before cropping or masking. Turn it off in Settings if you do not want captures saved; disabling it does not remove existing entries.
 
 ## Install, update and choose a language
 
