@@ -42,6 +42,17 @@
                 </DockPanel>
                 <TextBlock Style="{StaticResource HintText}" Text="{res:Str Settings_HotkeyHint}" />
                 <TextBlock x:Name="HotkeyStatusText" TextWrapping="Wrap" Margin="0,6,0,0" />
+                <DockPanel Margin="0,12,0,0">
+                    <Label DockPanel.Dock="Left" Padding="0,0,8,0" VerticalAlignment="Center"
+                           Content="{res:Str Settings_ScrollHotkeyLabel}" Target="{Binding ElementName=ScrollHotkeyBox}" />
+                    <Button DockPanel.Dock="Right" Margin="8,0,0,0" Padding="8,2"
+                            Content="{res:Str Settings_ClearScrollHotkey}" Click="ClearScrollHotkey_Click" />
+                    <TextBox x:Name="ScrollHotkeyBox" MinHeight="26" Padding="4,0" VerticalContentAlignment="Center"
+                             IsReadOnly="True" IsUndoEnabled="False" InputMethod.IsInputMethodEnabled="False"
+                             ToolTip="{res:Str Settings_HotkeyToolTip}" PreviewKeyDown="HotkeyBox_PreviewKeyDown"
+                             PreviewKeyUp="HotkeyBox_PreviewKeyUp" LostKeyboardFocus="HotkeyBox_LostKeyboardFocus" />
+                </DockPanel>
+                <TextBlock x:Name="ScrollHotkeyStatusText" TextWrapping="Wrap" Margin="0,6,0,0" />
             </StackPanel>
         </GroupBox>
 

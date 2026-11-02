@@ -35,6 +35,31 @@ public sealed class HistoryFlowTests : IDisposable
     private static void SetField(object target, string name, object value) =>
         target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(target, value);
 
+    [Theory]
+    [InlineData(600, 1600)]
+    [InlineData(1, 32768)]
+    [InlineData(2, 32768)]
+    public void AT16_LongCaptureHistory_RestoresEveryPixelIncludingNarrowMaximumHeight(int width, int height) => StaRunner.Run(() =>
+    {
+        var store = new HistoryStore(_temp.Combine("history"));
+        using var controller = Controller(store);
+        var frame = ScrollStitcherTests.Frame(0, height, width: width);
+        var image = System.Windows.Media.Imaging.BitmapSource.Create(width, height, 96, 96, System.Windows.Media.PixelFormats.Bgr32,
+            null, frame.Pixels, frame.Stride);
+        image.Freeze();
+        controller.RecordCapture(new ImageDocument(image));
+        var entries = Wait(store.ListAsync());
+        Assert.Null(store.LastError);
+        var entry = Assert.Single(entries.Value!);
+        Assert.InRange(entry.Thumbnail.PixelWidth, 1, 160);
+        Assert.InRange(entry.Thumbnail.PixelHeight, 1, 160);
+        var restored = Wait(store.LoadAsync(entry.Id));
+        Assert.Null(restored.Error);
+        Assert.Equal(frame.Pixels, ScreenshotApp.Capture.ScrollFrame.FromBitmap(restored.Value!.Snapshot.Source).Pixels);
+        var rendered = ImageRenderer.Render(restored.Value.Snapshot.Restore());
+        Assert.Equal(frame.Pixels, ScreenshotApp.Capture.ScrollFrame.FromBitmap(rendered).Pixels);
+    });
+
     [Fact]
     public void AT15_OnlyCapturesRecorded_DisablingDetachesExistingDocuments() => StaRunner.Run(() =>
     {

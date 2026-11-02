@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-02",
+  "phase": 13,
+  "baseline": "0d29a591a69b66b8787ac800fe93e9e4b51f51ec",
+  "branch": "feature/phase-13-scrolling-capture",
+  "command": "$env:BaseOutputPath = 'bin/phase13/'; pwsh -NoProfile -File tools/Invoke-Quality.ps1",
+  "isolationReason": "既有使用者 ScreenshotApp 鎖住標準 Release 輸出；保留原程式，改用隔離輸出。",
+  "release": {
+    "warnings": 0,
+    "errors": 0
+  },
+  "tests": {
+    "total": 1176,
+    "passed": 1176,
+    "failed": 0,
+    "newSincePhase12": 49,
+    "skipped": 0
+  },
+  "trx": "artifacts/quality/a36117344e754ca1a8635e8d91c0937d/tests.trx",
+  "assemblies": {
+    "ScreenshotApp/bin/phase13/Release/net10.0-windows/ScreenshotApp.dll": "83ec371bc33b8e0db01c9352a2d13fded9875aa240f55d5317596ba498e0ebee",
+    "ScreenshotApp.Tests/bin/phase13/Release/net10.0-windows/ScreenshotApp.Tests.dll": "e9cd40a7be4149b76c00708cb8facf2b13ce7f5854fdf7e67ec2d96830c18858"
+  },
+  "scriptValidation": {
+    "powershellAST": "PASS",
+    "embeddedCSharpCompile": "PASS",
+    "files": [
+      "tools/smoke/Show-TestPattern.ps1",
+      "tools/smoke/Invoke-Phase13Smoke.ps1",
+      "tools/smoke/Invoke-ScrollWheelProbe.ps1"
+    ]
+  },
+  "hiddenWpfPreview": {
+    "status": "PASS",
+    "artifacts": [
+      "artifacts/phase13-ui/scroll-panel.png",
+      "artifacts/phase13-ui/settings.png"
+    ],
+    "desktopOperation": false
+  },
+  "smoke": {
+    "status": "NOT_RUN",
+    "reason": "既有使用者 ScreenshotApp PID 35760 執行中，前置守衛停止；沒有送出桌面輸入。",
+    "evidence": "docs/evidence/phase-13/phase13-results.txt"
+  },
+  "wheelProbe": {
+    "status": "NOT_RUN",
+    "cases": 12,
+    "matrix": "docs/evidence/phase-13/wheel-probe-matrix.csv"
+  },
+  "boundaries": [
+    "桌面手動／自動逐像素驗收、真實輸入中止、視窗清理及 MT-13 尚未驗證。",
+    "P13-00 滾輪探測未執行；PostMessage 是待相容性驗證的初始方案，不能將官方文件視為實機證據。",
+    "測試使用暫存目錄、未顯示視窗及測試快捷鍵；未修改使用者剪貼簿、歷史或登入啟動設定。",
+    "未發佈 v1.2.0；Phase 14 維持 pending。"
+  ]
+}

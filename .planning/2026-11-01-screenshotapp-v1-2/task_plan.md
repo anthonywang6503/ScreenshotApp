@@ -15,11 +15,11 @@
 
 ## Next Step
 
-Phase 12 已完成並停在控制點；Phase 13 維持 pending。續作先讀 handoffs/phase-12-capture-history.md；實機煙霧因既有 ScreenshotApp 而尚未驗證。
+Phase 13 程式、測試與文件交付完成；Phase 14 維持 pending。續作讀 handoffs/phase-13-scrolling-capture.md，先補 P13-00 與桌面煙霧／MT-13；目前均尚未驗證。
 
 ## Current Phase
 
-Phase 12 完成（2026-11-02）；分支 `feature/phase-12-capture-history`，基準 `71fb4ff`。Release 0 警告／0 錯誤、1127／1127 測試通過。依使用者指令在目前分支提交，不合併、不建立 PR、不推送。
+Phase 13 程式交付完成（2026-11-02）；分支 `feature/phase-13-scrolling-capture`，基準 `0d29a59`。Release 0 警告／0 錯誤、1176／1176 通過。依使用者授權提交目前分支；不合併、不建立 PR、不推送。P13-00 與桌面驗收尚未完成。
 
 ## 使用者決定（2026-11-01）
 
@@ -61,7 +61,7 @@ Phase 12 完成（2026-11-02）；分支 `feature/phase-12-capture-history`，�
 2. 煙霧驗證只在使用者閒置時執行（AGENTS.md「實機煙霧驗證」）；無法執行的項目標示「尚未驗證」。Phase 12 之後，所有煙霧腳本都不得把測試圖樣留在使用者的截圖歷史中。
 3. 更新 `CHANGELOG.md` 的 `[Unreleased]`、相關 `docs/`（ARCHITECTURE、USER_GUIDE、KNOWN_LIMITATIONS、ACCEPTANCE）。
 4. 建立 `handoffs/phase-<NN>-<slug>.md`；更新本檔案、`progress.md`、`findings.md`；Phase 標記 `complete`（下一 Phase 維持 `pending`）並重新 attest。
-5. 每個 Phase 完成後停在控制點。使用者已於 2026-11-01 明確授權每個 Phase 完成後在目前分支 commit（`phase-<NN>: <摘要>`，內文條列變更與驗證結果）。不建立 PR、不推送 `upstream`；本次依 2026-11-02 使用者指令實作 Phase 12 並提交；在目前分支停於控制點，不合併、不推送。
+5. 每個 Phase 完成後停在控制點。使用者已於 2026-11-01 明確授權每個 Phase 完成後在目前分支 commit（`phase-<NN>: <摘要>`，內文條列變更與驗證結果）。不建立 PR、不推送 `upstream`；本次依 2026-11-02 使用者指令實作 Phase 13 並提交；在目前分支停於控制點，不合併、不推送。
 
 ## Phases
 
@@ -203,23 +203,25 @@ Checklist
 
 Checklist
 - [ ] P13-00 實測（spike，不進產品碼）：比較 `SendInput` 滾輪（游標移到範圍中心）與 `PostMessage(WM_MOUSEWHEEL)` 對 Edge／Chrome、Word、VS Code、檔案總管與已知圖樣視窗的效果；平滑捲動時畫面穩定所需的時間；結果寫入 `findings.md`｜Phase 12｜high｜每種程式與方式都有實測紀錄
-- [ ] P13-01 ADR-0023 長截圖：入口（系統匣、選用快捷鍵）、手動與自動捲動（依 P13-00 選定注入方式、偵測到使用者輸入即停止自動捲動）、擷取方式（區域 `BitBlt` 輪詢、等畫面穩定才拼接）、拼接演算法（列雜湊、固定標頭與頁尾偵測、只附加向下的新內容、無法對齊時不附加並提示）、上限（高度與總像素）、自家框線不在擷取範圍內、狀態機（長截圖期間維持選取中狀態，擋住重入）、不使用低階 Hook｜P13-00｜xhigh｜ADR Accepted
-- [ ] P13-02 `CaptureService` 擷取桌面實體像素範圍（沿用 SafeHandle 與 `GetDIBits` 路徑）｜P13-01｜high｜`CaptureServiceTests` 延伸；GDI 物件數不成長
-- [ ] P13-03 `Capture/ScrollStitcher`（純函式）：輸入連續影格、輸出拼接結果與狀態（已附加、無變化、無法對齊、達到上限）｜P13-01｜xhigh｜AT-16：各種位移、固定標頭／頁尾、往回捲動忽略、內容重複區塊、上限，以合成影像驗證
-- [ ] P13-04 長截圖工作階段（手動）：沿用覆蓋層選範圍（模式參數，放開時不開編輯器）→ 關閉覆蓋層 → 範圍外框視窗（滑鼠穿透、不搶前景、畫在範圍外）＋控制面板（目前高度、預覽、自動捲動、完成、取消）→ 輪詢擷取與拼接 → 完成時建立文件、開啟編輯器並加入歷史｜P13-02、P13-03｜xhigh｜實機：範圍內可直接以滾輪捲動底下的程式；取消不留下任何視窗
-- [ ] P13-05 自動捲動：控制面板「自動捲動／停止」；以 P13-00 選定的方式對範圍中心送出捲動、等畫面穩定後擷取；連續數次無變化視為到底並自動完成；使用者移動滑鼠、按鍵或按「停止」即停止自動捲動（回到手動，不結束工作階段）；達到上限停止｜P13-04｜xhigh｜實機：已知圖樣自動捲動到底且結果逐像素正確
-- [ ] P13-06 入口：系統匣「長截圖」；設定「長截圖快捷鍵」（第二個 `HotkeyService`，預設未設定，不可與截圖快捷鍵相同，套用時先註冊新組合）；`AppSettings` 新欄位｜P13-04｜high｜AT-08 延伸；`HotkeyServiceTests` 延伸
-- [ ] P13-07 錯誤與邊界：顯示設定變更、擷取失敗、達到上限自動停止並提示、未捲動就完成（結果即單一影格）；任何結束路徑都恢復隱藏的自家視窗與先前的狀態｜P13-04｜high｜`CaptureFlowTests` 以替身驗證各結束路徑
-- [ ] P13-08 文件：USER_GUIDE、ARCHITECTURE（第 3、4、9、12 節）、KNOWN_LIMITATIONS（只支援垂直向下、動態內容與平滑捲動的影響、浮動元素、自動捲動不支援的程式、上限、受保護內容）｜P13-07｜medium｜文件與程式碼一致
-- [ ] P13-09 自動化測試整理｜P13-02～P13-07｜high｜完整測試通過
-- [ ] P13-10 煙霧腳本 `Invoke-Phase13Smoke.ps1`；`Show-TestPattern.ps1` 增加可捲動模式（內容高於視窗、固定標頭帶、可接收滾輪並以固定像素捲動，另提供以視窗訊息捲動的路徑）：手動（腳本以視窗訊息捲動）與自動兩種長截圖結果都逐像素等於圖樣的連續內容；取消不留框線視窗；資源量測；證據 `docs/evidence/phase-13/`｜P13-07｜xhigh｜全部通過或標示「尚未驗證」
-- [ ] P13-11 Phase 收尾儀式（handoff `handoffs/phase-13-scrolling-capture.md`）｜全部｜low｜commit 與合併
+- [x] P13-01 ADR-0023 長截圖：入口（系統匣、選用快捷鍵）、手動與自動捲動（依 P13-00 選定注入方式、偵測到使用者輸入即停止自動捲動）、擷取方式（區域 `BitBlt` 輪詢、等畫面穩定才拼接）、拼接演算法（列雜湊、固定標頭與頁尾偵測、只附加向下的新內容、無法對齊時不附加並提示）、上限（高度與總像素）、自家框線不在擷取範圍內、狀態機（長截圖期間維持選取中狀態，擋住重入）、不使用低階 Hook｜P13-00｜xhigh｜ADR Accepted
+- [x] P13-02 `CaptureService` 擷取桌面實體像素範圍（沿用 SafeHandle 與 `GetDIBits` 路徑）｜P13-01｜high｜`CaptureServiceTests` 延伸；GDI 物件數不成長
+- [x] P13-03 `Capture/ScrollStitcher`（純函式）：輸入連續影格、輸出拼接結果與狀態（已附加、無變化、無法對齊、達到上限）｜P13-01｜xhigh｜AT-16：各種位移、固定標頭／頁尾、往回捲動忽略、內容重複區塊、上限，以合成影像驗證
+- [x] P13-04 長截圖工作階段（手動）：沿用覆蓋層選範圍（模式參數，放開時不開編輯器）→ 關閉覆蓋層 → 範圍外框視窗（滑鼠穿透、不搶前景、畫在範圍外）＋控制面板（目前高度、預覽、自動捲動、完成、取消）→ 輪詢擷取與拼接 → 完成時建立文件、開啟編輯器並加入歷史｜P13-02、P13-03｜xhigh｜實機：範圍內可直接以滾輪捲動底下的程式；取消不留下任何視窗
+- [x] P13-05 自動捲動：控制面板「自動捲動／停止」；以 P13-00 選定的方式對範圍中心送出捲動、等畫面穩定後擷取；連續數次無變化視為到底並自動完成；使用者移動滑鼠、按鍵或按「停止」即停止自動捲動（回到手動，不結束工作階段）；達到上限停止｜P13-04｜xhigh｜實機：已知圖樣自動捲動到底且結果逐像素正確
+- [x] P13-06 入口：系統匣「長截圖」；設定「長截圖快捷鍵」（第二個 `HotkeyService`，預設未設定，不可與截圖快捷鍵相同，套用時先註冊新組合）；`AppSettings` 新欄位｜P13-04｜high｜AT-08 延伸；`HotkeyServiceTests` 延伸
+- [x] P13-07 錯誤與邊界：顯示設定變更、擷取失敗、達到上限自動停止並提示、未捲動就完成（結果即單一影格）；任何結束路徑都恢復隱藏的自家視窗與先前的狀態｜P13-04｜high｜`CaptureFlowTests` 以替身驗證各結束路徑
+- [x] P13-08 文件：USER_GUIDE、ARCHITECTURE（第 3、4、9、12 節）、KNOWN_LIMITATIONS（只支援垂直向下、動態內容與平滑捲動的影響、浮動元素、自動捲動不支援的程式、上限、受保護內容）｜P13-07｜medium｜文件與程式碼一致
+- [x] P13-09 自動化測試整理｜P13-02～P13-07｜high｜完整測試通過
+- [x] P13-10 煙霧腳本 `Invoke-Phase13Smoke.ps1`；`Show-TestPattern.ps1` 增加可捲動模式（內容高於視窗、固定標頭帶、可接收滾輪並以固定像素捲動，另提供以視窗訊息捲動的路徑）：手動（腳本以視窗訊息捲動）與自動兩種長截圖結果都逐像素等於圖樣的連續內容；取消不留框線視窗；資源量測；證據 `docs/evidence/phase-13/`｜P13-07｜xhigh｜全部通過或標示「尚未驗證」
+- [x] P13-11 Phase 收尾儀式（handoff `handoffs/phase-13-scrolling-capture.md`）｜全部｜low｜目前分支 commit；不合併、不推送
+
+**驗證界線**：P13-00 未完成實測，保留未勾選；六種目標 × 兩種方式已有 NOT_RUN 矩陣與重跑工具。P13-04／05／10 的桌面操作、逐像素結果及 MT-13 尚未驗證。Phase 的 complete 表示本次程式、測試與文件交付結案，不能當作實機驗收通過；重跑責任交接至 Phase 14。全套 1176／1176、Release 0 警告／0 錯誤；詳見 handoff 與 ACCEPTANCE。
 
 **Acceptance Criteria**
 1. FR-43 可操作；AT-16 通過；已知圖樣的手動與自動長截圖逐像素正確（煙霧證據）。
 2. 使用者需驗證：MT-13（瀏覽器長網頁、Word、程式碼編輯器，手動與自動）。
 
-- **Status:** pending
+- **Status:** complete
 
 ### Phase 14: 整合驗證與發佈 v1.2.0
 
@@ -231,7 +233,7 @@ Checklist
 - [ ] P14-01 完整測試、Release 建置 0 警告、`tools/Invoke-Quality.ps1`｜Phase 13｜medium｜全部通過
 - [ ] P14-02 文件總檢：ARCHITECTURE（模組表、相依圖、執行緒、資源、本機資料、測試對應、ADR 索引 0019～0023）、USER_GUIDE、KNOWN_LIMITATIONS、ACCEPTANCE、README 功能與隱私說明｜P14-01｜medium｜文件之間與程式碼一致
 - [ ] P14-03 版本 1.2.0：專案檔 `Version` 與 `app.manifest` 的 `assemblyIdentity` 一起更新，CHANGELOG `[Unreleased]` 改為 `[1.2.0]`；commit 後加本機標籤 `v1.2.0`，以該 commit 執行 `tools/Publish-Release.ps1`｜P14-02｜low｜`publish/` 有資料夾版與單檔版 ZIP，產品版本內嵌 commit
-- [ ] P14-04 發佈版煙霧驗證：Phase 1～4 回歸與 Phase 9～13 新腳本（閒置時執行），結果記錄於 ACCEPTANCE｜P14-03｜high｜全部通過或標示「尚未驗證」
+- [ ] P14-04 發佈版煙霧驗證：先補 P13-00 滾輪探測，再跑 Phase 1～4 回歸與 Phase 9～13 新腳本（閒置時執行），結果記錄於 ACCEPTANCE｜P14-03｜high｜全部通過或標示「尚未驗證」
 - [ ] P14-05 使用者實機驗證請求：MT-12～MT-15｜P14-04｜low｜步驟寫入 ACCEPTANCE
 - [ ] P14-06 Phase 收尾儀式（handoff `handoffs/phase-14-release-1-2.md`；不推送 `upstream`，除非使用者要求）｜全部｜low｜commit、合併、暫停
 
@@ -304,3 +306,12 @@ Checklist
 | 極靠近右下邊界的浮點座標進位為圖片外像素 | 先新增測試重現 CopyPixels 例外，換算後再次驗證範圍；回歸通過 |
 | Alt+I 與既有字級欄位重複 | 取色改 Alt+D，尺規 Alt+Q；資源與文件同步 |
 | 實機守衛偵測既有使用者程式 | 記錄 NOT_RUN，不送出輸入、不改變使用者資料 |
+
+## Phase 13 執行錯誤與處理
+
+| 錯誤／觀察 | 處理 |
+|---|---|
+| RunAsync 新增可選參數使測試方法群組無法轉型（CS1503） | 保留無參數 overload，後續建置與完整測試通過 |
+| 清除長截圖快捷鍵後仍保留舊驗證錯誤，回歸 1 案失敗 | 集中重新顯示快捷鍵狀態並清除錯誤樣式，最終回歸通過 |
+| 未顯示 WPF 預覽的透明背景使黑字看似消失 | 驗證用暫存程式先繪製視窗背景；產品未因預覽假象修改 |
+| 既有使用者 ScreenshotApp PID 35760 鎖住 Release 並阻擋桌面煙霧 | 使用隔離輸出跑品質腳本；實機與 12 格滾輪矩陣保留 NOT_RUN，未操作桌面 |

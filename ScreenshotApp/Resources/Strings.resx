@@ -781,4 +781,94 @@
   <data name="History_UnexpectedDirectory" xml:space="preserve">
     <value>歷史條目包含非預期的子目錄。</value>
   </data>
+  <data name="Tray_ScrollCapture" xml:space="preserve">
+    <value>長截圖(&amp;L)</value>
+  </data>
+  <data name="SettingsField_ScrollHotkey" xml:space="preserve">
+    <value>長截圖快捷鍵</value>
+  </data>
+  <data name="Settings_ScrollHotkeyLabel" xml:space="preserve">
+    <value>長截圖快捷鍵(_G)：</value>
+  </data>
+  <data name="Settings_ClearScrollHotkey" xml:space="preserve">
+    <value>清除快捷鍵(_R)</value>
+  </data>
+  <data name="Settings_ScrollHotkeyNone" xml:space="preserve">
+    <value>未設定（可從系統匣啟動）</value>
+  </data>
+  <data name="Settings_HotkeyDuplicate" xml:space="preserve">
+    <value>長截圖與一般截圖不可使用相同的快捷鍵。</value>
+  </data>
+  <data name="Settings_ScrollHotkeyRejected" xml:space="preserve">
+    <value>長截圖快捷鍵無法註冊：{0}。保留原本的設定。</value>
+  </data>
+  <data name="Scroll_Title" xml:space="preserve">
+    <value>長截圖</value>
+  </data>
+  <data name="Scroll_FrameTitle" xml:space="preserve">
+    <value>長截圖範圍</value>
+  </data>
+  <data name="Scroll_SelectionHelp" xml:space="preserve">
+    <value>拖曳選取長截圖範圍；Ctrl 放大；Esc 或右鍵取消</value>
+  </data>
+  <data name="Scroll_Help" xml:space="preserve">
+    <value>在藍框內向下捲動，保留部分重疊內容；完成後可繼續標註。</value>
+  </data>
+  <data name="Scroll_Manual" xml:space="preserve">
+    <value>手動模式：請緩慢向下捲動，等預覽更新後再繼續。</value>
+  </data>
+  <data name="Scroll_Preview" xml:space="preserve">
+    <value>已拼接的長截圖預覽</value>
+  </data>
+  <data name="Scroll_Size" xml:space="preserve">
+    <value>{0} × {1} 像素</value>
+  </data>
+  <data name="Scroll_Automatic" xml:space="preserve">
+    <value>自動捲動(_A)</value>
+  </data>
+  <data name="Scroll_Stop" xml:space="preserve">
+    <value>停止自動捲動(_A)</value>
+  </data>
+  <data name="Scroll_Finish" xml:space="preserve">
+    <value>完成(_F)</value>
+  </data>
+  <data name="Scroll_Cancel" xml:space="preserve">
+    <value>取消(_C)</value>
+  </data>
+  <data name="Scroll_Running" xml:space="preserve">
+    <value>自動捲動中；移動滑鼠或按鍵會回到手動模式。</value>
+  </data>
+  <data name="Scroll_Interrupted" xml:space="preserve">
+    <value>已偵測到輸入，停止自動捲動並保留內容。可繼續手動捲動。</value>
+  </data>
+  <data name="Scroll_SendFailed" xml:space="preserve">
+    <value>無法對原目標送出捲動。請回到原視窗並改用手動捲動。</value>
+  </data>
+  <data name="Scroll_ReleaseKeys" xml:space="preserve">
+    <value>請放開按鍵後，再以滑鼠按下「自動捲動」。</value>
+  </data>
+  <data name="Scroll_NoResponse" xml:space="preserve">
+    <value>未觀察到捲動；可能已到底或程式不支援自動捲動。可改用手動，或按「完成」。</value>
+  </data>
+  <data name="Scroll_CannotAlign" xml:space="preserve">
+    <value>無法可靠對齊。已保留前段；請往回捲到仍有重疊的位置，再緩慢向下捲動。</value>
+  </data>
+  <data name="Scroll_Backward" xml:space="preserve">
+    <value>已忽略往回捲動；請捲過先前擷取的位置後再繼續。</value>
+  </data>
+  <data name="Scroll_Unstable" xml:space="preserve">
+    <value>畫面持續變動，已停止自動捲動。請等畫面穩定，或完成目前結果。</value>
+  </data>
+  <data name="Scroll_Limit" xml:space="preserve">
+    <value>已達高度或總像素上限，停止擷取。請按「完成」保留目前結果。</value>
+  </data>
+  <data name="Scroll_TooLarge" xml:space="preserve">
+    <value>選取範圍超過長截圖上限（高度 32,768 像素、總計 100,000,000 像素），請縮小範圍。</value>
+  </data>
+  <data name="Scroll_MemoryFailed" xml:space="preserve">
+    <value>記憶體不足，已取消長截圖。請縮小選取範圍或分段擷取。</value>
+  </data>
+  <data name="Scroll_TargetChanged" xml:space="preserve">
+    <value>原擷取視窗已關閉或被其他視窗遮住，已取消長截圖。</value>
+  </data>
 </root>

@@ -41,6 +41,7 @@ internal sealed class SettingsStore
     public const string HistoryEnabledField = "HistoryEnabled";
     public const string HistoryLimitField = "HistoryLimit";
     public const string HotkeyField = "Hotkey";
+    public const string ScrollHotkeyField = "ScrollHotkey";
     public const string StartWithWindowsField = "StartWithWindows";
     public const string LastSaveDirectoryField = "LastSaveDirectory";
     public const string DefaultColorField = "DefaultColor";
@@ -74,6 +75,7 @@ internal sealed class SettingsStore
         HistoryEnabledField => Strings.Get("SettingsField_HistoryEnabled"),
         HistoryLimitField => Strings.Get("SettingsField_HistoryLimit"),
         HotkeyField => Strings.Get("SettingsField_Hotkey"),
+        ScrollHotkeyField => Strings.Get("SettingsField_ScrollHotkey"),
         StartWithWindowsField => Strings.Get("SettingsField_StartWithWindows"),
         LastSaveDirectoryField => Strings.Get("SettingsField_LastSaveDirectory"),
         DefaultColorField => Strings.Get("SettingsField_DefaultColor"),
@@ -123,6 +125,7 @@ internal sealed class SettingsStore
             [HistoryEnabledField] = settings.HistoryEnabled,
             [HistoryLimitField] = settings.HistoryLimit,
             [HotkeyField] = settings.Hotkey.ToString(),
+            [ScrollHotkeyField] = settings.ScrollHotkey?.ToString(),
             [StartWithWindowsField] = settings.StartWithWindows,
             [LastSaveDirectoryField] = settings.LastSaveDirectory,
             [DefaultColorField] = ColorText.Format(settings.DefaultColor),
@@ -148,12 +151,20 @@ internal sealed class SettingsStore
     private static AppSettings ReadSettings(JsonObject root, List<string> invalidFields)
     {
         var defaults = new AppSettings();
+        var hotkey = ReadField<HotkeyGesture>(root, HotkeyField, defaults.Hotkey, invalidFields, TryReadHotkey);
+        var scrollHotkey = ReadField<HotkeyGesture?>(root, ScrollHotkeyField, null, invalidFields, TryReadOptionalHotkey);
+        if (scrollHotkey == hotkey)
+        {
+            invalidFields.Add(ScrollHotkeyField);
+            scrollHotkey = null;
+        }
         return new AppSettings
         {
             HistoryEnabled = ReadField<bool>(root, HistoryEnabledField, defaults.HistoryEnabled, invalidFields, TryReadBoolean),
             HistoryLimit = ReadField(root, HistoryLimitField, defaults.HistoryLimit, invalidFields,
                 (JsonNode? node, out int value) => TryReadInt(node, 1, 500, out value)),
-            Hotkey = ReadField<HotkeyGesture>(root, HotkeyField, defaults.Hotkey, invalidFields, TryReadHotkey),
+            Hotkey = hotkey,
+            ScrollHotkey = scrollHotkey,
             StartWithWindows = ReadField<bool>(root, StartWithWindowsField, defaults.StartWithWindows, invalidFields, TryReadBoolean),
             LastSaveDirectory = ReadField<string?>(root, LastSaveDirectoryField, defaults.LastSaveDirectory, invalidFields, TryReadDirectory),
             DefaultColor = ReadField<Color>(root, DefaultColorField, defaults.DefaultColor, invalidFields, TryReadColor),
@@ -179,6 +190,15 @@ internal sealed class SettingsStore
 
         invalidFields.Add(field);
         return fallback;
+    }
+
+    private static bool TryReadOptionalHotkey(JsonNode? node, out HotkeyGesture? value)
+    {
+        value = null;
+        if (node is null) return true;
+        if (!TryReadHotkey(node, out var gesture)) return false;
+        value = gesture;
+        return true;
     }
 
     private static bool TryReadHotkey(JsonNode? node, out HotkeyGesture value)

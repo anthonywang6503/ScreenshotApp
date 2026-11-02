@@ -24,6 +24,8 @@ internal sealed partial class AppController : IDisposable
     private readonly StartupService _startup;
     private readonly ErrorLog _log;
     private readonly HotkeyService _hotkey;
+    private readonly HotkeyService _scrollHotkey;
+    private HotkeyRegistrationResult _scrollHotkeyFailure;
     private readonly TrayService _tray;
     private readonly AppStateMachine _state = new();
     private readonly CaptureFlow _captureFlow;
@@ -44,8 +46,11 @@ internal sealed partial class AppController : IDisposable
         _captureFlow = new CaptureFlow(_state, new DesktopCaptureEnvironment());
         _hotkey = new HotkeyService();
         _hotkey.Pressed += (_, _) => StartCapture();
+        _scrollHotkey = new HotkeyService();
+        _scrollHotkey.Pressed += (_, _) => StartScrollCapture();
         _tray = new TrayService();
         _tray.CaptureRequested += (_, _) => RunAfterMenuCloses(StartCapture);
+        _tray.ScrollCaptureRequested += (_, _) => RunAfterMenuCloses(StartScrollCapture);
         _tray.OpenRequested += (_, _) => RunAfterMenuCloses(OpenImage);
         _tray.HistoryRequested += (_, _) => RunAfterMenuCloses(ShowHistory);
         _tray.SettingsRequested += (_, _) => ShowSettings();
@@ -57,13 +62,17 @@ internal sealed partial class AppController : IDisposable
     /// <summary>設定中的快捷鍵目前是否已成功註冊。</summary>
     public bool IsHotkeyActive => _hotkey.Current == _settings.Hotkey;
 
+    public string ScrollHotkeyStatus => _settings.ScrollHotkey is null ? Strings.Get("Settings_ScrollHotkeyNone")
+        : _scrollHotkey.Current == _settings.ScrollHotkey ? Strings.Format("Settings_HotkeyActive", _settings.ScrollHotkey)
+        : Strings.Format("Settings_HotkeyInactive", _settings.ScrollHotkey, _scrollHotkeyFailure.Describe());
+
     /// <summary>設定中的快捷鍵最近一次註冊失敗的原因。</summary>
     public string HotkeyFailureReason => _hotkeyFailure.Describe();
 
     // 正在詢問、編輯器正在背景匯出，或編輯器開著自己的對話框（存檔、色彩、錯誤訊息；Windows 會停用擁有者視窗）：
     // 此時忽略新的截圖、開啟圖片與結束要求，避免對話框重疊或在途中更換文件。
     private bool IsBusy =>
-        _prompting || (_editor is not null && (_editor.IsExporting || (new WindowInteropHelper(_editor).Handle != IntPtr.Zero && !NativeMethods.IsWindowEnabled(new WindowInteropHelper(_editor).Handle))));
+        _prompting || _state.Current is AppState.Capturing or AppState.Selecting || (_editor is not null && (_editor.IsExporting || (new WindowInteropHelper(_editor).Handle != IntPtr.Zero && !NativeMethods.IsWindowEnabled(new WindowInteropHelper(_editor).Handle))));
 
     public void Start(SettingsLoadResult loaded)
     {
@@ -103,6 +112,13 @@ internal sealed partial class AppController : IDisposable
         {
             _hotkeyFailure = registration;
             notices.Add(Strings.Format("Notify_HotkeyFailed", _settings.Hotkey, registration.Describe()));
+        }
+
+        if (_settings.ScrollHotkey is { } scrollGesture)
+        {
+            _scrollHotkeyFailure = _scrollHotkey.Register(scrollGesture);
+            if (!_scrollHotkeyFailure.Succeeded)
+                notices.Add(Strings.Format("Notify_HotkeyFailed", scrollGesture, _scrollHotkeyFailure.Describe()));
         }
 
         if (!_startup.TryApply(_settings.StartWithWindows, out var startupError))
@@ -162,6 +178,8 @@ internal sealed partial class AppController : IDisposable
     /// </summary>
     public SettingsApplyResult ApplySettings(AppSettings proposed)
     {
+        if (proposed.ScrollHotkey == proposed.Hotkey)
+            return new SettingsApplyResult(false, [Strings.Get("Settings_HotkeyDuplicate")]);
         var messages = new List<string>();
         var succeeded = true;
         var effective = proposed;
@@ -179,6 +197,21 @@ internal sealed partial class AppController : IDisposable
                 succeeded = false;
                 messages.Add(Strings.Format("Settings_HotkeyRejected", proposed.Hotkey, registration.Describe(), _settings.Hotkey));
                 effective = effective with { Hotkey = _settings.Hotkey };
+            }
+        }
+
+        if (proposed.ScrollHotkey != _scrollHotkey.Current)
+        {
+            if (proposed.ScrollHotkey is null) _scrollHotkey.Unregister();
+            else
+            {
+                _scrollHotkeyFailure = _scrollHotkey.Register(proposed.ScrollHotkey.Value);
+                if (!_scrollHotkeyFailure.Succeeded)
+                {
+                    succeeded = false;
+                    messages.Add(Strings.Format("Settings_ScrollHotkeyRejected", _scrollHotkeyFailure.Describe()));
+                    effective = effective with { ScrollHotkey = _settings.ScrollHotkey };
+                }
             }
         }
 
@@ -333,6 +366,7 @@ internal sealed partial class AppController : IDisposable
             }
         }
         _hotkey.Dispose();
+        _scrollHotkey.Dispose();
         _tray.Dispose();
     }
 
@@ -387,7 +421,11 @@ internal sealed partial class AppController : IDisposable
         }
     }
 
-    private async void StartCapture()
+    private void StartCapture() => CaptureAsync(false);
+
+    private void StartScrollCapture() => CaptureAsync(true);
+
+    private async void CaptureAsync(bool scrolling)
     {
         // 新截圖可能取代編輯中的文件：先詢問未匯出的變更，再隱藏視窗擷取畫面，對話框不會被截入。
         if (IsBusy || !await ConfirmUnexportedChangesAsync())
@@ -395,7 +433,7 @@ internal sealed partial class AppController : IDisposable
             return;
         }
 
-        var outcome = await _captureFlow.RunAsync();
+        var outcome = await _captureFlow.RunAsync(scrolling ? ScrollCaptureWindow.CaptureAsync : null);
         switch (outcome.Status)
         {
             case CaptureStatus.Completed:

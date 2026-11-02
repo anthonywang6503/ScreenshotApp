@@ -33,3 +33,7 @@
 1. 狀態機加入 `Editing`。`TryBeginCapture` 接受 Resident 或 Editing，並記住開始前的狀態；`EndCapture` 回到該狀態，因此取消新截圖時回到原本的編輯狀態，文件與視窗不變。`BeginEditing`／`EndEditing` 對應編輯視窗的開啟與關閉；已在編輯時 `BeginEditing` 代表以新文件取代目前的文件。
 2. Capturing 與 Selecting 期間仍忽略新的截圖要求與第二個執行個體的喚醒（不顯示設定視窗）。此外 `AppController` 在詢問未匯出的變更、背景匯出或編輯視窗開著自己的模態對話框時，也忽略新的截圖、開啟圖片與結束要求（見 ADR-0016 的修訂）。
 3. 完成的截圖改為開啟編輯器；第 5 點「複製到剪貼簿並通知」只存在於編輯器加入之前。
+
+## 修訂（2026-11-02）：長截圖工作階段
+
+Selecting 延伸至整段捲動期間；CaptureFlow 使用同一個隱藏視窗 scope 與 finally，接受注入的非同步捲動步驟。AppController 的忙碌判定包含 Capturing／Selecting，完成才走既有文件與歷史路徑。見 [ADR-0023](0023-scrolling-capture.md)。

@@ -121,6 +121,8 @@ stateDiagram-v2
 - **關閉編輯視窗**：`EditorWindow.Closed` 時仍為 `Editing` 才 `EndEditing`（結束程式時編輯器由 `Dispose` 關閉，此時可能不在編輯狀態）。
 - `Capturing`／`Selecting` 期間也不顯示設定視窗、不開啟圖片，避免被截入或蓋住覆蓋層。
 
+長截圖選取後仍維持 Selecting，直到手動完成、自動到底、取消或失敗；一般／長截圖、開檔、歷史、設定、第二執行個體與結束要求不在忙碌期間重入。
+
 ## 4. 截圖流程
 
 [CaptureFlow](../ScreenshotApp/Capture/CaptureFlow.cs) 只負責步驟順序與回復；隱藏視窗、快照與區域選取三個平台步驟經同一檔案定義的 `ICaptureEnvironment` 注入，正式環境為 [DesktopCaptureEnvironment](../ScreenshotApp/Capture/DesktopCaptureEnvironment.cs)，測試以替身取代。結果為 `CaptureOutcome`，狀態是 `Ignored`、`Cancelled`、`Failed` 或 `Completed`（附裁切後的圖片）。
@@ -162,6 +164,14 @@ sequenceDiagram
 [OverlayResult](../ScreenshotApp/Capture/OverlayResult.cs) 區分 `RegionSelected` 與 `ColorPicked`，取消為 null。無修飾鍵的 C 產生色碼後，先關閉覆蓋層，再由 `CaptureFlow` 回傳 `ColorPicked` 並恢復先前狀態與視窗；`AppController` 使用 `ClipboardService.TrySetText` 複製 Unicode 純文字並通知。此分支不裁切、不替換文件、不記錄色碼，也不標記文件為已匯出。鍵盤事件的游標位置由 `GetCursorPos` 取得；滑鼠選取仍使用事件本身的座標。詳見 [ADR-0019](adr/0019-overlay-magnifier-and-color-pick.md)。
 
 **覆蓋層量測**：R 切換只改變 `SelectionController` 的模式，清除進行中選取／量測並釋放捕捉；`BeginDrag`、`UpdateDrag`、`EndDrag` 共用事件座標。量測端點夾取到起始顯示器，交給 [PixelMeasurement](../ScreenshotApp/Editor/Model/PixelMeasurement.cs) 計算；`SelectionOverlay.ShowMeasurement` 畫線、定位數值標籤。正常放開保留，下一次按下清除全部顯示器的舊量測；捕捉遺失丟棄進行中的量測。此路徑不回傳 `RegionSelected`，因此不建立文件。Esc／右鍵及顯示設定變更沿用既有取消流程。
+
+### 長截圖
+
+系統匣或選用快捷鍵 → `CaptureFlow.RunAsync` → 長截圖選取覆蓋層 → 轉換為桌面 `PixelRect` → `ScrollCaptureWindow.CaptureAsync` → 凍結長圖 → 原有 `RecordCapture`／`OpenEditor`。`CaptureFlow` 的隱藏視窗 scope 包含整個工作階段，完成、取消與例外都回復。
+
+`ScrollCaptureFrame` 的四條 HWND 畫在取樣外，面板提供高度、縮圖與操作。區域沿用 `CaptureService.Capture`；面板重疊時先隱藏與等待 DWM。`ScrollFrame` 持有正規化 Bgr32 與列雜湊；`ScrollCaptureSession` 管理三張穩定影格、捲動嘗試與自動停止；`ScrollStitcher` 只接受唯一且逐像素相同的向下重疊，固定首尾只加入一次，附加的新列以區塊保存。
+
+`ScrollTarget` 以開始時的視窗與程序為目標，送出定向 WM_MOUSEWHEEL 前檢查前景、遮蔽及 `ScrollInputStamp`；不移游標、不注入全域輸入、不使用低階 Hook。規則、保守失敗行為及尚未實測的相容性見 [ADR-0023](adr/0023-scrolling-capture.md)。
 
 ## 5. 座標系統
 
@@ -300,6 +310,7 @@ sequenceDiagram
 | `ImageFileLoader.Load`（開檔與解碼） | `AppController.OpenImage`，`Task.Run` | 回傳凍結的 `BitmapSource` |
 | `ClipboardPayload.Create`（DIB 與 PNG 位元組） | `EditorWindow.CopyImageAsync`，`Task.Run` | 輸入凍結的合成結果，輸出 `byte[]` |
 | `PngFileService.Save`（編碼與寫檔） | `EditorWindow.SaveImageAsync`，`Task.Run` | 輸入凍結的合成結果 |
+| 長截圖像素複製／列雜湊、完成點陣圖 | `ScrollCaptureWindow`，`Task.Run` | 輸入凍結區域圖；回 UI 後才更新拼接，完成時回傳凍結長圖 |
 | `HistoryStore` 序列背景佇列 | `AppController.History` | 凍結原圖及不可變標註快照；PNG／縮圖編碼、JSON 及所有磁碟讀寫／刪除依序執行 |
 | 等待第二個執行個體的喚醒 | `SingleInstanceGuard`，執行緒集區 | 以 `Dispatcher.BeginInvoke` 轉回 UI 執行緒 |
 
@@ -369,6 +380,8 @@ sequenceDiagram
 
 背景作業取得磁碟錯誤時回傳繁體中文原因；控制器每次執行至多一次背景失敗通知，日誌只記錄固定作業種類，不含文件內容。初次建立根目錄以系統通知說明隱私。歷史視窗只持有凍結縮圖，原圖於開啟／複製時解碼；無法還原 JSON 時僅開原圖。詳見 [ADR-0022](adr/0022-capture-history.md)。
 
+長截圖選用快捷鍵保存為 `ScrollHotkey` 字串或 null，由第二個 `HotkeyService` 管理；不得與 `Hotkey` 相同，註冊失敗保留原值，清除可解除而不影響一般截圖。
+
 ## 12. 資源管理
 
 | 資源 | 擁有者與釋放 |
@@ -385,6 +398,8 @@ sequenceDiagram
 **事件訂閱**：`EditorWindow.Load` 換文件時先解除舊 `EditorSession` 的三個事件（`Changed`、`StyleDefaultsChanged`、`StepNumberEditRequested`）；覆蓋層的事件沒有逐一解除，覆蓋層與 `SelectionController` 在選取結束後一起被捨棄；`AppController` 對快捷鍵與系統匣事件的訂閱隨這兩個服務在結束時釋放；全域例外處理的訂閱持續到處理程序結束。設定視窗與編輯視窗的 `Closed` 事件會清除控制器對它們的參考，編輯視窗關閉時也停止狀態列訊息的計時器。
 
 歷史文件關聯使用弱參照表，不因條目保留原圖。編輯器取代與關閉前擷取快照，成功匯出後更新；正常結束先關閉編輯器，再有限等待背景佇列 3 秒，失敗或逾時提示。歷史視窗結束時解除控制器參考。
+
+長截圖框線以 `IDisposable` 釋放全部 `HwndSource`；面板在 finally 關閉，任一迴圈只處理一張影格，不累積輪詢工作。新列分段保存、縮圖直接抽樣，完成時才配置完整輸出；高 32,768 與 100,000,000 總像素限制同時套用。
 
 ## 13. 文字資源
 
@@ -453,3 +468,4 @@ sequenceDiagram
 | [ADR-0017](adr/0017-release-packaging.md) | 發佈與封裝：自包含 win-x64 資料夾版為主、單檔版為輔、不簽章，只保留繁體中文的框架附屬組件 |
 | [ADR-0019](adr/0019-overlay-magnifier-and-color-pick.md) | 選取放大鏡與螢幕取色：靜態快照、實體像素格、Ctrl 輸入抑制、獨立取色結果與文字剪貼簿 |
 | [ADR-0021](adr/0021-ruler-and-eyedropper.md) | 共用中心距離量測、尺寸標註、覆蓋層 R 模式與原圖取色 |
+| [ADR-0023](adr/0023-scrolling-capture.md) | 長截圖：穩定影格、唯一重疊、固定帶、定向滾輪、輸入停止、視窗與記憶體上限 |

@@ -66,6 +66,23 @@ public class CaptureServiceTests
         });
     }
 
+    [Fact]
+    public void AT16_RepeatedRegionCapture_HasNoGdiGrowth() => StaRunner.Run(() =>
+    {
+        NativeTestHelpers.UsePerMonitorV2();
+        var bounds = MonitorService.GetMonitors()[0].Bounds;
+        var region = new PixelRect(bounds.X + 7, bounds.Y + 11, 79, 63);
+        CaptureService.Capture(region);
+        var before = NativeTestHelpers.GdiObjectCount();
+        for (var i = 0; i < 30; i++)
+        {
+            var image = CaptureService.Capture(region);
+            Assert.Equal((79, 63), (image.PixelWidth, image.PixelHeight));
+            Assert.True(image.IsFrozen);
+        }
+        Assert.True(NativeTestHelpers.GdiObjectCount() <= before);
+    });
+
     private static void CaptureAll(IReadOnlyList<MonitorInfo> monitors)
     {
         foreach (var monitor in monitors)

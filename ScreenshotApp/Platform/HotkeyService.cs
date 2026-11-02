@@ -79,6 +79,14 @@ internal sealed class HotkeyService : IDisposable
         return HotkeyRegistrationResult.Success;
     }
 
+    public void Unregister()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_registeredId != 0) NativeMethods.UnregisterHotKey(WindowHandle, _registeredId);
+        _registeredId = 0;
+        Current = null;
+    }
+
     public void Dispose()
     {
         if (_disposed)

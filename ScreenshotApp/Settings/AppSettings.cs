@@ -12,6 +12,8 @@ internal sealed record AppSettings
 
     public HotkeyGesture Hotkey { get; init; } = HotkeyGesture.Default;
 
+    public HotkeyGesture? ScrollHotkey { get; init; }
+
     public bool StartWithWindows { get; init; }
 
     public bool HistoryEnabled { get; init; } = true;

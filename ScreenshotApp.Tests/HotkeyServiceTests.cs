@@ -129,6 +129,24 @@ public partial class HotkeyServiceTests
         });
     }
 
+    [Fact]
+    public void AT08_SecondHotkey_UnregisterCanBeReusedWithoutAffectingFirst() => StaRunner.Run(() =>
+    {
+        using var regular = new HotkeyService();
+        using var scrolling = new HotkeyService();
+        using var probe = new HotkeyService();
+        Assert.True(regular.Register(GestureA).Succeeded);
+        Assert.True(scrolling.Register(GestureB).Succeeded);
+        scrolling.Unregister();
+        Assert.Null(scrolling.Current);
+        Assert.Equal(0, scrolling.RegisteredId);
+        Assert.False(probe.Register(GestureA).Succeeded);
+        Assert.True(probe.Register(GestureB).Succeeded);
+        probe.Unregister();
+        Assert.True(scrolling.Register(GestureB).Succeeded);
+        Assert.Equal(GestureA, regular.Current);
+    });
+
     [LibraryImport("user32.dll", EntryPoint = "PostMessageW")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool PostMessage(nint hWnd, int msg, nint wParam, nint lParam);

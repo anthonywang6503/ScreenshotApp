@@ -15,6 +15,7 @@ internal partial class SettingsWindow : Window
     private readonly AppController _controller;
     private readonly ObservableCollection<NamedColor> _colors = [];
     private HotkeyGesture _pendingHotkey;
+    private HotkeyGesture? _pendingScrollHotkey;
 
     public SettingsWindow(AppController controller)
     {
@@ -28,6 +29,8 @@ internal partial class SettingsWindow : Window
     private void ShowSettings(AppSettings settings)
     {
         _pendingHotkey = settings.Hotkey;
+        _pendingScrollHotkey = settings.ScrollHotkey;
+        ScrollHotkeyBox.Text = PendingHotkeyText(ScrollHotkeyBox);
         HotkeyBox.Text = settings.Hotkey.ToString();
         ShowHotkeyStatus();
 
@@ -46,6 +49,8 @@ internal partial class SettingsWindow : Window
 
     private void ShowHotkeyStatus()
     {
+        ScrollHotkeyStatusText.Text = _controller.ScrollHotkeyStatus;
+        ScrollHotkeyStatusText.ClearValue(TextBlock.ForegroundProperty);
         if (_controller.IsHotkeyActive)
         {
             HotkeyStatusText.Text = Strings.Format("Settings_HotkeyActive", _controller.Settings.Hotkey);
@@ -86,6 +91,9 @@ internal partial class SettingsWindow : Window
             _ => e.Key,
         };
         var modifiers = Keyboard.Modifiers;
+        var box = (TextBox)sender;
+        var optional = ReferenceEquals(box, ScrollHotkeyBox);
+        var status = optional ? ScrollHotkeyStatusText : HotkeyStatusText;
 
         // 沒有 Ctrl／Alt／Win 時保留 Tab、Enter、Esc 的原本用途，維持鍵盤導覽與確定／取消。
         if ((modifiers & ~ModifierKeys.Shift) == ModifierKeys.None && key is Key.Tab or Key.Enter or Key.Escape)
@@ -97,7 +105,7 @@ internal partial class SettingsWindow : Window
         if (IsModifierKey(key))
         {
             var partial = HotkeyGesture.FormatModifiers(modifiers);
-            HotkeyBox.Text = partial.Length == 0 ? _pendingHotkey.ToString() : Strings.Format("Settings_HotkeyPartial", partial);
+            box.Text = partial.Length == 0 ? PendingHotkeyText(box) : Strings.Format("Settings_HotkeyPartial", partial);
             return;
         }
 
@@ -105,15 +113,16 @@ internal partial class SettingsWindow : Window
         var validation = gesture.Validate();
         if (validation == HotkeyValidation.Valid)
         {
-            _pendingHotkey = gesture;
-            HotkeyBox.Text = gesture.ToString();
+            if (optional) _pendingScrollHotkey = gesture;
+            else _pendingHotkey = gesture;
+            box.Text = gesture.ToString();
             ShowHotkeyStatus();
         }
         else
         {
-            HotkeyBox.Text = _pendingHotkey.ToString();
-            HotkeyStatusText.Text = Strings.Format("Settings_HotkeyInvalid", gesture, DescribeValidation(validation));
-            HotkeyStatusText.Foreground = ErrorBrush;
+            box.Text = PendingHotkeyText(box);
+            status.Text = Strings.Format("Settings_HotkeyInvalid", gesture, DescribeValidation(validation));
+            status.Foreground = ErrorBrush;
         }
     }
 
@@ -122,12 +131,22 @@ internal partial class SettingsWindow : Window
         // 只按修飾鍵後放開時，恢復顯示目前選定的組合。
         if (Keyboard.Modifiers == ModifierKeys.None)
         {
-            HotkeyBox.Text = _pendingHotkey.ToString();
+            ((TextBox)sender).Text = PendingHotkeyText((TextBox)sender);
         }
     }
 
     private void HotkeyBox_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) =>
-        HotkeyBox.Text = _pendingHotkey.ToString();
+        ((TextBox)sender).Text = PendingHotkeyText((TextBox)sender);
+
+    private string PendingHotkeyText(TextBox box) => ReferenceEquals(box, ScrollHotkeyBox)
+        ? _pendingScrollHotkey?.ToString() ?? Strings.Get("Settings_ScrollHotkeyNone") : _pendingHotkey.ToString();
+
+    private void ClearScrollHotkey_Click(object sender, RoutedEventArgs e)
+    {
+        _pendingScrollHotkey = null;
+        ScrollHotkeyBox.Text = PendingHotkeyText(ScrollHotkeyBox);
+        ShowHotkeyStatus();
+    }
 
     private void CustomColorButton_Click(object sender, RoutedEventArgs e)
     {
@@ -168,6 +187,7 @@ internal partial class SettingsWindow : Window
             HistoryEnabled = HistoryEnabledBox.IsChecked == true,
             HistoryLimit = limit,
             Hotkey = _pendingHotkey,
+            ScrollHotkey = _pendingScrollHotkey,
             StartWithWindows = StartWithWindowsBox.IsChecked == true,
             DefaultColor = (ColorList.SelectedItem as NamedColor)?.Color ?? current.DefaultColor,
             DefaultStrokeWidth = StrokeWidthBox.SelectedItem as int? ?? current.DefaultStrokeWidth,

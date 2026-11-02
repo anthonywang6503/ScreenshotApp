@@ -144,3 +144,17 @@
 - 以未顯示 WPF 內容進行 RenderTargetBitmap 視覺檢查：歷史列表與設定欄位／按鈕可見；設定加入捲動與工作區高度限制。這不是桌面操作驗收，預覽保留在忽略的 artifacts/phase12-ui。
 
 - OnSessionEnding 不代表程式必定結束（其他程式可取消登出）；歷史停止寫入與有限等待只在實際 RequestExit／Dispose 進行，避免繼續執行時遺失更新。
+
+## Phase 13 設計準備
+- CaptureService.Capture 已接受桌面實體 PixelRect；沿用既有 SafeHandle 路徑，補強區域與資源測試。
+- CaptureFlow 的隱藏視窗與 finally 回復狀態可包住整段捲動工作階段。快捷鍵沿用第二個 HotkeyService。
+- 桌面實測受現有 ScreenshotApp PID 35760 阻擋；無法把滾輪相容性宣稱為已驗證，保留逐項 NOT_RUN 與重跑工具。
+
+- 合成影格 21 案例通過。拼接採唯一前後綴重疊與逐像素驗證；至少 2～32 列重疊（依內容區高度），固定首尾只存一次。每 150ms 取樣，連續 3 張相同才採用；自動每次只送一格 -120，3 次無變化且曾成功附加才自動完成，從未成功移動則改回手動。
+- 使用 mysearch 擷取 Microsoft 官方文件：WM_MOUSEWHEEL 的座標是有號 16 位元桌面像素，DefWindowProc 會向父視窗傳遞；GetLastInputInfo 時間戳記不保證遞增，因此以不相等判定介入，另檢查游標與按住的按鍵。來源：https://learn.microsoft.com/en-us/windows/win32/inputdev/wm-mousewheel 、https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getlastinputinfo 。
+- 桌面阻擋下採 PostMessage 作為可測試的初始方案：不移游標、不注入全域輸入、每次驗證 HWND／程序／前景／遮蔽／輸入。此決策尚無瀏覽器、Word、VS Code、檔案總管相容性證據。
+
+- 未顯示視窗的內容繪製需要先畫視窗背景；否則 PNG 透明背景在檢視器中顯黑，使黑色文字看似消失。已修正驗證用暫存程式，不改產品文字。
+
+- 最終跨模組回歸確認 600×1600、1×32768、2×32768 的歷史原圖與 ImageRenderer 共用合成逐像素相同；WPF 亦能處理這些最大高度測試案例。此結果不代表 100,000,000 像素的記憶體壓力或桌面操作已量測。
+- 最終 1176／1176、49 個新增案例；P13-00 與 MT-13 等桌面驗證保留 NOT_RUN。交接詳列守衛、隔離 Release、兩種滾輪重跑、失敗判定與 Phase 14 接點。

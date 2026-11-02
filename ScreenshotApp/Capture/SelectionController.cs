@@ -21,20 +21,23 @@ internal sealed class SelectionController
     private DragSelection? _drag;
     private SelectionOverlay? _dragOverlay;
 
+    private readonly bool _scrolling;
     private bool _measuring;
     private PixelPoint _measurementStart;
 
     internal IReadOnlyList<SelectionOverlay> Overlays => _overlays;
     internal Task<OverlayResult?> Completion => _completion.Task;
 
-    internal SelectionController(DesktopSnapshot snapshot)
+    internal SelectionController(DesktopSnapshot snapshot, bool scrolling = false)
     {
+        _scrolling = scrolling;
         _monitors = snapshot.Monitors.Select(monitor => monitor.Monitor).ToList();
         try
         {
             foreach (var monitor in snapshot.Monitors)
             {
                 var overlay = new SelectionOverlay(monitor);
+                if (scrolling) overlay.SetScrollingMode();
                 overlay.MouseLeftButtonDown += OnMouseLeftButtonDown;
                 overlay.MouseMove += OnMouseMove;
                 overlay.MouseLeftButtonUp += OnMouseLeftButtonUp;
@@ -55,9 +58,9 @@ internal sealed class SelectionController
     }
 
     /// <summary>顯示覆蓋層並等待選取結果；取消時為 null，選取期間顯示設定變更時拋出 <see cref="CaptureException"/>。</summary>
-    public static Task<OverlayResult?> SelectAsync(DesktopSnapshot snapshot)
+    public static Task<OverlayResult?> SelectAsync(DesktopSnapshot snapshot, bool scrolling = false)
     {
-        var controller = new SelectionController(snapshot);
+        var controller = new SelectionController(snapshot, scrolling);
         controller.Show();
         return controller._completion.Task;
     }
@@ -194,7 +197,7 @@ internal sealed class SelectionController
             e.Handled = true;
             Finish(null);
         }
-        else if (e.Key == Key.R && !e.IsRepeat && Keyboard.Modifiers == ModifierKeys.None)
+        else if (!_scrolling && e.Key == Key.R && !e.IsRepeat && Keyboard.Modifiers == ModifierKeys.None)
         {
             e.Handled = true;
             ToggleMeasurement();
@@ -208,7 +211,7 @@ internal sealed class SelectionController
                 UpdateMagnifier(cursor);
             }
         }
-        else if (e.Key == Key.C && !e.IsRepeat && Keyboard.Modifiers == ModifierKeys.None
+        else if (!_scrolling && e.Key == Key.C && !e.IsRepeat && Keyboard.Modifiers == ModifierKeys.None
             && TryGetCursor(out var cursor))
         {
             var overlay = _overlays.FirstOrDefault(candidate => candidate.Monitor.Bounds.Contains(cursor));
@@ -222,6 +225,7 @@ internal sealed class SelectionController
 
     internal void ToggleMeasurement()
     {
+        if (_scrolling) return;
         var captured = _dragOverlay;
         AbortDrag();
         captured?.ReleaseMouseCapture();

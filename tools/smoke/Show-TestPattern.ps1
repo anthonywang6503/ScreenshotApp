@@ -16,7 +16,11 @@ param(
     [Parameter(Mandatory)][int]$Y,
     [Parameter(Mandatory)][int]$Width,
     [Parameter(Mandatory)][int]$Height,
-    [string]$Title = 'ScreenshotApp 煙霧驗證圖樣'
+    [string]$Title = 'ScreenshotApp 煙霧驗證圖樣',
+    [switch]$Scrollable,
+    [ValidateRange(1, 4096)][int]$ContentHeight = 1600,
+    [ValidateRange(0, 200)][int]$HeaderHeight = 24,
+    [ValidateRange(1, 500)][int]$ScrollStep = 80
 )
 
 $ErrorActionPreference = 'Stop'
@@ -53,10 +57,13 @@ public static class TestPatternPixels
 
 [void][TestPatternPixels]::SetThreadDpiAwarenessContext([IntPtr]-4)
 
-$bitmap = [System.Drawing.Bitmap]::new($Width, $Height, [System.Drawing.Imaging.PixelFormat]::Format32bppRgb)
-$data = $bitmap.LockBits([System.Drawing.Rectangle]::new(0, 0, $Width, $Height), [System.Drawing.Imaging.ImageLockMode]::WriteOnly, $bitmap.PixelFormat)
+$imageHeight = if ($Scrollable) { $ContentHeight } else { $Height }
+if ($Scrollable -and ($ContentHeight -le $Height -or $HeaderHeight -ge $Height)) { throw '可捲動圖樣需要內容高於視窗，且標頭低於視窗。' }
+$script:scrollOffset = 0
+$bitmap = [System.Drawing.Bitmap]::new($Width, $imageHeight, [System.Drawing.Imaging.PixelFormat]::Format32bppRgb)
+$data = $bitmap.LockBits([System.Drawing.Rectangle]::new(0, 0, $Width, $imageHeight), [System.Drawing.Imaging.ImageLockMode]::WriteOnly, $bitmap.PixelFormat)
 try {
-    $pixels = [TestPatternPixels]::Create($Width, $Height)
+    $pixels = [TestPatternPixels]::Create($Width, $imageHeight)
     [System.Runtime.InteropServices.Marshal]::Copy($pixels, 0, $data.Scan0, $pixels.Length)
 }
 finally {
@@ -72,13 +79,29 @@ $form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::None
 $form.TopMost = $true
 $form.Bounds = $bounds
 $form.Add_Load({ $form.Bounds = $bounds })
+if ($Scrollable) {
+    $form.Add_MouseWheel({
+        param($sender, $e)
+        $script:scrollOffset = [Math]::Clamp($script:scrollOffset - [Math]::Sign($e.Delta) * $ScrollStep, 0, $ContentHeight - $Height)
+        $form.Invalidate()
+    })
+}
 $form.Add_Paint({
         param($sender, $e)
         # 一比一複製像素，不做任何內插。
         $e.Graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::NearestNeighbor
         $e.Graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::Half
         $e.Graphics.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceCopy
-        $e.Graphics.DrawImage($bitmap, [System.Drawing.Rectangle]::new(0, 0, $Width, $Height), 0, 0, $Width, $Height, [System.Drawing.GraphicsUnit]::Pixel)
+        if ($Scrollable) {
+            if ($HeaderHeight -gt 0) {
+                $e.Graphics.DrawImage($bitmap, [System.Drawing.Rectangle]::new(0, 0, $Width, $HeaderHeight), 0, 0, $Width, $HeaderHeight, [System.Drawing.GraphicsUnit]::Pixel)
+            }
+            $bodyHeight = $Height - $HeaderHeight
+            $e.Graphics.DrawImage($bitmap, [System.Drawing.Rectangle]::new(0, $HeaderHeight, $Width, $bodyHeight), 0, ($HeaderHeight + $script:scrollOffset), $Width, $bodyHeight, [System.Drawing.GraphicsUnit]::Pixel)
+        }
+        else {
+            $e.Graphics.DrawImage($bitmap, [System.Drawing.Rectangle]::new(0, 0, $Width, $Height), 0, 0, $Width, $Height, [System.Drawing.GraphicsUnit]::Pixel)
+        }
     })
 
 [System.Windows.Forms.Application]::Run($form)

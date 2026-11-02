@@ -141,6 +141,53 @@ public class CaptureFlowTests
         Assert.Equal(editing ? AppState.Editing : AppState.Resident, state.Current);
     }
 
+    [Theory]
+    [InlineData(false, 0)]
+    [InlineData(true, 0)]
+    [InlineData(false, 1)]
+    [InlineData(true, 1)]
+    [InlineData(false, 2)]
+    [InlineData(true, 3)]
+    public async Task AT16_ScrollingKeepsWindowsHiddenAndStateBusyUntilEveryExit(bool editing, int ending)
+    {
+        var environment = new FakeEnvironment();
+        var state = new AppStateMachine();
+        if (editing) state.BeginEditing();
+        environment.Selection.SetResult(new RegionSelected(new SelectionResult(1, new PixelRect(1, 1, 4, 2))));
+        var completion = new TaskCompletionSource<BitmapSource?>();
+        var flow = new CaptureFlow(state, environment);
+        var pending = flow.RunAsync(rect =>
+        {
+            Assert.Equal(new PixelRect(-5, 1, 4, 2), rect);
+            Assert.True(environment.Scrolling);
+            Assert.Equal(AppState.Selecting, state.Current);
+            Assert.DoesNotContain("restore", environment.Calls);
+            return completion.Task;
+        });
+        Assert.Equal(CaptureStatus.Ignored, (await flow.RunAsync()).Status);
+        Assert.Equal(CaptureStatus.Ignored, (await flow.RunAsync(_ => throw new InvalidOperationException())).Status);
+        var image = FakeEnvironment.CreateSnapshot().Monitors[1].Image;
+        if (ending >= 2) completion.SetException(new CaptureException(ending == 2 ? "擷取失敗" : "顯示設定改變"));
+        else completion.SetResult(ending == 0 ? image : null);
+        var result = await pending;
+        Assert.Equal(ending == 0 ? CaptureStatus.Completed : ending == 1 ? CaptureStatus.Cancelled : CaptureStatus.Failed, result.Status);
+        Assert.Equal(ending == 0 ? image : null, result.Image);
+        Assert.Equal(editing ? AppState.Editing : AppState.Resident, state.Current);
+        Assert.Equal(new[] { "hide", "snapshot", "select", "restore" }, environment.Calls);
+    }
+
+    [Fact]
+    public async Task AT16_SelectionCancellation_DoesNotStartScrolling()
+    {
+        var environment = new FakeEnvironment();
+        environment.Selection.SetResult(null);
+        var state = new AppStateMachine();
+        var result = await new CaptureFlow(state, environment).RunAsync(_ => throw new InvalidOperationException());
+        Assert.Equal(CaptureStatus.Cancelled, result.Status);
+        Assert.Equal(AppState.Resident, state.Current);
+        Assert.Equal("restore", environment.Calls.Last());
+    }
+
     // 每個像素的值由顯示器序號與座標決定，裁切位置錯一格就會不同。
     private static byte[] PatternPixels(int monitorIndex, PixelRect rect)
     {
@@ -168,6 +215,7 @@ public class CaptureFlowTests
 
     private sealed class FakeEnvironment : ICaptureEnvironment
     {
+        public bool Scrolling { get; private set; }
         public List<string> Calls { get; } = [];
 
         public Func<DesktopSnapshot> Snapshot { get; init; } = CreateSnapshot;
@@ -192,8 +240,9 @@ public class CaptureFlowTests
             return Snapshot();
         }
 
-        public Task<OverlayResult?> SelectRegionAsync(DesktopSnapshot snapshot)
+        public Task<OverlayResult?> SelectRegionAsync(DesktopSnapshot snapshot, bool scrolling = false)
         {
+            Scrolling = scrolling;
             Calls.Add("select");
             return Selection.Task;
         }

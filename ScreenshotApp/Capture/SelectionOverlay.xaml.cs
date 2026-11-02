@@ -120,6 +120,8 @@ internal sealed partial class SelectionOverlay : UserControl, IDisposable
         Canvas.SetLeft(SizeLabel, Math.Max(_area.Left, Math.Min(view.X, _area.Right - label.Width)));
     }
 
+    public void SetScrollingMode() => HelpText.Text = Strings.Get("Scroll_SelectionHelp");
+
     public void SetMeasurementMode(bool measuring) =>
         HelpText.Text = measuring ? Strings.Get("Selection_MeasureHelp") : Strings.Get("Selection_Help");
 

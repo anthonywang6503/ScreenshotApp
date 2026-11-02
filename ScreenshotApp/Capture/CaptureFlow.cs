@@ -1,4 +1,5 @@
 using System.Windows.Media.Imaging;
+using ScreenshotApp.Editor.Model;
 using ScreenshotApp.Platform;
 
 namespace ScreenshotApp.Capture;
@@ -13,7 +14,7 @@ internal interface ICaptureEnvironment
     DesktopSnapshot TakeSnapshot();
 
     /// <summary>顯示覆蓋層讓使用者選取；取消時回傳 null，選取期間顯示設定變更時拋出 <see cref="CaptureException"/>。</summary>
-    Task<OverlayResult?> SelectRegionAsync(DesktopSnapshot snapshot);
+    Task<OverlayResult?> SelectRegionAsync(DesktopSnapshot snapshot, bool scrolling = false);
 }
 
 internal enum CaptureStatus
@@ -48,7 +49,9 @@ internal sealed class CaptureFlow
         _environment = environment;
     }
 
-    public async Task<CaptureOutcome> RunAsync()
+    public Task<CaptureOutcome> RunAsync() => RunAsync(null);
+
+    public async Task<CaptureOutcome> RunAsync(Func<PixelRect, Task<BitmapSource?>>? scrollCapture)
     {
         if (!_state.TryBeginCapture())
         {
@@ -61,7 +64,15 @@ internal sealed class CaptureFlow
             {
                 var snapshot = _environment.TakeSnapshot();
                 _state.BeginSelecting();
-                var selection = await _environment.SelectRegionAsync(snapshot);
+                var selection = await _environment.SelectRegionAsync(snapshot, scrollCapture is not null);
+                if (selection is RegionSelected region && scrollCapture is not null)
+                {
+                    var bounds = CoordinateMapper.MonitorLocalToDesktop(region.Selection.Rect,
+                        snapshot.Monitors[region.Selection.MonitorIndex].Monitor.Bounds);
+                    snapshot = null;
+                    var image = await scrollCapture(bounds);
+                    return new CaptureOutcome(image is null ? CaptureStatus.Cancelled : CaptureStatus.Completed, image);
+                }
                 return selection switch
                 {
                     RegionSelected chosen => new CaptureOutcome(CaptureStatus.Completed, snapshot.Crop(chosen.Selection)),
