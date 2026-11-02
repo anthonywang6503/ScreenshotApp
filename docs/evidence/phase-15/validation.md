@@ -35,3 +35,9 @@ The earlier v1.3.0 tag was not released: single-file publish rewrote the source 
 ## Windows checkout regression
 
 GitHub run 41404048273 at the earlier v1.3.1 candidate passed locked restore/build but failed five of 1189 tests: multiline Selection_Pixel resources contained CRLF after Windows checkout while overlay assertions expected LF. The final 1.3.2 candidate adds .gitattributes (`* text=auto eol=lf`), preserving assertions and enforcing the project text policy. No Release was created for v1.3.0/v1.3.1. The final commit must pass main CI before tagging.
+
+## Published result
+
+Published [v1.3.2](https://github.com/anthonywang6503/ScreenshotApp/releases/tag/v1.3.2) as the latest public release, not a draft or prerelease. The tag resolves to `dc985d8d24f1373aef8ca091d79766f192a57e1a`; the executable embeds that commit. Both [main CI](https://github.com/anthonywang6503/ScreenshotApp/actions/runs/41404417197) and [tag CI](https://github.com/anthonywang6503/ScreenshotApp/actions/runs/41404623295) passed the complete 1189-test gate with zero skipped tests and zero build warnings/errors.
+
+The download ZIP is **70700702 bytes**, SHA-256 `20aa947a16fa346cf770fcc63abef43db4550e0ee817d52f994ce34411d924de`. Both remote asset sizes/digests match local files, and their state is uploaded. Only the folder ZIP and SHA256SUMS.txt are release assets. Source/tag/package/CI details are retained in [release.json](release.json). The package was built from the exact commit now identified by the final tag; subsequent commits only record release evidence. Desktop acceptance remains NOT_RUN.

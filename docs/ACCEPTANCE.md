@@ -11,6 +11,8 @@ This release adds English-default English/Traditional Chinese UI selection and E
 | Locked restore, zero-warning Release build, complete automated suite | PASS: 1189/1189 tests, 0 skipped, 0 warnings/errors |
 | Both resource sets, format arguments, migration, invalid-language fallback and settings UI | PASS: language/resource tests included in the complete 1189-test run |
 | Published folder package with zh-TW satellite, licenses, bilingual guides and SHA-256 | PASS: ZIP integrity/required files; 281 files; actual English/zh-TW resource loading and embedded version checked |
+| GitHub Windows CI (main and v1.3.2 tag) | PASS: 1189/1189, zero warnings/skips in both runs |
+| Public GitHub Release and assets | PASS: latest v1.3.2; ZIP and checksums uploaded; size/digest/tag commit verified |
 | Interactive tray/capture/export/language restart smoke | NOT_RUN |
 | Clean Windows 11 x64 without .NET installed | NOT_RUN |
 | Mixed-DPI, IME, third-party clipboard and scrolling-target compatibility | NOT_RUN for this release |

@@ -45,3 +45,8 @@
 - 1.3.1 main CI 41404048273: 1184 pass/5 fail. All failures are LF-vs-CRLF in SelectionOverlayTests; resx checkout was converted on Windows due missing .gitattributes. Add text=auto eol=lf per repository policy; do not weaken assertions. Preserve unreleased 1.3.0/1.3.1 tags. Final release 1.3.2; await successful main CI BEFORE final tag. User informed.
 
 - 1.3.2 local full gate PASS: 1189/1189, 0 skipped, Release 0 warnings/errors. Added .gitattributes, retained all assertions/tests.
+
+- COMPLETE: latest public GitHub Release https://github.com/anthonywang6503/ScreenshotApp/releases/tag/v1.3.2 (release ID 431160917); source/tag dc985d8d24f1373aef8ca091d79766f192a57e1a. Main CI 41404417197 and tag CI 41404623295 SUCCESS, 1189/1189, 0 warnings/skips.
+- Public ZIP 70700702 bytes; SHA256 20aa947a16fa346cf770fcc63abef43db4550e0ee817d52f994ce34411d924de. Both assets verified by remote digest/size/state. English/zh-TW resources and post-package locked restore PASS. Single-file withheld; desktop NOT_RUN.
+- Draft lookup by release-tag endpoint returned 404 (drafts not exposed there); used authenticated releases listing to verify draft before publication, then verified published/latest state.
+- Final evidence docs/evidence/phase-15/release.json and validation.md. No PR, no upstream push, no ScreenshotApp desktop session started.

@@ -4,7 +4,7 @@
 Ship English-default English/zh-TW UI, English-first public documentation, tested tagged GitHub release with downloadable portable ZIP.
 
 ## Next Step
-Commit verified package evidence, tag v1.3.2, rebuild exact tagged source and publish after GitHub CI.
+Complete: v1.3.2 published as latest; both Windows CI runs and asset digest verification passed.
 
 ## Current Phase
 Phase 5
@@ -38,11 +38,11 @@ Phase 5
 
 ### Phase 5: Delivery
 - [x] Review source, docs and preflight packages
-- [ ] Commit evidence, tag and rebuild exact final package
-- [ ] Fast-forward main, push main/tag, inspect Windows CI
-- [ ] Publish release and compare GitHub asset digest
-- [ ] Deliver release link to user
-- **Status:** in_progress
+- [x] Commit evidence, build exact release commit and tag after CI
+- [x] Fast-forward main, push main/tag, inspect Windows CI
+- [x] Publish release and compare GitHub asset digest
+- [x] Release URL ready for final delivery
+- **Status:** complete
 
 ## Decisions Made
 | Decision | Rationale |
