@@ -32,3 +32,5 @@
 
 - fa94d83 committed source. Post-commit packaging PASS: folder 281 files, ZIP approx 67.4 MiB; both resource cultures load from published assembly; embedded version/commit match. ZIP contents/CRC/licenses/bilingual docs/checksum PASS. Runtime resolves 10.0.14 (updated old 10.0.13 notices). Single-file local output withheld from upload.
 - Evidence docs/evidence/phase-15/validation.md; final tagged rebuild will have its own digest checked against GitHub after upload. No ScreenshotApp process started or user data modified.
+
+- Release blocker found before creating GitHub Release: single-file publish rewrites source packages.lock.json with implicit ILLink dependency/RID; it was accidentally included in 4b2b487. Subsequent locked restore fails NU1004. v1.3.0 tag already pushed; do not overwrite it. Correct source lock and isolate query/variant locks in publish/. Publish corrected 1.3.1 instead, rerunning full gate and post-package locked restore/hash check. User informed.

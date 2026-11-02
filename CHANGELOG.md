@@ -4,7 +4,14 @@
 
 ## [Unreleased]
 
-## [1.3.0] - 2026-11-02
+## [1.3.1] - 2026-11-02
+
+### Fixed
+
+- Isolate packaging restore lock files from the source lock file so folder/single-file publishing cannot break subsequent locked restore or Windows CI.
+- Supersedes the unpublished v1.3.0 tag; the original tag is retained for traceability.
+
+## [1.3.0] - 2026-11-02 (tag only; not released)
 
 ### Added
 

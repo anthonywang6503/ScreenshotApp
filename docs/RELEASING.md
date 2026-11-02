@@ -13,3 +13,5 @@ Requires Windows x64, PowerShell 7, the pinned .NET SDK, Git and an authenticate
 9. Verify GitHub visibility, tag commit, downloadable assets, sizes and digest against the local files. Report the release link and remaining acceptance limits.
 
 Use `gh release view` and `gh run view` to inspect external state. Never overwrite an existing release/tag or force-push to repair a mismatch silently. Runtime licenses are collected from the actual resolved packs; no application NuGet dependencies are added for packaging.
+
+Packaging restore uses separate NuGet lock files under publish/ for the runtime query and each variant. Never commit these generated locks over ScreenshotApp/packages.lock.json. After packaging, confirm the source lock is unchanged and rerun locked restore. The v1.3.0 tag is retained without a Release because its packaging-generated source lock broke locked restore; v1.3.1 corrects this.

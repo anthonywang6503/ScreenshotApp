@@ -1,10 +1,10 @@
-# Task Plan: Bilingual open-source GitHub release 1.3.0
+# Task Plan: Bilingual open-source GitHub release 1.3.1
 
 ## Goal
 Ship English-default English/zh-TW UI, English-first public documentation, tested tagged GitHub release with downloadable portable ZIP.
 
 ## Next Step
-Commit verified package evidence, tag v1.3.0, rebuild exact tagged source and publish after GitHub CI.
+Commit verified package evidence, tag v1.3.1, rebuild exact tagged source and publish after GitHub CI.
 
 ## Current Phase
 Phase 5
@@ -26,7 +26,7 @@ Phase 5
 - [x] Persist en/zh-TW selection; load culture before services/windows; restart required
 - [x] English resources with complete zh-TW satellite and tests
 - [x] English-first public docs with preserved Traditional Chinese references
-- [x] Version 1.3.0, release notes, portable package and checksums
+- [x] Version 1.3.1, release notes, portable package and checksums
 - **Status:** complete
 
 ### Phase 4: Testing & Verification

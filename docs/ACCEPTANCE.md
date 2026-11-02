@@ -2,7 +2,7 @@
 
 [Traditional Chinese historical evidence and manual test procedures](ACCEPTANCE_zh_TW.md) · [Quality gate](QUALITY.md)
 
-## 1.3.0 — 2026-11-02
+## 1.3.1 — 2026-11-02
 
 This release adds English-default English/Traditional Chinese UI selection and English-first public documentation. Language changes are saved and take effect after exiting from the tray and restarting.
 
@@ -16,9 +16,13 @@ This release adds English-default English/Traditional Chinese UI selection and E
 | Mixed-DPI, IME, third-party clipboard and scrolling-target compatibility | NOT_RUN for this release |
 | Single-file download | Withheld pending version-specific interactive smoke |
 
-No previous desktop result is claimed as a 1.3.0 desktop pass. Automated tests create isolated data and hidden windows; they do not show the application or drive the user's desktop.
+No previous desktop result is claimed as a 1.3.1 desktop pass. Automated tests create isolated data and hidden windows; they do not show the application or drive the user's desktop.
 
-Packaging verification resolved .NET and Windows Desktop Runtime 10.0.14. The final tagged rebuild and downloadable asset digest are verified during GitHub publication; see [release evidence](evidence/phase-15/validation.md) and [the release](https://github.com/anthonywang6503/ScreenshotApp/releases/tag/v1.3.0). Packaging checks load resources without starting the application or writing user settings.
+Packaging verification resolved .NET and Windows Desktop Runtime 10.0.14. The final tagged rebuild and downloadable asset digest are verified during GitHub publication; see [release evidence](evidence/phase-15/validation.md) and [the release](https://github.com/anthonywang6503/ScreenshotApp/releases/tag/v1.3.1). Packaging checks load resources without starting the application or writing user settings.
+
+## Packaging correction
+
+The v1.3.0 tag was pushed but not released. Its packaging-generated source lock caused NU1004 on later locked restore. Version 1.3.1 restores the source lock and isolates runtime/variant locks under publish/. The release gate includes post-packaging locked restore and a source-lock hash check. The old tag is retained; no downloadable v1.3.0 Release is published.
 
 ## Previous baseline
 

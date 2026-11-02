@@ -23,7 +23,11 @@ $ErrorActionPreference = 'Stop'
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $project = Join-Path $root 'ScreenshotApp/ScreenshotApp.csproj'
+$sourceLock = Join-Path $root 'ScreenshotApp/packages.lock.json'
+$sourceLockHash = (Get-FileHash -LiteralPath $sourceLock -Algorithm SHA256).Hash
 $publishRoot = Join-Path $root 'publish'
+$null = New-Item -ItemType Directory -Path $publishRoot -Force
+$queryLockPath = Join-Path $publishRoot 'runtime-query.packages.lock.json'
 
 function Invoke-DotNet([string[]]$Arguments) {
     $output = & dotnet @Arguments
@@ -37,7 +41,8 @@ function Invoke-DotNet([string[]]$Arguments) {
 # 版本與自包含發佈實際使用的 Runtime 套件位置（授權檔在套件根目錄）。
 $query = Invoke-DotNet @(
     'msbuild', $project, '-restore', '-t:ResolveFrameworkReferences', '-getProperty:Version', '-getItem:ResolvedRuntimePack',
-    '-p:Configuration=Release', '-p:RuntimeIdentifier=win-x64', '-p:SelfContained=true') | Out-String | ConvertFrom-Json
+    '-p:Configuration=Release', '-p:RuntimeIdentifier=win-x64', '-p:SelfContained=true',
+    "-p:NuGetLockFilePath=$queryLockPath") | Out-String | ConvertFrom-Json
 $version = $query.Properties.Version
 $runtimePacks = @($query.Items.ResolvedRuntimePack | Where-Object { $_.FrameworkName -in 'Microsoft.NETCore.App', 'Microsoft.WindowsDesktop.App' })
 if ($runtimePacks.Count -ne 2) { throw '找不到 .NET Runtime 與 Windows Desktop Runtime 套件' }
@@ -57,7 +62,9 @@ foreach ($variant in $variants) {
     if (Test-Path -LiteralPath $output) { Remove-Item -LiteralPath $output -Recurse -Force }
     if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
 
-    $null = Invoke-DotNet (@('publish', $project, '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true', '-o', $output) + $variant.Properties)
+    $restoreLock = Join-Path $publishRoot "$($variant.Name).packages.lock.json"
+    $null = Invoke-DotNet (@('publish', $project, '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true', '-o', $output,
+        "-p:NuGetLockFilePath=$restoreLock") + $variant.Properties)
 
     $licenses = New-Item -ItemType Directory -Path (Join-Path $output 'licenses')
     foreach ($pack in $runtimePacks) {
@@ -108,3 +115,6 @@ $checksums = foreach ($variant in $variants | Where-Object { $_.Properties.Count
     "$($hash.Hash.ToLowerInvariant())  $zipName"
 }
 Set-Content -LiteralPath (Join-Path $publishRoot 'SHA256SUMS.txt') -Value $checksums -Encoding utf8NoBOM
+if ((Get-FileHash -LiteralPath $sourceLock -Algorithm SHA256).Hash -ne $sourceLockHash) {
+    throw 'Packaging changed the source NuGet lock file.'
+}

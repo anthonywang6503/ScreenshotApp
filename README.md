@@ -4,7 +4,7 @@
 
 A lightweight, native Windows screenshot and annotation tool. Capture a region with a hotkey, add annotations, and copy or save the result as PNG. Runs locally in the system tray, with no account, network connection or administrator privileges required.
 
-**Version 1.3.0** adds English and Traditional Chinese interfaces. English is the default, including upgrades from versions without a language preference. Choose **Settings → Interface language**, save, exit from the tray and restart to switch languages.
+**Version 1.3.1** adds English and Traditional Chinese interfaces. English is the default, including upgrades from versions without a language preference. Choose **Settings → Interface language**, save, exit from the tray and restart to switch languages.
 
 ## Features
 
@@ -20,14 +20,14 @@ A lightweight, native Windows screenshot and annotation tool. Capture a region w
 
 ## Download and run
 
-1. Download `ScreenshotApp-1.3.0-win-x64.zip` from [Releases](https://github.com/anthonywang6503/ScreenshotApp/releases/tag/v1.3.0).
+1. Download `ScreenshotApp-1.3.1-win-x64.zip` from [Releases](https://github.com/anthonywang6503/ScreenshotApp/releases/tag/v1.3.1).
 2. Extract the complete folder and run `ScreenshotApp.exe`. Keep the accompanying files, including the `zh-TW` resource folder.
 3. Find the icon in the notification area (possibly under hidden icons). Press **Ctrl+Shift+2** and drag to capture a region.
 
 Windows 11 x64 is the target platform. Windows 10 x64 is best-effort and unverified. Binaries are unsigned, so Windows SmartScreen or organizational policy may block them. There is no installer or automatic updater. Verify the ZIP using the release's `SHA256SUMS.txt`:
 
 ```powershell
-Get-FileHash .\ScreenshotApp-1.3.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\ScreenshotApp-1.3.1-win-x64.zip -Algorithm SHA256
 ```
 
 The downloadable package uses a folder layout. Single-file builds are withheld until that version passes the required interactive smoke tests. Automated tests do not establish clean-machine, mixed-DPI, clipboard-application or scrolling-target compatibility; see [acceptance](docs/ACCEPTANCE.md).
