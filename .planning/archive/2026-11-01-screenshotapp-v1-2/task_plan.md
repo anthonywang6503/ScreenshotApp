@@ -15,11 +15,26 @@
 
 ## Next Step
 
-Phase 14 本機交付完成，所有 Phase 已結案；尚待隔離桌面補 P13-00、發佈版煙霧與 MT-12～MT-15。步驟與版本／標籤／證據見 handoffs/phase-14-release-1-2.md。單檔只保留待驗證封裝，未上傳 Releases；不自動開始後續工作。
+本計畫依使用者 2026-11-02 指令封存於 `.planning/archive/2026-11-01-screenshotapp-v1-2/`，不再是作用中計畫。七項功能與 Phase 14 本機封裝已交付；整份計畫尚未全部驗收。尚待隔離桌面補 P13-00、發佈版煙霧與 MT-12～MT-15，保留於[驗收紀錄](../../../docs/ACCEPTANCE.md)。[完成度核對](handoffs/plan-completion-review-2026-11-02.md)已確認程式接線、原始 TRX 與封裝雜湊；步驟與版本／標籤／證據見 handoffs/phase-14-release-1-2.md。單檔只保留待驗證封裝，未上傳 Releases；不自動開始後續工作。
 
 ## Current Phase
 
 Phase 14 complete（2026-11-02）；分支 `feature/phase-14-release-1-2`，基準 `51011c2`。版本提交 `1e443dcfb596c8de0a29476951d9c2a0c2f76020`、本機 `v1.2.0`，兩種 ZIP 均由該 commit 封裝；最後僅提交驗證紀錄，不移動標籤。1176／1176、Release 0 警告／0 錯誤；封裝內容、內嵌版本及授權驗證通過。桌面煙霧 18 項與滾輪矩陣 12 格均 NOT_RUN，MT-12～MT-15 尚未驗證。依使用者授權目前分支提交，不合併、不推送、不建立 PR。
+
+## 封存與合併（2026-11-02）
+
+- 使用者明確要求「archive plan，合併回 main」，授權必要的本機提交與 fast-forward 合併；此指令更新先前各 Phase 不合併的限制，仍不推送、不建立 PR。
+- 封存位置為 `.planning/archive/2026-11-01-screenshotapp-v1-2/`；保留計畫、發現、進度、交接、核對證據與 attestation，並移除 `.planning/.active_plan`。歷史 `.mode` 不再由作用中計畫解析器選用。
+- 合併前 `main` 為 `6556bab`，是工作分支的祖先；封存提交後以 fast-forward 納入 Phase 8～14 與完成度核對，不改寫既有提交，不移動 `v1.2.0` 或重建封裝。
+- 提交前使用 `bin/plan-archive/` 隔離 Release 建置，0 警告／0 錯誤；本次僅變更規劃與文件，產品測試沿用已核對的 1176／1176，不重跑完整套件或桌面煙霧。
+- 封存不代表未驗證項目通過：P13-00 維持未勾選，18 項發佈版煙霧、12 格滾輪矩陣與 MT-12～MT-15 等仍待驗證。
+
+## 計畫完成度核對（2026-11-02）
+
+- 核對基準 `a4f1bd1`；本次紀錄分支 `feature/phase-14-plan-verification`。[核對報告](handoffs/plan-completion-review-2026-11-02.md)與[機器可讀證據](completion-checks-2026-11-02.json)記錄完整結果。
+- 七項功能的程式接線、自動化測試與本機封裝均已交付；Phase `complete` 8／8、勾選項目 65／66。原生完成工具只計算 Phase 狀態，不能證明實機驗收通過。
+- 已核對原始 TRX 的 1176／1176、受測組件與兩份 ZIP／EXE 的雜湊；產品、測試、工具與 v1.2.0 無差異，本次未重跑產品建置或測試。
+- 整體驗收仍未完成：P13-00 未勾選，18 項發佈版煙霧及 12 格滾輪矩陣均 NOT_RUN，MT-12～MT-15、乾淨 Windows 與長時間資源驗證待補。保留原有 Phase 交付結案狀態與未驗證界線。
 
 ## 使用者決定（2026-11-01）
 
@@ -288,6 +303,7 @@ Checklist
 |-------|---------|------------|
 | 搜尋根目錄 `handoffs/` 不存在 | 1 | 依封存慣例改用目前計畫下的 `handoffs/` |
 | 收尾 patch 的 Checklist 行未包含完整原文，套用遭拒 | 1 | 確認整批未套用，拆開完整行修訂與限定 P8-01～04 的勾選更新 |
+| 本次核對以 PowerShell 管線傳遞含中文的 Python 原始碼造成證據文字亂碼；以顯示名稱拆測試類別亦受帶小數與路徑的參數干擾 | 1 | 改用 Unicode 命令引數與 Python UTF-8 模式重寫文字；依 TRX TestDefinitions 的 TestMethod.className 計數，確認修正後證據有效 |
 
 ## Phase 10 執行錯誤與處理
 

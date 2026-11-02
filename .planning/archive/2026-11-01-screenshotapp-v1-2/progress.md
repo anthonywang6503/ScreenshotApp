@@ -3,7 +3,7 @@
 ## Session: 2026-11-01
 
 ### Current Status
-- **Phase:** 12 - 截圖歷史（complete）；Phase 13 pending，停在階段控制點
+- **Phase:** 已封存；14 本機交付 complete、七項功能已實作，整體實機驗收待完成（2026-11-02，詳見本檔末段）
 - **Started:** 2026-11-01
 
 ### Actions Taken
@@ -202,3 +202,30 @@
 - 最後提交僅包含驗收證據與計畫收尾；不重建封裝、不移動 v1.2.0、不合併、不推送、不建立 PR。
 
 - 最終收尾檢查：本次 29 份文件／證據 UTF-8／LF、213 個本機文件連結有效、JSON／CSV 狀態一致、git diff --check 與原生計畫格式檢查通過；所有 8 個 Phase complete，保留未實測界線，attestation 已更新。
+
+## 計畫完成度核對（2026-11-02）
+
+- 使用者要求使用 planning-with-files 確認計畫是否均已實作。resolver 選定現行 v1.2 計畫；基準 a4f1bd1，工作目錄原先乾淨，建立 feature/phase-14-plan-verification 記錄核對。
+- 原生格式與完成檢查通過：8 個 Phase 均標為 complete；另行核算 65／66 個項目已勾選，唯一未勾選為 P13-00。煙霧項目雖已結案，實機結果仍為 NOT_RUN。
+- 透過 CodeGraph 核對放大鏡、兩種取色入口、馬賽克、模糊、兩種尺規、磁碟歷史及手動／自動長截圖的產品接線，並對照規格、Accepted ADR 與測試類別。
+- 原始 TRX 計數為 1176／1176、0 失敗、0 未執行；應用程式與測試 DLL 的 SHA-256 符合既有摘要。HEAD 與 v1.2.0 之間的產品、測試及工具無差異，因此沿用既有品質結果，未重跑建置或測試套件。
+- v1.2.0 解參照提交與發佈紀錄相同；兩份 ZIP 及 EXE 雜湊、276／9 檔計數符合紀錄。18 項發佈版煙霧及 12 格滾輪矩陣全部仍為 NOT_RUN；MT-12～MT-15 未驗證。
+- 已建立 [完成度核對報告](handoffs/plan-completion-review-2026-11-02.md)與[機器可讀證據](completion-checks-2026-11-02.json)，更新計畫 Next Step 及完成度界線，修正本檔開頭過時的 Phase 12 摘要。
+- 核對時的 PowerShell 中文管線編碼與帶參數測試名稱切割已改用 Unicode 命令引數、Python UTF-8 及 TRX TestDefinitions 修正；既有品質證據未被改寫。
+- 結論：七項功能的程式與本機封裝已交付；整份計畫尚未全部驗收。本次不啟動桌面補測，不修改產品、不提交、不合併、不推送、不建立 PR。
+
+- 本次最終文件檢查通過：6 份 Markdown／JSON 為 UTF-8／LF，66 個本機相對連結有效，原生格式與勾選計數、證據狀態及計畫 attestation 一致，git diff --check 通過。
+- 一頁 HTML 摘要已產生，4 個面板、0 個文字風格警告；草稿位於忽略的 artifacts/plan-review/completion-summary.md。新增核對文件與證據保持未提交。
+
+
+## 封存與合併回 main（2026-11-02）
+
+- 依使用者新指令封存現行計畫、保留所有未驗證項目，並提交後 fast-forward 合併回 main；不推送、不建立 PR。
+- main 為目前分支祖先；目前只有本次完成度核對文件未提交，沒有外來產品變更。準備封存與相對連結修正。
+
+- 隔離 Release 建置完成：`dotnet build ScreenshotApp.sln -c Release --no-restore --nologo -warnaserror -p:BaseOutputPath=bin/plan-archive/`，0 警告／0 錯誤。原品質組件與 publish 輸出不改動；產品、測試與工具沒有變更，因此不重跑測試套件。
+- 封存到 `.planning/archive/2026-11-01-screenshotapp-v1-2/`，保留全部交付與未驗證證據；文件相對連結隨位置調整，ACCEPTANCE 的 7 個交接入口一併更新。封存後移除作用中指標，再提交並 fast-forward 合併至 main。
+
+- 封存移動完成：16 個檔案在移動前後逐檔 SHA-256 一致；作用中指標已移除，原生清單回報 selection=none、candidates=[]。
+- 封存後驗證通過：14 份 Markdown／JSON 的 UTF-8／LF、197 個本機相對連結、8 個 Phase 格式、65／66 勾選項目、P13-00 未勾選及 attestation 一致；原品質組件、ZIP 與 v1.2.0 標籤保持不變。
+- 本次提交只包含完成度核對、計畫封存與文件路徑同步；以 fast-forward 納入 main，仍不推送、不建立 PR。

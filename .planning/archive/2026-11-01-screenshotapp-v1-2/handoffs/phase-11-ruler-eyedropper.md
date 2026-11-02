@@ -8,19 +8,19 @@
 
 ## 完成內容
 
-- [ADR-0021](../../../docs/adr/0021-ruler-and-eyedropper.md)：像素中心距離、包含端點的寬高、顯示捨入、標籤、互動與原圖取色；模型及文字輸入 ADR 已修訂。
-- [PixelMeasurement](../../../ScreenshotApp/Editor/Model/PixelMeasurement.cs) 共用純計算，double 差值避免整數平方溢位。
-- [RulerAnnotation](../../../ScreenshotApp/Editor/Model/RulerAnnotation.cs)：線段端點、垂直界線、白底黑字標籤、顏色與線寬；標籤限制在原圖，極小圖片縮小；所有修改沿用命令與復原。
+- [ADR-0021](../../../../docs/adr/0021-ruler-and-eyedropper.md)：像素中心距離、包含端點的寬高、顯示捨入、標籤、互動與原圖取色；模型及文字輸入 ADR 已修訂。
+- [PixelMeasurement](../../../../ScreenshotApp/Editor/Model/PixelMeasurement.cs) 共用純計算，double 差值避免整數平方溢位。
+- [RulerAnnotation](../../../../ScreenshotApp/Editor/Model/RulerAnnotation.cs)：線段端點、垂直界線、白底黑字標籤、顏色與線寬；標籤限制在原圖，極小圖片縮小；所有修改沿用命令與復原。
 - 覆蓋層按 R 切換量測，放開保留、下一次拖曳清除舊線，不建立文件；Ctrl 放大鏡、C 取色、Esc／右鍵取消仍有效。
 - 編輯器 Alt+Q 尺規、Alt+D 取色；取色保留原工具與文字輸入，使用原圖 RGB 並沿用 SetColor 與預設設定儲存。先驗證座標、再驗證換算後像素，圖片外不夾取。
 
 ## 驗證
 
 - `pwsh -NoProfile -File tools/Invoke-Quality.ps1`：Release 0 警告／0 錯誤，1072／1072 測試通過，無跳過；比 Phase 10 新增 36 個案例。
-- [自動化摘要](../../../docs/evidence/phase-11/automated-validation.json) 記錄 TRX 與組件 SHA-256；TRX 為 `artifacts/quality/9272029a78fc4b2c8c2f554ac5795657/tests.trx`，不提交。
+- [自動化摘要](../../../../docs/evidence/phase-11/automated-validation.json) 記錄 TRX 與組件 SHA-256；TRX 為 `artifacts/quality/9272029a78fc4b2c8c2f554ac5795657/tests.trx`，不提交。
 - 畫布與輸出逐像素一致、縮放不影響輸出、裁切不重新定位標籤、PNG 存檔與剪貼簿酬載一致；測試只使用暫存設定及未顯示視窗。
 - 取色邊界回歸先重現 CopyPixels 例外後修正；文字資源掃描曾無法辨識條件式鍵，已改為明確呼叫並通過。
-- [煙霧結果](../../../docs/evidence/phase-11/phase11-results.txt)：NOT_RUN，既有使用者 ScreenshotApp PID 28076 執行中；未送出輸入，沒有改變使用者設定、剪貼簿或文件。
+- [煙霧結果](../../../../docs/evidence/phase-11/phase11-results.txt)：NOT_RUN，既有使用者 ScreenshotApp PID 28076 執行中；未送出輸入，沒有改變使用者設定、剪貼簿或文件。
 
 ## 實機重跑與界線
 

@@ -8,17 +8,17 @@
 
 ## 已交付
 
-- [ADR-0023](../../../docs/adr/0023-scrolling-capture.md) 固定長截圖的入口、取樣、對齊、固定帶、定向滾輪、輸入停止、上限與恢復路徑；設定與狀態機 ADR 同步修訂。
-- [ScrollFrame](../../../ScreenshotApp/Capture/ScrollFrame.cs) 正規化 Bgr32 與列雜湊；[ScrollStitcher](../../../ScreenshotApp/Capture/ScrollStitcher.cs) 以 KMP 列候選與逐像素確認，只接受唯一向下重疊，固定標頭／頁尾只存一次。向上、重複圖樣、變動畫面或無可靠重疊不附加；已接受內容不受破壞。
-- [ScrollCaptureSession](../../../ScreenshotApp/Capture/ScrollCaptureSession.cs) 等三張相同影格才處理；自動每次送一格，曾成功前進後三次無變化才完成，完全無回應提示手動；動畫逾時、無法對齊及使用者介入回到手動。
-- [面板](../../../ScreenshotApp/Capture/ScrollCaptureWindow.xaml.cs) 包含高度、抽樣預覽、自動／停止、完成及取消；[四邊框](../../../ScreenshotApp/Capture/ScrollCaptureFrame.cs) 均在取樣之外。面板重疊時先隱藏並等 DWM。沿用區域 BitBlt 與 SafeHandle；高 32,768、總像素 100,000,000，僅附加可容納完整列。
-- [ScrollInput](../../../ScreenshotApp/Capture/ScrollInput.cs) 在發送前確認原 HWND／程序、範圍中心、前景及輸入；GetLastInputInfo 時間戳記以不相等判定，另查游標與按住的按鍵。不移游標、不送全域輸入、不使用低階 Hook。PostMessage 相容性尚未驗證。
-- [CaptureFlow](../../../ScreenshotApp/Capture/CaptureFlow.cs) 將整段捲動包在 Selecting 與隱藏視窗 scope 中；所有出口回復原狀態。完成經既有 AppController 路徑建立 ImageDocument、RecordCapture 與 OpenEditor；取消／失敗不取代文件或新增歷史。
+- [ADR-0023](../../../../docs/adr/0023-scrolling-capture.md) 固定長截圖的入口、取樣、對齊、固定帶、定向滾輪、輸入停止、上限與恢復路徑；設定與狀態機 ADR 同步修訂。
+- [ScrollFrame](../../../../ScreenshotApp/Capture/ScrollFrame.cs) 正規化 Bgr32 與列雜湊；[ScrollStitcher](../../../../ScreenshotApp/Capture/ScrollStitcher.cs) 以 KMP 列候選與逐像素確認，只接受唯一向下重疊，固定標頭／頁尾只存一次。向上、重複圖樣、變動畫面或無可靠重疊不附加；已接受內容不受破壞。
+- [ScrollCaptureSession](../../../../ScreenshotApp/Capture/ScrollCaptureSession.cs) 等三張相同影格才處理；自動每次送一格，曾成功前進後三次無變化才完成，完全無回應提示手動；動畫逾時、無法對齊及使用者介入回到手動。
+- [面板](../../../../ScreenshotApp/Capture/ScrollCaptureWindow.xaml.cs) 包含高度、抽樣預覽、自動／停止、完成及取消；[四邊框](../../../../ScreenshotApp/Capture/ScrollCaptureFrame.cs) 均在取樣之外。面板重疊時先隱藏並等 DWM。沿用區域 BitBlt 與 SafeHandle；高 32,768、總像素 100,000,000，僅附加可容納完整列。
+- [ScrollInput](../../../../ScreenshotApp/Capture/ScrollInput.cs) 在發送前確認原 HWND／程序、範圍中心、前景及輸入；GetLastInputInfo 時間戳記以不相等判定，另查游標與按住的按鍵。不移游標、不送全域輸入、不使用低階 Hook。PostMessage 相容性尚未驗證。
+- [CaptureFlow](../../../../ScreenshotApp/Capture/CaptureFlow.cs) 將整段捲動包在 Selecting 與隱藏視窗 scope 中；所有出口回復原狀態。完成經既有 AppController 路徑建立 ImageDocument、RecordCapture 與 OpenEditor；取消／失敗不取代文件或新增歷史。
 - 系統匣獨立入口；設定 `ScrollHotkey` 可為 null，預設未設定，不能與一般截圖相同；獨立註冊、衝突保留舊值、清除解除。長截圖選取模式保留 Ctrl，停用 C／R；一般截圖不變。
 
 ## 自動化與版面驗證
 
-- 最終品質腳本：Release 0 警告／0 錯誤、1176／1176 通過、無跳過，比 Phase 12 新增 49 個案例。[摘要、TRX 與受測組件 SHA-256](../../../docs/evidence/phase-13/automated-validation.json)。
+- 最終品質腳本：Release 0 警告／0 錯誤、1176／1176 通過、無跳過，比 Phase 12 新增 49 個案例。[摘要、TRX 與受測組件 SHA-256](../../../../docs/evidence/phase-13/automated-validation.json)。
 - 因使用者程式鎖住標準 Release 輸出，以環境屬性隔離建置，未修改品質腳本或關閉使用者程式：
 
 ```powershell
@@ -33,7 +33,7 @@ pwsh -NoProfile -File tools/Invoke-Quality.ps1
 
 ## 尚未驗證與重跑
 
-本次 [煙霧結果](../../../docs/evidence/phase-13/phase13-results.txt) 及 [12 格滾輪矩陣](../../../docs/evidence/phase-13/wheel-probe-matrix.csv) 均為 NOT_RUN。前置守衛發現使用者 ScreenshotApp PID 35760，沒有送出桌面輸入或修改使用者設定／剪貼簿／歷史。P13-00 的實測未完成，PostMessage 是待相容性驗證的初始方案，150ms／三影格／三次無變化是實作常數，不能宣稱為各應用程式實測最佳值。
+本次 [煙霧結果](../../../../docs/evidence/phase-13/phase13-results.txt) 及 [12 格滾輪矩陣](../../../../docs/evidence/phase-13/wheel-probe-matrix.csv) 均為 NOT_RUN。前置守衛發現使用者 ScreenshotApp PID 35760，沒有送出桌面輸入或修改使用者設定／剪貼簿／歷史。P13-00 的實測未完成，PostMessage 是待相容性驗證的初始方案，150ms／三影格／三次無變化是實作常數，不能宣稱為各應用程式實測最佳值。
 
 在隔離測試桌面、既有程式結束且閒置至少 90 秒後，以前述隔離建置執行：
 
@@ -51,7 +51,7 @@ pwsh -NoProfile -STA -File tools/smoke/Invoke-ScrollWheelProbe.ps1 -WindowHandle
 
 `ApplicationName` 可為 Edge、Chrome、Word、VS Code、Explorer、Pattern。工具比較 SendInput（游標中心）與 PostMessage，記錄版本、畫面雜湊是否變化及三張穩定影格所需時間，不保存螢幕內容；無變化也可能已到底，須搭配測試文件與實際觀察判斷。既有 ScreenshotApp 或未指定目標時只產生 NOT_RUN。
 
-尚待確認：瀏覽器／Word／程式碼編輯器與已知圖樣的兩種捲動、真實滑鼠穿透、輸入中止、到底、取消、顯示變更清理、混合 DPI、框外面板及資源趨勢。這些是 [MT-13](../../../docs/ScreenshotApp.Spec.md) 與下一階段整合驗證的續作項目。
+尚待確認：瀏覽器／Word／程式碼編輯器與已知圖樣的兩種捲動、真實滑鼠穿透、輸入中止、到底、取消、顯示變更清理、混合 DPI、框外面板及資源趨勢。這些是 [MT-13](../../../../docs/ScreenshotApp.Spec.md) 與下一階段整合驗證的續作項目。
 
 ## Phase 14 接點
 

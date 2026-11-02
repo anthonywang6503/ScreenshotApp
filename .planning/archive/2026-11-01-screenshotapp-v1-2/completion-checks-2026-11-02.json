@@ -1,0 +1,181 @@
+{
+  "date": "2026-11-02",
+  "basisCommit": "a4f1bd1e5a1fcb1a1d541d5252ee4dfeeb7cc8e9",
+  "reviewBranch": "feature/phase-14-plan-verification",
+  "scope": "現行 v1.2 計畫、產品接線與既有驗證證據核對；未重跑產品測試或桌面輸入",
+  "plan": {
+    "phases": [
+      {
+        "id": 0,
+        "status": "complete"
+      },
+      {
+        "id": 8,
+        "status": "complete"
+      },
+      {
+        "id": 9,
+        "status": "complete"
+      },
+      {
+        "id": 10,
+        "status": "complete"
+      },
+      {
+        "id": 11,
+        "status": "complete"
+      },
+      {
+        "id": 12,
+        "status": "complete"
+      },
+      {
+        "id": 13,
+        "status": "complete"
+      },
+      {
+        "id": 14,
+        "status": "complete"
+      }
+    ],
+    "checkedItems": 65,
+    "uncheckedItems": [
+      "P13-00 實測（spike，不進產品碼）：比較 `SendInput` 滾輪（游標移到範圍中心）與 `PostMessage(WM_MOUSEWHEEL)` 對 Edge／Chrome、Word、VS Code、檔案總管與已知圖樣視窗的效果；平滑捲動時畫面穩定所需的時間；結果寫入 `findings.md`｜Phase 12｜high｜每種程式與方式都有實測紀錄"
+    ]
+  },
+  "releaseTag": {
+    "name": "v1.2.0",
+    "expectedCommit": "1e443dcfb596c8de0a29476951d9c2a0c2f76020",
+    "actualCommit": "1e443dcfb596c8de0a29476951d9c2a0c2f76020",
+    "productTestToolChangesSinceTag": []
+  },
+  "automationEvidence": {
+    "summary": "docs/evidence/phase-14/automated-validation.json",
+    "testsRerun": false,
+    "buildEvidence": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "trx": "artifacts/quality/e9d5a11736ab4f499239d5624ab9f7c3/tests.trx",
+    "trxCounters": {
+      "total": 1176,
+      "executed": 1176,
+      "passed": 1176,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "aborted": 0,
+      "inconclusive": 0,
+      "passedButRunAborted": 0,
+      "notRunnable": 0,
+      "notExecuted": 0,
+      "disconnected": 0,
+      "warning": 0,
+      "completed": 0,
+      "inProgress": 0,
+      "pending": 0
+    },
+    "nonPassingResults": 0,
+    "testCountsMatch": true,
+    "featureTestClasses": {
+      "CaptureFlowTests": 16,
+      "EffectAnnotationTests": 4,
+      "EffectRenderingTests": 17,
+      "EyedropperTests": 13,
+      "HistoryFlowTests": 25,
+      "HistoryTests": 33,
+      "HotkeyServiceTests": 8,
+      "MagnifierGeometryTests": 17,
+      "MeasurementOverlayTests": 4,
+      "PixelEffectsTests": 18,
+      "RulerTests": 16,
+      "ScrollCaptureIntegrationTests": 16,
+      "ScrollCaptureSessionTests": 5,
+      "ScrollStitcherTests": 16,
+      "SelectionOverlayTests": 5,
+      "SettingsStoreTests": 31,
+      "StringsResourceTests": 7
+    },
+    "assemblies": [
+      {
+        "path": "ScreenshotApp/bin/phase14/Release/net10.0-windows/ScreenshotApp.dll",
+        "expectedSHA256": "650ebc0de7e3520c54583b4ab53e038ab6cb5fb5ac4452d2439172338f5f6bad",
+        "actualSHA256": "650ebc0de7e3520c54583b4ab53e038ab6cb5fb5ac4452d2439172338f5f6bad"
+      },
+      {
+        "path": "ScreenshotApp.Tests/bin/phase14/Release/net10.0-windows/ScreenshotApp.Tests.dll",
+        "expectedSHA256": "8341cbfb42c9830719c618616443f791d54d64cb6f4767a152f85848ee083d3d",
+        "actualSHA256": "8341cbfb42c9830719c618616443f791d54d64cb6f4767a152f85848ee083d3d"
+      }
+    ]
+  },
+  "packages": [
+    {
+      "name": "ScreenshotApp-1.2.0-win-x64",
+      "archive": "publish/ScreenshotApp-1.2.0-win-x64.zip",
+      "expectedZipSHA256": "913644588f03a27097e4e218dcdd9ff7dddf1bc06d290521e56d73ca178caf1f",
+      "actualZipSHA256": "913644588f03a27097e4e218dcdd9ff7dddf1bc06d290521e56d73ca178caf1f",
+      "expectedExeSHA256": "d3a9ef649461bceeb72fb4ff2967c36c77a49031c431811ef3f2d830c1224683",
+      "actualExeSHA256": "d3a9ef649461bceeb72fb4ff2967c36c77a49031c431811ef3f2d830c1224683",
+      "expectedFileCount": 276,
+      "actualFileCount": 276
+    },
+    {
+      "name": "ScreenshotApp-1.2.0-win-x64-singlefile",
+      "archive": "publish/ScreenshotApp-1.2.0-win-x64-singlefile.zip",
+      "expectedZipSHA256": "260dca5188a8c67bf116e95dc33f8f5260b82688492397de98034627d1bfc216",
+      "actualZipSHA256": "260dca5188a8c67bf116e95dc33f8f5260b82688492397de98034627d1bfc216",
+      "expectedExeSHA256": "92081f0e09fe69d4be98f9e8cd72c10773ec3a562d356794957436ce1cc1fbf0",
+      "actualExeSHA256": "92081f0e09fe69d4be98f9e8cd72c10773ec3a562d356794957436ce1cc1fbf0",
+      "expectedFileCount": 9,
+      "actualFileCount": 9
+    }
+  ],
+  "desktopEvidence": {
+    "smoke": {
+      "path": "docs/evidence/phase-14/smoke-results.csv",
+      "cases": 18,
+      "statusCounts": {
+        "NOT_RUN": 18
+      },
+      "columns": [
+        "Variant",
+        "Phase",
+        "Script",
+        "ExePath",
+        "ExeSHA256",
+        "Status",
+        "Stage",
+        "ExitCode",
+        "BlockingProcessIds",
+        "Detail"
+      ]
+    },
+    "wheelProbe": {
+      "path": "docs/evidence/phase-14/wheel-probe-matrix.csv",
+      "cases": 12,
+      "statusCounts": {
+        "NOT_RUN": 12
+      },
+      "columns": [
+        "Application",
+        "Version",
+        "Method",
+        "Status",
+        "Changed",
+        "StableMilliseconds",
+        "Detail"
+      ]
+    },
+    "manualAcceptance": {
+      "MT-12": "尚未驗證",
+      "MT-13": "尚未驗證",
+      "MT-14": "尚未驗證",
+      "MT-15": "尚未驗證"
+    }
+  },
+  "verdict": "七項功能的程式接線與既有自動化交付已確認；P13-00、桌面煙霧與 MT 尚未完成，整份計畫未全部驗收。",
+  "evidenceConsistencyChecksPassed": true,
+  "featureImplementationsFound": 7,
+  "planFullyAccepted": false
+}

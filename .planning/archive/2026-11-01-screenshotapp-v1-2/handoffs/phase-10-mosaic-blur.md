@@ -8,20 +8,20 @@
 
 ## 完成內容
 
-- [ADR-0020](../../../docs/adr/0020-effect-annotations.md) 固定強度、捨入、邊界、取樣、快取及隱私限制；ADR-0010／0011 已補修訂。
-- [EffectAnnotation](../../../ScreenshotApp/Editor/Model/EffectAnnotation.cs)：不可變矩形效果、整塊命中、八個控制點、翻轉與至少 1×1。
-- [PixelEffects](../../../ScreenshotApp/Editor/Rendering/PixelEffects.cs)：區塊平均、三輪可分離盒狀模糊；滑動總和與逐列記憶體存取，輸入不變、輸出不透明。
-- [EffectBitmapCache](../../../ScreenshotApp/Editor/Rendering/EffectBitmapCache.cs)：凍結原圖弱參照分組，完整 Rect／種類／Strength 鍵，每張原圖 8 筆／64 MiB 上限，超大單筆不保存。
+- [ADR-0020](../../../../docs/adr/0020-effect-annotations.md) 固定強度、捨入、邊界、取樣、快取及隱私限制；ADR-0010／0011 已補修訂。
+- [EffectAnnotation](../../../../ScreenshotApp/Editor/Model/EffectAnnotation.cs)：不可變矩形效果、整塊命中、八個控制點、翻轉與至少 1×1。
+- [PixelEffects](../../../../ScreenshotApp/Editor/Rendering/PixelEffects.cs)：區塊平均、三輪可分離盒狀模糊；滑動總和與逐列記憶體存取，輸入不變、輸出不透明。
+- [EffectBitmapCache](../../../../ScreenshotApp/Editor/Rendering/EffectBitmapCache.cs)：凍結原圖弱參照分組，完整 Rect／種類／Strength 鍵，每張原圖 8 筆／64 MiB 上限，超大單筆不保存。
 - 畫布與匯出共用 AnnotationPainter 並傳入原圖；只取樣原圖，蓋住下層標註，保留上層，先整張合成再裁切。
 - 編輯器新增 Alt+J 馬賽克、Alt+H 模糊、Alt+U 強度；強度只在工作階段內，選取效果時不適用的顏色／線寬／字型欄位停用。移動／調整／強度／再製／層序／刪除都沿用命令及復原。
 
 ## 驗證
 
 - `pwsh -NoProfile -File tools/Invoke-Quality.ps1`：Release 0 警告／0 錯誤，1036／1036 測試通過，無跳過；新增 45 個案例。
-- [自動化摘要](../../../docs/evidence/phase-10/automated-validation.json)：TRX 路徑、受測組件 SHA-256、測試數及未驗證範圍。原始 TRX 在 artifacts，不提交。
+- [自動化摘要](../../../../docs/evidence/phase-10/automated-validation.json)：TRX 路徑、受測組件 SHA-256、測試數及未驗證範圍。原始 TRX 在 artifacts，不提交。
 - 獨立參考演算法、原圖不變、不透明、層序、負座標／圖片邊界、裁切、PNG／DIB／存檔一致、命令粒度與快取筆數淘汰皆通過。
-- [4K 量測](../../../docs/evidence/phase-10/performance.json)：單一 STA、5 次移動左邊界、含取樣及凍結點陣圖建立；馬賽克 12px 中位數 51.1ms，模糊 6px 424.3ms。大範圍同步模糊仍可能阻塞 UI，不宣稱流暢。
-- [煙霧結果](../../../docs/evidence/phase-10/phase10-results.txt)：NOT_RUN，既有使用者 ScreenshotApp PID 28076 執行中，未送出模擬輸入。腳本語法及獨立參考演算法已成功編譯。
+- [4K 量測](../../../../docs/evidence/phase-10/performance.json)：單一 STA、5 次移動左邊界、含取樣及凍結點陣圖建立；馬賽克 12px 中位數 51.1ms，模糊 6px 424.3ms。大範圍同步模糊仍可能阻塞 UI，不宣稱流暢。
+- [煙霧結果](../../../../docs/evidence/phase-10/phase10-results.txt)：NOT_RUN，既有使用者 ScreenshotApp PID 28076 執行中，未送出模擬輸入。腳本語法及獨立參考演算法已成功編譯。
 
 ## 尚未驗證與重跑
 

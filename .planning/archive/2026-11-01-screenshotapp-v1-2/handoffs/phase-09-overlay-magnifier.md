@@ -7,18 +7,18 @@
 
 ## 完成內容
 
-- [ADR-0019](../../../docs/adr/0019-overlay-magnifier-and-color-pick.md)：15×15 格、每格 12 實體像素、快照取樣、四角翻轉／灰格、Ctrl 啟動抑制與取色結果分流。
-- [幾何](../../../ScreenshotApp/Capture/MagnifierGeometry.cs)、[輸入狀態](../../../ScreenshotApp/Capture/MagnifierInput.cs)、[覆蓋層](../../../ScreenshotApp/Capture/SelectionOverlay.xaml.cs)：最近鄰繪製、黑白中心框、座標／色碼、未拖曳與拖曳中更新；捕捉或焦點遺失時隱藏。
-- [覆蓋層結果](../../../ScreenshotApp/Capture/OverlayResult.cs) 與 [CaptureFlow](../../../ScreenshotApp/Capture/CaptureFlow.cs)：區域選取與取色分流；取色不裁切、不替換既有文件，先關閉覆蓋層及恢復視窗，再由 AppController 複製 Unicode 文字並通知。
-- [文字剪貼簿](../../../ScreenshotApp/Export/ClipboardService.cs) 以委派測試成功與失敗，沿用 WPF 內建有限重試；所有新介面文字在 Strings.resx。
+- [ADR-0019](../../../../docs/adr/0019-overlay-magnifier-and-color-pick.md)：15×15 格、每格 12 實體像素、快照取樣、四角翻轉／灰格、Ctrl 啟動抑制與取色結果分流。
+- [幾何](../../../../ScreenshotApp/Capture/MagnifierGeometry.cs)、[輸入狀態](../../../../ScreenshotApp/Capture/MagnifierInput.cs)、[覆蓋層](../../../../ScreenshotApp/Capture/SelectionOverlay.xaml.cs)：最近鄰繪製、黑白中心框、座標／色碼、未拖曳與拖曳中更新；捕捉或焦點遺失時隱藏。
+- [覆蓋層結果](../../../../ScreenshotApp/Capture/OverlayResult.cs) 與 [CaptureFlow](../../../../ScreenshotApp/Capture/CaptureFlow.cs)：區域選取與取色分流；取色不裁切、不替換既有文件，先關閉覆蓋層及恢復視窗，再由 AppController 複製 Unicode 文字並通知。
+- [文字剪貼簿](../../../../ScreenshotApp/Export/ClipboardService.cs) 以委派測試成功與失敗，沿用 WPF 內建有限重試；所有新介面文字在 Strings.resx。
 - 使用指南、架構、限制、驗收紀錄與 CHANGELOG 已同步；編輯器取色仍留在 Phase 11。
 
 ## 驗證
 
 - `pwsh -NoProfile -File tools/Invoke-Quality.ps1`：Release 0 警告／0 錯誤、991／991 測試通過，無跳過。
 - 新增 34 個測試案例；未顯示覆蓋層在中央及四角各以 RenderTargetBitmap 比對 32,400 個像素，沒有混色、取樣偏移或中心框差異。這不替代桌面實機驗收。
-- [自動化摘要](../../../docs/evidence/phase-09/automated-validation.json) 包含組件 SHA-256；原始 TRX 位於摘要所記載的本機 artifacts 目錄，該目錄不提交。
-- 煙霧腳本與共用工具的 PowerShell AST 語法檢查通過。啟動前偵測到既有 ScreenshotApp，結果 [NOT_RUN](../../../docs/evidence/phase-09/phase9-results.txt)，未送出任何模擬輸入。
+- [自動化摘要](../../../../docs/evidence/phase-09/automated-validation.json) 包含組件 SHA-256；原始 TRX 位於摘要所記載的本機 artifacts 目錄，該目錄不提交。
+- 煙霧腳本與共用工具的 PowerShell AST 語法檢查通過。啟動前偵測到既有 ScreenshotApp，結果 [NOT_RUN](../../../../docs/evidence/phase-09/phase9-results.txt)，未送出任何模擬輸入。
 - 文件相對連結、UTF-8／LF、`git diff --check` 於提交前檢查。
 
 ## 尚未驗證與後續入口

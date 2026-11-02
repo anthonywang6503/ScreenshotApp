@@ -7,9 +7,9 @@
 
 ## 完成內容
 
-- [規格](../../../docs/ScreenshotApp.Spec.md)：新增 FR-37～FR-43、AT-11～AT-16、MT-12～MT-15 與需求／階段／驗收矩陣；修訂入口、工具、快捷鍵、狀態、設定、隱私及排除範圍。一般截圖仍放開即開啟編輯器。
-- [截圖策略 ADR](../../../docs/adr/0007-capture-strategy.md) 與 [未匯出保護 ADR](../../../docs/adr/0016-unexported-changes-protection.md)：明確記錄磁碟歷史是新需求，完整快照仍不持久化，歷史寫入不等於成功匯出；技術細節於實作階段補齊。
-- [驗收紀錄](../../../docs/ACCEPTANCE.md) 與 [CHANGELOG](../../../CHANGELOG.md)：只記錄規格變更，新增功能均標示尚未實作／驗證，既有結果不作為 v1.2 證據。
+- [規格](../../../../docs/ScreenshotApp.Spec.md)：新增 FR-37～FR-43、AT-11～AT-16、MT-12～MT-15 與需求／階段／驗收矩陣；修訂入口、工具、快捷鍵、狀態、設定、隱私及排除範圍。一般截圖仍放開即開啟編輯器。
+- [截圖策略 ADR](../../../../docs/adr/0007-capture-strategy.md) 與 [未匯出保護 ADR](../../../../docs/adr/0016-unexported-changes-protection.md)：明確記錄磁碟歷史是新需求，完整快照仍不持久化，歷史寫入不等於成功匯出；技術細節於實作階段補齊。
+- [驗收紀錄](../../../../docs/ACCEPTANCE.md) 與 [CHANGELOG](../../../../CHANGELOG.md)：只記錄規格變更，新增功能均標示尚未實作／驗證，既有結果不作為 v1.2 證據。
 - [計畫](../task_plan.md)、[進度](../progress.md)、[發現](../findings.md)：同步使用者開始執行的授權、實際基準、Git 限制、修正後的效果驗收與數值界線。
 
 ## 定案與留待實作的細節

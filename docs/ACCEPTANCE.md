@@ -15,7 +15,7 @@ Phase 8 完成 [規格](ScreenshotApp.Spec.md) 修訂；Phase 9～13 已實作�
 | 磁碟截圖歷史 | 12 | AT-08／15、MT-15 | 已實作，自動化通過；實機及 MT-15 尚未驗證 |
 | 手動與自動長截圖 | 13 | AT-16、MT-13 | 程式已實作，AT-16 自動化通過；桌面煙霧、滾輪相容性及 MT-13 尚未驗證 |
 
-Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差異格式檢查；未執行建置、產品測試、品質腳本或實機煙霧驗證。結果與續作入口見 [Phase 8 交接](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-08-v1-2-spec.md)。
+Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差異格式檢查；未執行建置、產品測試、品質腳本或實機煙霧驗證。結果與續作入口見 [Phase 8 交接](../.planning/archive/2026-11-01-screenshotapp-v1-2/handoffs/phase-08-v1-2-spec.md)。
 
 ### Phase 9 驗證（2026-11-01）
 
@@ -24,7 +24,7 @@ Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差�
 - 五個 WPF 繪製案例（中央與四角）各比對 180×180＝32,400 個實際繪製像素，包含灰格、最近鄰與中心黑白框；這是 RenderTargetBitmap 自動化驗證，不是桌面 PrintWindow 實機證據。
 - [Phase 9 煙霧腳本](../tools/smoke/Invoke-Phase9Smoke.ps1) 已完成並通過 PowerShell 語法檢查；實際啟動時偵測到使用者既有 ScreenshotApp，未啟動另一份程式、未送出鍵鼠輸入。結果為 [NOT_RUN](evidence/phase-09/phase9-results.txt)，不能算實機通過。
 - **尚未驗證**：實際快捷鍵 Ctrl 抑制、鍵鼠拖曳／取消／C 取色、剪貼簿通知、桌面 PrintWindow 每格比對、多螢幕切換與混合 DPI；MT-12 各縮放的桌面驗收仍待執行。編輯器取色在 Phase 11。
-- 續作與執行方式見 [Phase 9 交接](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-09-overlay-magnifier.md)。
+- 續作與執行方式見 [Phase 9 交接](../.planning/archive/2026-11-01-screenshotapp-v1-2/handoffs/phase-09-overlay-magnifier.md)。
 
 ### Phase 10 驗證（2026-11-01）
 
@@ -34,7 +34,7 @@ Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差�
 - 模型／工作階段／未顯示視窗測試涵蓋八個控制點、翻轉、零位移、拖曳預覽、取消、移動、調整、強度、再製、層序、刪除與逐筆復原／重做；驗證適用控制項、右鍵選單、強度不寫入設定，以及快取鍵與筆數淘汰。
 - [4K 量測](evidence/phase-10/performance.json)：3840×2160、Release、.NET 10.0.14、16 邏輯處理器、單一 STA 執行緒，各 5 次移動邊界重算；馬賽克 12px 中位數 51.1ms，模糊 6px 424.3ms。含取樣／建立凍結點陣圖，不含 WPF 呈現與桌面操作；**大範圍模糊可能停頓，不宣稱拖曳流暢**。可用 `dotnet run --project tools/benchmarks/Effects.csproj -c Release -- docs/evidence/phase-10/performance.json` 重測。
 - [煙霧腳本](../tools/smoke/Invoke-Phase10Smoke.ps1) 通過 AST 語法與參考演算法編譯；執行時因既有 ScreenshotApp 而在輸入前停止，結果 [NOT_RUN](evidence/phase-10/phase10-results.txt)。實機建立效果、移動／調整操作、剪貼簿／另存對話框、PrintWindow、GDI／USER 趨勢與 MT-14 PowerPoint 貼上仍**尚未驗證**。
-- [Phase 10 交接](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-10-mosaic-blur.md) 記錄重跑方式、限制與下一階段入口。
+- [Phase 10 交接](../.planning/archive/2026-11-01-screenshotapp-v1-2/handoffs/phase-10-mosaic-blur.md) 記錄重跑方式、限制與下一階段入口。
 
 ### Phase 11 驗證（2026-11-02）
 
@@ -44,7 +44,7 @@ Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差�
 - AT-12：取原圖而非標註色、拒絕圖片外及浮點容差進位後的越界像素、選取一筆可復原命令、無選取透過既有事件保存預設值至測試暫存設定、中文字輸入保留、完成／取消回原工具、效果忽略顏色、索引色與預乘透明格式。
 - 隱藏覆蓋層控制器驗證：切換模式取消進行中預覽、放開保留、下一次拖曳跨顯示器取代、起始顯示器夾取、捕捉遺失、不建立文件、返回一般截圖、與放大鏡共存及像素中心座標。這些是程式與 WPF 自動化證據，並非桌面鍵鼠實機驗收。
 - [煙霧腳本](../tools/smoke/Invoke-Phase11Smoke.ps1) AST 通過；執行時偵測既有 ScreenshotApp PID 28076，在任何模擬輸入與資料備份前停止，結果 [NOT_RUN](evidence/phase-11/phase11-results.txt)。**真實 R／Esc／右鍵操作、滑鼠拖曳、PrintWindow、混合 DPI、多螢幕切換、微軟注音組字中取色、PowerPoint 貼上尚未驗證**。
-- [Phase 11 交接](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-11-ruler-eyedropper.md) 記錄重跑方式與 Phase 12 接點。
+- [Phase 11 交接](../.planning/archive/2026-11-01-screenshotapp-v1-2/handoffs/phase-11-ruler-eyedropper.md) 記錄重跑方式與 Phase 12 接點。
 
 ### Phase 12 驗證（2026-11-02）
 
@@ -54,7 +54,7 @@ Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差�
 - AT-08：新欄位缺省、正常往返、布林型別錯誤，以及保留筆數 0／501／非整數／null／字串只重設自身。隱藏歷史及設定視窗的具名元件與三個視窗的存取鍵無衝突；另以未顯示 WPF 內容繪製確認清單與設定欄位可見。
 - [Phase 12 煙霧腳本](../tools/smoke/Invoke-Phase12Smoke.ps1) AST 通過；執行時因既有使用者 ScreenshotApp PID 27708，在備份與輸入前停止，結果 [NOT_RUN](evidence/phase-12/phase12-results.txt)。腳本要求空白歷史目錄，防止驗證淘汰／全部清除時影響既有資料；Phase 2～4 已補上停用歷史，9～11 原有停用設定保留。
 - **尚未驗證**：實際首次通知、歷史視窗鍵鼠操作、桌面程式重新啟動、長時間常駐、磁碟及記憶體趨勢、既有煙霧重跑後的歷史比對、MT-15；長截圖新增歷史留待 Phase 13。
-- 重跑方式及下一階段接點見 [Phase 12 交接](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-12-capture-history.md)。
+- 重跑方式及下一階段接點見 [Phase 12 交接](../.planning/archive/2026-11-01-screenshotapp-v1-2/handoffs/phase-12-capture-history.md)。
 
 ### Phase 13 驗證（2026-11-02）
 
@@ -65,7 +65,7 @@ Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差�
 - 長圖歷史在測試暫存目錄中驗證 600×1600、1×32768、2×32768 保存、逐像素還原及 ImageRenderer 合成一致，縮圖尺寸有效。未顯示的 WPF 內容繪製確認面板預覽、狀態、按鈕及設定欄位可見；這不是桌面操作證據。
 - [Phase 13 煙霧](../tools/smoke/Invoke-Phase13Smoke.ps1)、[滾輪探測](../tools/smoke/Invoke-ScrollWheelProbe.ps1)及可捲動圖樣通過 PowerShell AST 與內嵌 C# 編譯。實際執行在使用者既有 ScreenshotApp PID 35760 守衛停止，結果 [NOT_RUN](evidence/phase-13/phase13-results.txt)；[兩種方式 × 六種目標的矩陣](evidence/phase-13/wheel-probe-matrix.csv)共 12 格均尚未驗證，未送出輸入或修改使用者資料。
 - **尚未驗證**：P13-00 的 SendInput／PostMessage 比較與平滑捲動時間、已知圖樣的真實手動／自動逐像素輸出、原視窗滾輪穿透、真實輸入中止、桌面框線／面板清理、資源趨勢、跨應用程式與混合 DPI 的 MT-13。PostMessage 是初始實作方案，沒有宣稱瀏覽器、Word、VS Code 或檔案總管相容性通過。
-- 本階段交付程式、測試與重跑工具；尚未驗證項目留待隔離桌面重跑及 Phase 14 整合驗證。重跑步驟與判定見 [Phase 13 交接](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-13-scrolling-capture.md)。
+- 本階段交付程式、測試與重跑工具；尚未驗證項目留待隔離桌面重跑及 Phase 14 整合驗證。重跑步驟與判定見 [Phase 13 交接](../.planning/archive/2026-11-01-screenshotapp-v1-2/handoffs/phase-13-scrolling-capture.md)。
 
 ### Phase 14 整合驗證（2026-11-02）
 
@@ -73,7 +73,7 @@ Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差�
 - 專案版本及 manifest 同步為 **1.2.0／1.2.0.0**，完成 README、使用指南、限制、架構模組／相依圖／測試對應／ADR 0018～0023 索引總檢。品質報告與受測組件雜湊見 [自動化摘要](evidence/phase-14/automated-validation.json)，發佈內容見 [封裝驗證](evidence/phase-14/release-validation.json)。
 - 版本提交 **`1e443dcfb596c8de0a29476951d9c2a0c2f76020`**、本機 **`v1.2.0`** 標籤建立後，執行既有發佈腳本：資料夾版 **276 個檔案／ZIP 67.4 MiB**，單檔版 **9 個檔案／ZIP 63.6 MiB**。兩者產品版本均為 `1.2.0+` 該完整 commit，內嵌 manifest 為 1.2.0.0、PerMonitorV2、asInvoker。ZIP 全部檔案的 CRC／SHA-256 與資料夾一致，附帶文件與標籤來源一致，兩個 Runtime 的授權齊全。後續只補驗證紀錄的提交不移動標籤；未推送或上傳外部服務。
 - 使用者既有 ScreenshotApp **PID 35760** 執行中。[發佈版回歸](evidence/phase-14/smoke-results.csv)共 **18 項 NOT_RUN**：兩種封裝的 Phase 9～13 實際呼叫腳本入口，在各自守衛停止（10 次、結束碼 2）；Phase 1～4 由外層前置守衛擋住，沒有啟動腳本（8 項）。[12 格滾輪比較](evidence/phase-14/wheel-probe-matrix.csv)亦由工具守衛記為 **NOT_RUN／尚未驗證**。未啟動受測程式或注入桌面輸入，不算實機通過。依 ADR-0017，單檔 **未提供為已驗收版本**；舊版通過紀錄不沿用到此版。
-- MT-12～MT-15 的待驗證步驟列於本文件末尾；使用無敏感內容的測試桌面，尤其歷史淘汰／清除不得用有既有資料的環境。交接見 [Phase 14](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-14-release-1-2.md)。
+- MT-12～MT-15 的待驗證步驟列於本文件末尾；使用無敏感內容的測試桌面，尤其歷史淘汰／清除不得用有既有資料的環境。交接見 [Phase 14](../.planning/archive/2026-11-01-screenshotapp-v1-2/handoffs/phase-14-release-1-2.md)。
 
 ## 1. 自動化測試
 

@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+### Changed
+- 封存 [v1.2 計畫](.planning/archive/2026-11-01-screenshotapp-v1-2/task_plan.md)，納入七項功能的完成度核對與證據，更新驗收紀錄的交接入口；P13-00、桌面煙霧與 MT-12～MT-15 保留未驗證狀態。
+
 ## [1.2.0] - 2026-11-02
 
 ### Fixed
