@@ -70,9 +70,9 @@ Phase 8 僅執行文件編號、驗收對應、相對連結、UTF-8／LF 與差�
 ### Phase 14 整合驗證（2026-11-02）
 
 - `tools/Invoke-Quality.ps1` 通過：locked restore、Release **0 警告／0 錯誤**、**1176／1176 測試通過**、無跳過。因使用者程式鎖住標準輸出，採 `BaseOutputPath=bin/phase14/` 隔離建置；沒有關閉使用者程式。
-- 專案版本及 manifest 同步為 **1.2.0／1.2.0.0**，完成 README、使用指南、限制、架構模組／相依圖／測試對應／ADR 0018～0023 索引總檢。品質報告、組件雜湊與封裝結果見 [Phase 14 證據目錄](evidence/phase-14/)。
-- 封裝依序在版本提交、本機 `v1.2.0` 標籤後執行；最終來源 commit、產品版本、ZIP SHA-256 及封裝檢查記錄於該目錄。後續只補驗證紀錄的提交不移動標籤。未推送或上傳外部服務。
-- 發佈版 Phase 1～4／9～13 回歸與 12 格滾輪比較若被前置守衛阻擋，記為 **NOT_RUN／尚未驗證**，不能算通過。未通過 v1.2.0 實機煙霧的單檔封裝依 ADR-0017 **未提供為已驗收版本**；舊版通過紀錄不沿用到此版。
+- 專案版本及 manifest 同步為 **1.2.0／1.2.0.0**，完成 README、使用指南、限制、架構模組／相依圖／測試對應／ADR 0018～0023 索引總檢。品質報告與受測組件雜湊見 [自動化摘要](evidence/phase-14/automated-validation.json)，發佈內容見 [封裝驗證](evidence/phase-14/release-validation.json)。
+- 版本提交 **`1e443dcfb596c8de0a29476951d9c2a0c2f76020`**、本機 **`v1.2.0`** 標籤建立後，執行既有發佈腳本：資料夾版 **276 個檔案／ZIP 67.4 MiB**，單檔版 **9 個檔案／ZIP 63.6 MiB**。兩者產品版本均為 `1.2.0+` 該完整 commit，內嵌 manifest 為 1.2.0.0、PerMonitorV2、asInvoker。ZIP 全部檔案的 CRC／SHA-256 與資料夾一致，附帶文件與標籤來源一致，兩個 Runtime 的授權齊全。後續只補驗證紀錄的提交不移動標籤；未推送或上傳外部服務。
+- 使用者既有 ScreenshotApp **PID 35760** 執行中。[發佈版回歸](evidence/phase-14/smoke-results.csv)共 **18 項 NOT_RUN**：兩種封裝的 Phase 9～13 實際呼叫腳本入口，在各自守衛停止（10 次、結束碼 2）；Phase 1～4 由外層前置守衛擋住，沒有啟動腳本（8 項）。[12 格滾輪比較](evidence/phase-14/wheel-probe-matrix.csv)亦由工具守衛記為 **NOT_RUN／尚未驗證**。未啟動受測程式或注入桌面輸入，不算實機通過。依 ADR-0017，單檔 **未提供為已驗收版本**；舊版通過紀錄不沿用到此版。
 - MT-12～MT-15 的待驗證步驟列於本文件末尾；使用無敏感內容的測試桌面，尤其歷史淘汰／清除不得用有既有資料的環境。交接見 [Phase 14](../.planning/2026-11-01-screenshotapp-v1-2/handoffs/phase-14-release-1-2.md)。
 
 ## 1. 自動化測試

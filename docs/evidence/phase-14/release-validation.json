@@ -1,0 +1,100 @@
+{
+  "phase": 14,
+  "date": "2026-11-02",
+  "version": "1.2.0",
+  "status": "PACKAGED_NOT_DESKTOP_VALIDATED",
+  "releaseCommit": "1e443dcfb596c8de0a29476951d9c2a0c2f76020",
+  "tag": "v1.2.0",
+  "publishCommand": "BaseOutputPath=bin/phase14/; pwsh -NoProfile -File tools/Publish-Release.ps1",
+  "runtime": {
+    "tfm": "net10.0",
+    "includedFrameworks": [
+      {
+        "name": "Microsoft.NETCore.App",
+        "version": "10.0.14"
+      },
+      {
+        "name": "Microsoft.WindowsDesktop.App",
+        "version": "10.0.14"
+      }
+    ],
+    "configProperties": {
+      "System.Reflection.Metadata.MetadataUpdater.IsSupported": false,
+      "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization": false,
+      "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS": false
+    }
+  },
+  "packages": [
+    {
+      "name": "ScreenshotApp-1.2.0-win-x64",
+      "directory": "publish/ScreenshotApp-1.2.0-win-x64",
+      "archive": "publish/ScreenshotApp-1.2.0-win-x64.zip",
+      "fileCount": 276,
+      "uncompressedBytes": 163649966,
+      "zipBytes": 70675916,
+      "zipSHA256": "913644588f03a27097e4e218dcdd9ff7dddf1bc06d290521e56d73ca178caf1f",
+      "exeSHA256": "d3a9ef649461bceeb72fb4ff2967c36c77a49031c431811ef3f2d830c1224683",
+      "version": {
+        "Name": "ScreenshotApp-1.2.0-win-x64",
+        "ProductVersion": "1.2.0+1e443dcfb596c8de0a29476951d9c2a0c2f76020",
+        "FileVersion": "1.2.0.0",
+        "ManifestVersion": "1.2.0.0",
+        "DpiAwareness": "PerMonitorV2",
+        "ExecutionLevel": "asInvoker"
+      },
+      "archiveContent": "PASS: 每個 ZIP 項目的 CRC／SHA-256 與資料夾逐檔一致",
+      "bundledDocuments": "PASS: 與版本標籤中的授權／使用指南／已知限制相同",
+      "licenses": [
+        "licenses/Microsoft.NETCore.App.LICENSE.txt",
+        "licenses/Microsoft.NETCore.App.THIRD-PARTY-NOTICES.txt",
+        "licenses/Microsoft.WindowsDesktop.App.LICENSE.txt"
+      ]
+    },
+    {
+      "name": "ScreenshotApp-1.2.0-win-x64-singlefile",
+      "directory": "publish/ScreenshotApp-1.2.0-win-x64-singlefile",
+      "archive": "publish/ScreenshotApp-1.2.0-win-x64-singlefile.zip",
+      "fileCount": 9,
+      "uncompressedBytes": 156787124,
+      "zipBytes": 66646608,
+      "zipSHA256": "260dca5188a8c67bf116e95dc33f8f5260b82688492397de98034627d1bfc216",
+      "exeSHA256": "92081f0e09fe69d4be98f9e8cd72c10773ec3a562d356794957436ce1cc1fbf0",
+      "version": {
+        "Name": "ScreenshotApp-1.2.0-win-x64-singlefile",
+        "ProductVersion": "1.2.0+1e443dcfb596c8de0a29476951d9c2a0c2f76020",
+        "FileVersion": "1.2.0.0",
+        "ManifestVersion": "1.2.0.0",
+        "DpiAwareness": "PerMonitorV2",
+        "ExecutionLevel": "asInvoker"
+      },
+      "archiveContent": "PASS: 每個 ZIP 項目的 CRC／SHA-256 與資料夾逐檔一致",
+      "bundledDocuments": "PASS: 與版本標籤中的授權／使用指南／已知限制相同",
+      "licenses": [
+        "licenses/Microsoft.NETCore.App.LICENSE.txt",
+        "licenses/Microsoft.NETCore.App.THIRD-PARTY-NOTICES.txt",
+        "licenses/Microsoft.WindowsDesktop.App.LICENSE.txt"
+      ]
+    }
+  ],
+  "smoke": {
+    "status": "NOT_RUN",
+    "cases": 18,
+    "scriptPreflightExecutions": 10,
+    "outerPreflightOnly": 8,
+    "evidence": "docs/evidence/phase-14/smoke-results.csv",
+    "reason": "既有使用者 ScreenshotApp PID 35760 執行中；未啟動受測程式或注入輸入。"
+  },
+  "wheelProbe": {
+    "status": "NOT_RUN",
+    "cases": 12,
+    "evidence": "docs/evidence/phase-14/wheel-probe-matrix.csv"
+  },
+  "singlefileDelivery": "未提供為已驗收版本；僅保留待驗證本機封裝。",
+  "externalPublication": false,
+  "boundaries": [
+    "封裝內容、版本、內嵌 manifest、授權、逐檔 ZIP 一致及雜湊已檢查，不等同執行程式或實機驗收。",
+    "MT-12～MT-15、P13-00、乾淨 Windows 11 無 .NET Runtime、長時間資源趨勢尚未驗證。",
+    "自動化組件於版本提交前建置；其雜湊另列 automated-validation.json，不混同本次發佈組件。",
+    "版本提交後只補驗證文件，不移動標籤或重建封裝。"
+  ]
+}

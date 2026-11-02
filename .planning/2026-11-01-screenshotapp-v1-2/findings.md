@@ -168,3 +168,8 @@
 
 - 文件總檢的主要落差：架構總表與圖漏 History、ADR 漏 0018／0020／0022，使用指南漏歷史入口及效果工具表；已補齊。KNOWN_LIMITATIONS 舊稱關閉後無法個別編輯，與磁碟歷史矛盾，已改為僅 PNG 不可還原標註。
 - v1.2.0 尚未有桌面量測；README 的 154ms／91ms 明確限定為 v1.0.0 歷史結果。單檔依 ADR-0017 只產生待驗證封裝，不宣稱已驗收。
+
+- tools/Publish-Release.ps1 的自包含／單檔還原會改寫應用程式 packages.lock.json，加入 SDK 隱含 ILLink 與 RID 項目；這不是產品相依升級。封裝後已限定還原本次產物並再通過 locked restore。
+
+- 發佈版以 Win32 資源唯讀方式擷取 manifest（不執行程式），兩種封裝皆為 1.2.0.0／PerMonitorV2／asInvoker；FileVersion 1.2.0.0、ProductVersion 1.2.0+版本提交，且 ZIP 每檔與資料夾一致。
+- 版本標籤必須保留在實際建置來源提交；之後僅新增證據的提交不重新封裝，避免內嵌 commit 與標籤失配。重現本版時先選 v1.2.0，不能以證據提交直接重建並宣稱雜湊相同。

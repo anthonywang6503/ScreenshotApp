@@ -15,11 +15,11 @@
 
 ## Next Step
 
-執行 Phase 14：完整品質檢查、文件總檢、版本 1.2.0、本機提交／標籤／封裝與發佈版煙霧紀錄。既有使用者程式執行時不操作桌面；P13-00 與 MT-12～MT-15 未實測項目繼續標示尚未驗證。
+Phase 14 本機交付完成，所有 Phase 已結案；尚待隔離桌面補 P13-00、發佈版煙霧與 MT-12～MT-15。步驟與版本／標籤／證據見 handoffs/phase-14-release-1-2.md。單檔只保留待驗證封裝，未上傳 Releases；不自動開始後續工作。
 
 ## Current Phase
 
-Phase 14 執行中（2026-11-02）；分支 `feature/phase-14-release-1-2`，基準 `51011c2`，工作目錄起始乾淨。使用者已授權實作並提交；沿用目前分支提交、不合併、不建立 PR、不推送。既有 ScreenshotApp PID 35760 執行中，品質檢查採隔離 Release 輸出。
+Phase 14 complete（2026-11-02）；分支 `feature/phase-14-release-1-2`，基準 `51011c2`。版本提交 `1e443dcfb596c8de0a29476951d9c2a0c2f76020`、本機 `v1.2.0`，兩種 ZIP 均由該 commit 封裝；最後僅提交驗證紀錄，不移動標籤。1176／1176、Release 0 警告／0 錯誤；封裝內容、內嵌版本及授權驗證通過。桌面煙霧 18 項與滾輪矩陣 12 格均 NOT_RUN，MT-12～MT-15 尚未驗證。依使用者授權目前分支提交，不合併、不推送、不建立 PR。
 
 ## 使用者決定（2026-11-01）
 
@@ -61,7 +61,7 @@ Phase 14 執行中（2026-11-02）；分支 `feature/phase-14-release-1-2`，基
 2. 煙霧驗證只在使用者閒置時執行（AGENTS.md「實機煙霧驗證」）；無法執行的項目標示「尚未驗證」。Phase 12 之後，所有煙霧腳本都不得把測試圖樣留在使用者的截圖歷史中。
 3. 更新 `CHANGELOG.md` 的 `[Unreleased]`、相關 `docs/`（ARCHITECTURE、USER_GUIDE、KNOWN_LIMITATIONS、ACCEPTANCE）。
 4. 建立 `handoffs/phase-<NN>-<slug>.md`；更新本檔案、`progress.md`、`findings.md`；Phase 標記 `complete`（下一 Phase 維持 `pending`）並重新 attest。
-5. 每個 Phase 完成後停在控制點。使用者已於 2026-11-01 明確授權每個 Phase 完成後在目前分支 commit（`phase-<NN>: <摘要>`，內文條列變更與驗證結果）。不建立 PR、不推送 `upstream`；本次依 2026-11-02 使用者指令實作 Phase 13 並提交；在目前分支停於控制點，不合併、不推送。
+5. 每個 Phase 完成後停在控制點。使用者已於 2026-11-01 明確授權每個 Phase 完成後在目前分支 commit（`phase-<NN>: <摘要>`，內文條列變更與驗證結果）。不建立 PR、不推送 `upstream`；本次依 2026-11-02 使用者指令實作 Phase 14 並提交；在目前分支停於控制點，不合併、不推送。
 
 ## Phases
 
@@ -232,15 +232,17 @@ Checklist
 Checklist
 - [x] P14-01 完整測試、Release 建置 0 警告、`tools/Invoke-Quality.ps1`｜Phase 13｜medium｜全部通過
 - [x] P14-02 文件總檢：ARCHITECTURE（模組表、相依圖、執行緒、資源、本機資料、測試對應、ADR 索引 0019～0023）、USER_GUIDE、KNOWN_LIMITATIONS、ACCEPTANCE、README 功能與隱私說明｜P14-01｜medium｜文件之間與程式碼一致
-- [ ] P14-03 版本 1.2.0：專案檔 `Version` 與 `app.manifest` 的 `assemblyIdentity` 一起更新，CHANGELOG `[Unreleased]` 改為 `[1.2.0]`；commit 後加本機標籤 `v1.2.0`，以該 commit 執行 `tools/Publish-Release.ps1`｜P14-02｜low｜`publish/` 有資料夾版與單檔版 ZIP，產品版本內嵌 commit
-- [ ] P14-04 發佈版煙霧驗證：先補 P13-00 滾輪探測，再跑 Phase 1～4 回歸與 Phase 9～13 新腳本（閒置時執行），結果記錄於 ACCEPTANCE｜P14-03｜high｜全部通過或標示「尚未驗證」
+- [x] P14-03 版本 1.2.0：專案檔 `Version` 與 `app.manifest` 的 `assemblyIdentity` 一起更新，CHANGELOG `[Unreleased]` 改為 `[1.2.0]`；commit 後加本機標籤 `v1.2.0`，以該 commit 執行 `tools/Publish-Release.ps1`｜P14-02｜low｜`publish/` 有資料夾版與單檔版 ZIP，產品版本內嵌 commit
+- [x] P14-04 發佈版煙霧驗證：先補 P13-00 滾輪探測，再跑 Phase 1～4 回歸與 Phase 9～13 新腳本（閒置時執行），結果記錄於 ACCEPTANCE｜P14-03｜high｜全部通過或標示「尚未驗證」
 - [x] P14-05 使用者實機驗證請求：MT-12～MT-15｜P14-04｜low｜步驟寫入 ACCEPTANCE
-- [ ] P14-06 Phase 收尾儀式（handoff `handoffs/phase-14-release-1-2.md`；不推送 `upstream`，除非使用者要求）｜全部｜low｜目前分支 commit、暫停；依本次提交授權不合併
+- [x] P14-06 Phase 收尾儀式（handoff `handoffs/phase-14-release-1-2.md`；不推送 `upstream`，除非使用者要求）｜全部｜low｜目前分支 commit、暫停；依本次提交授權不合併
+
+**驗證界線**：P14-04 依允許的「尚未驗證」路徑結案：18 項回歸均為 NOT_RUN，12 格滾輪矩陣亦未實測，沒有啟動受測程式或送出桌面輸入。P13-00 保留未勾選；Phase 14 complete 不代表桌面相容性、MT 或乾淨 Windows 驗收通過。
 
 **Acceptance Criteria**
 1. FR-37～FR-43 全部可操作；AT-01～AT-16 通過；發佈版煙霧驗證有證據；未驗證項目明確標示。
 
-- **Status:** in_progress
+- **Status:** complete
 
 ## 追蹤矩陣（FR → Phase → 測試 → 驗收）
 
@@ -322,6 +324,6 @@ Checklist
 |---|---|
 | 初次讀取品質腳本誤用不存在的 Check-Quality.ps1 | 已依交接改用實際入口 tools/Invoke-Quality.ps1 |
 | 舊版 PowerShell 以系統編碼讀取中文出現亂碼 | 後續統一 pwsh -NoProfile 與明確 UTF-8；檔案內容未改變 |
-
 | 架構煙霧表的完整行文字與 patch 預期不符 | 改採唯一行首定位插入，確認無部分修改後完成文件同步 |
 | 文件連結初檢時交接尚未建立、證據目錄尚未建立 | 建立本階段交接及證據後再做完整本機連結檢查 |
+| 單檔 publish 改寫應用程式 lock 為 ILLink／RID 與 CRLF | 確認工作目錄原先乾淨，僅還原本次工具產物至版本標籤；再次 locked restore 通過 |
