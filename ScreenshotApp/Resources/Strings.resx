@@ -17,448 +17,448 @@
     <value>ScreenshotApp</value>
   </data>
   <data name="List_Separator" xml:space="preserve">
-    <value>、</value>
+    <value>, </value>
   </data>
 
   <data name="Tray_StartCapture" xml:space="preserve">
-    <value>開始截圖(&amp;C)</value>
+    <value>Start capture (&amp;C)</value>
   </data>
   <data name="Tray_OpenImage" xml:space="preserve">
-    <value>開啟圖片(&amp;O)…</value>
+    <value>Open image (&amp;O)…</value>
   </data>
   <data name="Tray_Settings" xml:space="preserve">
-    <value>設定(&amp;S)</value>
+    <value>Settings (&amp;S)</value>
   </data>
   <data name="Tray_Exit" xml:space="preserve">
-    <value>結束(&amp;X)</value>
+    <value>Exit (&amp;X)</value>
   </data>
   <data name="Tray_ToolTipHotkeyActive" xml:space="preserve">
-    <value>{0}（快捷鍵：{1}）</value>
+    <value>{0} (hotkey: {1})</value>
   </data>
   <data name="Tray_ToolTipHotkeyInactive" xml:space="preserve">
-    <value>{0}（快捷鍵未啟用）</value>
+    <value>{0} (hotkey inactive)</value>
   </data>
 
   <data name="Notify_HotkeyFailed" xml:space="preserve">
-    <value>無法註冊快捷鍵 {0}：{1}。請從系統匣開啟「設定」改用其他組合。</value>
+    <value>Could not register hotkey {0}: {1}. Open Settings from the tray and choose another combination.</value>
   </data>
   <data name="Notify_SettingsCorrupt" xml:space="preserve">
-    <value>設定檔內容損毀，已改用預設值；原檔已另存為 {0}。</value>
+    <value>Settings were corrupt and have been reset to defaults. The original was backed up to {0}.</value>
   </data>
   <data name="Notify_SettingsInvalidFields" xml:space="preserve">
-    <value>下列設定無效，已改用預設值：{0}。</value>
+    <value>These settings were invalid and have been reset to defaults: {0}.</value>
   </data>
   <data name="Notify_SettingsReadFailed" xml:space="preserve">
-    <value>無法讀取設定檔，本次使用預設值：{0}</value>
+    <value>Could not read settings. Using defaults for this session: {0}</value>
   </data>
   <data name="Notify_SettingsSaveFailed" xml:space="preserve">
-    <value>無法寫入設定檔，變更只在本次執行有效：{0}</value>
+    <value>Could not save settings. Changes apply only to this session: {0}</value>
   </data>
   <data name="Notify_StartupSyncFailed" xml:space="preserve">
-    <value>無法更新「登入 Windows 時啟動」設定：{0}</value>
+    <value>Could not update Start with Windows: {0}</value>
   </data>
   <data name="Notify_CaptureFailed" xml:space="preserve">
-    <value>截圖失敗：{0}</value>
+    <value>Capture failed: {0}</value>
   </data>
 
   <data name="Capture_NoMonitor" xml:space="preserve">
-    <value>找不到可擷取的顯示器。</value>
+    <value>No display is available for capture.</value>
   </data>
   <data name="Capture_ApiFailed" xml:space="preserve">
-    <value>Windows 無法擷取畫面（錯誤碼 {0}）。</value>
+    <value>Windows could not capture the screen (error {0}).</value>
   </data>
   <data name="Capture_DisplayChanged" xml:space="preserve">
-    <value>選取期間顯示設定已變更，已取消本次截圖，請重新截圖。</value>
+    <value>Display settings changed during selection. Capture was canceled; please try again.</value>
   </data>
   <data name="Selection_Title" xml:space="preserve">
-    <value>ScreenshotApp 區域選取</value>
+    <value>ScreenshotApp region selection</value>
   </data>
   <data name="Selection_Size" xml:space="preserve">
     <value>{0} × {1}</value>
   </data>
 
   <data name="SettingsField_Hotkey" xml:space="preserve">
-    <value>截圖快捷鍵</value>
+    <value>Capture hotkey</value>
   </data>
   <data name="SettingsField_StartWithWindows" xml:space="preserve">
-    <value>登入 Windows 時啟動</value>
+    <value>Start with Windows</value>
   </data>
   <data name="SettingsField_LastSaveDirectory" xml:space="preserve">
-    <value>上次儲存位置</value>
+    <value>Last save folder</value>
   </data>
   <data name="SettingsField_DefaultColor" xml:space="preserve">
-    <value>預設顏色</value>
+    <value>Default color</value>
   </data>
   <data name="SettingsField_DefaultStrokeWidth" xml:space="preserve">
-    <value>預設線寬</value>
+    <value>Default line width</value>
   </data>
   <data name="SettingsField_DefaultFontSize" xml:space="preserve">
-    <value>預設字級</value>
+    <value>Default font size</value>
   </data>
 
   <data name="Hotkey_ErrorInUse" xml:space="preserve">
-    <value>此組合已被其他程式或 Windows 使用</value>
+    <value>This combination is already used by another application or Windows</value>
   </data>
   <data name="Hotkey_ErrorCode" xml:space="preserve">
-    <value>Windows 回報錯誤碼 {0}</value>
+    <value>Windows reported error {0}</value>
   </data>
   <data name="Hotkey_MissingModifier" xml:space="preserve">
-    <value>須包含 Ctrl、Alt 或 Win 其中至少一個</value>
+    <value>Include at least one of Ctrl, Alt or Win</value>
   </data>
   <data name="Hotkey_UnsupportedKey" xml:space="preserve">
-    <value>不支援此按鍵</value>
+    <value>This key is not supported</value>
   </data>
   <data name="Hotkey_ReservedBySystem" xml:space="preserve">
-    <value>此組合為 Windows 保留的截圖快捷鍵</value>
+    <value>This combination is reserved by Windows for screenshots</value>
   </data>
 
   <data name="Settings_Title" xml:space="preserve">
-    <value>ScreenshotApp 設定</value>
+    <value>ScreenshotApp settings</value>
   </data>
   <data name="Settings_HotkeyGroup" xml:space="preserve">
-    <value>截圖快捷鍵</value>
+    <value>Capture hotkeys</value>
   </data>
   <data name="Settings_HotkeyLabel" xml:space="preserve">
-    <value>快捷鍵(_H)：</value>
+    <value>_Hotkey:</value>
   </data>
   <data name="Settings_HotkeyToolTip" xml:space="preserve">
-    <value>點選此欄位後，按下新的按鍵組合</value>
+    <value>Click this field, then press a new key combination</value>
   </data>
   <data name="Settings_HotkeyHint" xml:space="preserve">
-    <value>點選欄位後按下新的組合，須包含 Ctrl、Alt 或 Win；按「套用」或「確定」後才會生效。</value>
+    <value>Click the field and press a combination including Ctrl, Alt or Win. Click Apply or OK to activate it.</value>
   </data>
   <data name="Settings_HotkeyPartial" xml:space="preserve">
     <value>{0}+…</value>
   </data>
   <data name="Settings_HotkeyActive" xml:space="preserve">
-    <value>目前已啟用：{0}</value>
+    <value>Active: {0}</value>
   </data>
   <data name="Settings_HotkeyInactive" xml:space="preserve">
-    <value>目前未啟用：{0}（{1}）</value>
+    <value>Inactive: {0} ({1})</value>
   </data>
   <data name="Settings_HotkeyInvalid" xml:space="preserve">
-    <value>無法使用 {0}：{1}</value>
+    <value>Cannot use {0}: {1}</value>
   </data>
   <data name="Settings_GeneralGroup" xml:space="preserve">
-    <value>一般</value>
+    <value>General</value>
   </data>
   <data name="Settings_StartWithWindows" xml:space="preserve">
-    <value>登入 Windows 時啟動(_W)</value>
+    <value>Start with _Windows</value>
   </data>
   <data name="Settings_StartWithWindowsToolTip" xml:space="preserve">
-    <value>目前使用者登入 Windows 時自動常駐於系統匣，不需要系統管理員權限</value>
+    <value>Run in the tray when the current user signs in; no administrator privileges required</value>
   </data>
   <data name="Settings_LastSaveDirectoryLabel" xml:space="preserve">
-    <value>上次儲存位置(_P)：</value>
+    <value>Last save _folder:</value>
   </data>
   <data name="Settings_LastSaveDirectoryNone" xml:space="preserve">
-    <value>（尚未儲存過圖片）</value>
+    <value>(No image saved yet)</value>
   </data>
   <data name="Settings_StyleGroup" xml:space="preserve">
-    <value>預設標註樣式</value>
+    <value>Default annotation style</value>
   </data>
   <data name="Settings_ColorLabel" xml:space="preserve">
-    <value>預設顏色(_C)：</value>
+    <value>Default _color:</value>
   </data>
   <data name="Settings_CustomColor" xml:space="preserve">
-    <value>自訂顏色(_U)…</value>
+    <value>C_ustom color…</value>
   </data>
   <data name="Settings_CustomColorToolTip" xml:space="preserve">
-    <value>開啟色彩對話框選擇其他顏色</value>
+    <value>Open the color dialog to select another color</value>
   </data>
   <data name="Settings_StrokeWidthLabel" xml:space="preserve">
-    <value>預設線寬(_L)：</value>
+    <value>Default _line width:</value>
   </data>
   <data name="Settings_FontSizeLabel" xml:space="preserve">
-    <value>預設字級(_F)：</value>
+    <value>Default _font size:</value>
   </data>
   <data name="Settings_PixelFormat" xml:space="preserve">
     <value>{0} px</value>
   </data>
   <data name="Settings_SizeHint" xml:space="preserve">
-    <value>線寬與字級以最終圖片像素為準，不受畫布縮放影響。</value>
+    <value>Line width and font size use output image pixels and do not change with canvas zoom.</value>
   </data>
   <data name="Settings_Ok" xml:space="preserve">
-    <value>確定</value>
+    <value>OK</value>
   </data>
   <data name="Settings_Cancel" xml:space="preserve">
-    <value>取消</value>
+    <value>Cancel</value>
   </data>
   <data name="Settings_Apply" xml:space="preserve">
-    <value>套用(_A)</value>
+    <value>_Apply</value>
   </data>
   <data name="Settings_Applied" xml:space="preserve">
-    <value>設定已套用並儲存。</value>
+    <value>Settings applied and saved.</value>
   </data>
   <data name="Settings_HotkeyApplied" xml:space="preserve">
-    <value>已啟用新快捷鍵 {0}。</value>
+    <value>Hotkey {0} is now active.</value>
   </data>
   <data name="Settings_HotkeyRejected" xml:space="preserve">
-    <value>無法使用 {0}（{1}），仍保留原設定 {2}。</value>
+    <value>Cannot use {0} ({1}). Keeping the previous setting {2}.</value>
   </data>
   <data name="Settings_StartupFailed" xml:space="preserve">
-    <value>無法變更「登入 Windows 時啟動」：{0}</value>
+    <value>Could not change Start with Windows: {0}</value>
   </data>
   <data name="Settings_SaveFailed" xml:space="preserve">
-    <value>設定已套用，但無法寫入設定檔：{0}</value>
+    <value>Settings applied, but could not be saved: {0}</value>
   </data>
 
   <data name="Editor_Title" xml:space="preserve">
-    <value>ScreenshotApp 編輯器</value>
+    <value>ScreenshotApp editor</value>
   </data>
   <data name="Editor_ToolSelect" xml:space="preserve">
-    <value>選取(_V)</value>
+    <value>Select (_V)</value>
   </data>
   <data name="Editor_ToolSelectToolTip" xml:space="preserve">
-    <value>選取、移動或調整標註；雙擊文字可重新編輯，雙擊步驟編號可修改數值</value>
+    <value>Select, move or resize annotations; double-click text to edit it or a step number to change its value</value>
   </data>
   <data name="Editor_ToolCrop" xml:space="preserve">
-    <value>裁切(_C)</value>
+    <value>Crop (_C)</value>
   </data>
   <data name="Editor_ToolCropToolTip" xml:space="preserve">
-    <value>拖曳框選裁切範圍或拖曳控制點調整，按 Enter 或在範圍內雙擊套用，Esc 取消</value>
+    <value>Drag a crop region or resize its handles; Enter or double-click inside to apply, Esc to cancel</value>
   </data>
   <data name="Editor_ToolRectangle" xml:space="preserve">
-    <value>矩形(_R)</value>
+    <value>Rectangle (_R)</value>
   </data>
   <data name="Editor_ToolRectangleToolTip" xml:space="preserve">
-    <value>拖曳繪製矩形框</value>
+    <value>Drag to draw a rectangle outline</value>
   </data>
   <data name="Editor_ToolEllipse" xml:space="preserve">
-    <value>橢圓(_E)</value>
+    <value>Ellipse (_E)</value>
   </data>
   <data name="Editor_ToolEllipseToolTip" xml:space="preserve">
-    <value>拖曳繪製橢圓</value>
+    <value>Drag to draw an ellipse</value>
   </data>
   <data name="Editor_ToolLine" xml:space="preserve">
-    <value>直線(_L)</value>
+    <value>Line (_L)</value>
   </data>
   <data name="Editor_ToolLineToolTip" xml:space="preserve">
-    <value>拖曳繪製直線</value>
+    <value>Drag to draw a line</value>
   </data>
   <data name="Editor_ToolArrow" xml:space="preserve">
-    <value>箭頭(_A)</value>
+    <value>Arrow (_A)</value>
   </data>
   <data name="Editor_ToolArrowToolTip" xml:space="preserve">
-    <value>拖曳繪製箭頭，箭頭指向放開滑鼠的位置</value>
+    <value>Drag to draw an arrow pointing toward the release position</value>
   </data>
   <data name="Editor_ToolText" xml:space="preserve">
-    <value>文字(_T)</value>
+    <value>Text (_T)</value>
   </data>
   <data name="Editor_ToolTextToolTip" xml:space="preserve">
-    <value>點一下開始輸入文字；Ctrl+Enter 或點擊其他位置完成，Esc 取消；點擊既有文字可重新編輯</value>
+    <value>Click to type; Ctrl+Enter or click elsewhere to finish, Esc to cancel; click existing text to edit it</value>
   </data>
   <data name="Editor_ToolStep" xml:space="preserve">
-    <value>編號(_N)</value>
+    <value>Step (_N)</value>
   </data>
   <data name="Editor_ToolStepToolTip" xml:space="preserve">
-    <value>點一下放置自動遞增的步驟編號，按住可拖曳調整位置</value>
+    <value>Click to place an incrementing step number; hold and drag to position it</value>
   </data>
   <data name="Editor_Undo" xml:space="preserve">
-    <value>復原(_Z)</value>
+    <value>Undo (_Z)</value>
   </data>
   <data name="Editor_UndoToolTip" xml:space="preserve">
-    <value>復原上一個操作（Ctrl+Z）</value>
+    <value>Undo the last action (Ctrl+Z)</value>
   </data>
   <data name="Editor_Redo" xml:space="preserve">
-    <value>重做(_Y)</value>
+    <value>Redo (_Y)</value>
   </data>
   <data name="Editor_RedoToolTip" xml:space="preserve">
-    <value>重做被復原的操作（Ctrl+Y）</value>
+    <value>Redo an undone action (Ctrl+Y)</value>
   </data>
   <data name="Editor_Copy" xml:space="preserve">
-    <value>複製(_P)</value>
+    <value>Copy (_P)</value>
   </data>
   <data name="Editor_CopyToolTip" xml:space="preserve">
-    <value>將完成的圖片複製到剪貼簿（Ctrl+C）</value>
+    <value>Copy the finished image to the clipboard (Ctrl+C)</value>
   </data>
   <data name="Editor_Save" xml:space="preserve">
-    <value>另存 PNG(_S)</value>
+    <value>Save PNG (_S)</value>
   </data>
   <data name="Editor_SaveToolTip" xml:space="preserve">
-    <value>將完成的圖片另存為 PNG 檔（Ctrl+S）</value>
+    <value>Save the finished image as a PNG file (Ctrl+S)</value>
   </data>
   <data name="Editor_Open" xml:space="preserve">
-    <value>開啟(_G)…</value>
+    <value>Open (_G)…</value>
   </data>
   <data name="Editor_OpenToolTip" xml:space="preserve">
-    <value>開啟 PNG、JPEG 或 BMP 圖片（Ctrl+O）</value>
+    <value>Open a PNG, JPEG or BMP image (Ctrl+O)</value>
   </data>
   <data name="Editor_ColorLabel" xml:space="preserve">
-    <value>顏色(_O)：</value>
+    <value>C_olor:</value>
   </data>
   <data name="Editor_CustomColor" xml:space="preserve">
-    <value>自訂(_K)…</value>
+    <value>Custom (_K)…</value>
   </data>
   <data name="Editor_CustomColorToolTip" xml:space="preserve">
-    <value>選擇其他顏色</value>
+    <value>Select another color</value>
   </data>
   <data name="Editor_StrokeWidthLabel" xml:space="preserve">
-    <value>線寬(_W)：</value>
+    <value>Line _width:</value>
   </data>
   <data name="Editor_StrokeWidthToolTip" xml:space="preserve">
-    <value>矩形、橢圓、直線與箭頭的線寬，以圖片像素為單位，不隨縮放改變</value>
+    <value>Rectangle, ellipse, line and arrow width in image pixels, independent of zoom</value>
   </data>
   <data name="Editor_FontFamilyLabel" xml:space="preserve">
-    <value>字型(_F)：</value>
+    <value>_Font:</value>
   </data>
   <data name="Editor_FontFamilyToolTip" xml:space="preserve">
-    <value>文字標註的字型</value>
+    <value>Font for text annotations</value>
   </data>
   <data name="Editor_FontSizeLabel" xml:space="preserve">
-    <value>字級(_I)：</value>
+    <value>Font s_ize:</value>
   </data>
   <data name="Editor_FontSizeToolTip" xml:space="preserve">
-    <value>文字標註的字級，以圖片像素為單位；也決定新步驟編號的大小</value>
+    <value>Text size in image pixels; also controls the size of new step numbers</value>
   </data>
   <data name="Editor_StepNumberLabel" xml:space="preserve">
-    <value>編號值(_B)：</value>
+    <value>Step num_ber:</value>
   </data>
   <data name="Editor_StepNumberToolTip" xml:space="preserve">
-    <value>選取步驟編號後輸入新的數值（1～999），按 Enter 套用</value>
+    <value>Select a step, enter a value from 1 to 999, then press Enter to apply</value>
   </data>
   <data name="Editor_ZoomLabel" xml:space="preserve">
-    <value>縮放(_M)：</value>
+    <value>Zoo_m:</value>
   </data>
   <data name="Editor_ZoomToolTip" xml:space="preserve">
-    <value>Ctrl+滾輪以游標為中心縮放，Ctrl+0 符合視窗；按住空白鍵或滑鼠中鍵拖曳可平移</value>
+    <value>Ctrl+wheel zooms around the pointer; Ctrl+0 fits the window; hold Space or the middle mouse button and drag to pan</value>
   </data>
   <data name="Editor_ZoomFit" xml:space="preserve">
-    <value>符合視窗</value>
+    <value>Fit to window</value>
   </data>
   <data name="Editor_ZoomPercent" xml:space="preserve">
     <value>{0}%</value>
   </data>
   <data name="Editor_ImageSize" xml:space="preserve">
-    <value>圖片：{0} × {1}</value>
+    <value>Image: {0} × {1}</value>
   </data>
   <data name="Editor_CropSize" xml:space="preserve">
-    <value>裁切：{0} × {1}</value>
+    <value>Crop: {0} × {1}</value>
   </data>
   <data name="Editor_CursorPosition" xml:space="preserve">
-    <value>游標：{0}, {1}</value>
+    <value>Pointer: {0}, {1}</value>
   </data>
   <data name="Editor_CropHint" xml:space="preserve">
-    <value>拖曳框選裁切範圍或拖曳控制點調整；按 Enter 或在範圍內雙擊套用，Esc 取消。</value>
+    <value>Drag a crop region or resize its handles; Enter or double-click inside to apply, Esc to cancel.</value>
   </data>
   <data name="Editor_Copied" xml:space="preserve">
-    <value>已將 {0} × {1} 像素的圖片複製到剪貼簿。</value>
+    <value>Copied a {0} × {1} pixel image to the clipboard.</value>
   </data>
   <data name="Editor_CopyFailed" xml:space="preserve">
-    <value>無法複製到剪貼簿（錯誤碼 0x{0:X8}）。
+    <value>Could not copy to the clipboard (error 0x{0:X8}).
 
-圖片仍保留在編輯器中，請稍後再試。</value>
+Your image is still in the editor. Please try again later.</value>
   </data>
   <data name="Editor_CopyFailedBusy" xml:space="preserve">
-    <value>剪貼簿正被其他程式使用，無法複製。
+    <value>Another application is using the clipboard. Could not copy.
 
-圖片仍保留在編輯器中，請稍後再試。</value>
+Your image is still in the editor. Please try again later.</value>
   </data>
   <data name="Editor_SaveTitle" xml:space="preserve">
-    <value>另存 PNG</value>
+    <value>Save PNG</value>
   </data>
   <data name="Editor_SaveFilter" xml:space="preserve">
-    <value>PNG 圖片 (*.png)|*.png</value>
+    <value>PNG image (*.png)|*.png</value>
   </data>
   <data name="Editor_Saved" xml:space="preserve">
-    <value>已儲存：{0}</value>
+    <value>Saved: {0}</value>
   </data>
   <data name="Editor_SavedDirectoryNotRemembered" xml:space="preserve">
-    <value>已儲存：{0}（無法記住儲存位置：{1}）</value>
+    <value>Saved: {0} (could not remember the save folder: {1})</value>
   </data>
   <data name="Editor_SaveFailed" xml:space="preserve">
-    <value>無法儲存圖片：{0}
+    <value>Could not save the image: {0}
 
-圖片仍保留在編輯器中，可以改存到其他位置。</value>
+Your image is still in the editor. You can save it to another location.</value>
   </data>
   <data name="Editor_DefaultsSaveFailed" xml:space="preserve">
-    <value>無法儲存預設樣式：{0}</value>
+    <value>Could not save the default style: {0}</value>
   </data>
   <data name="Open_Title" xml:space="preserve">
-    <value>開啟圖片</value>
+    <value>Open image</value>
   </data>
   <data name="Open_Filter" xml:space="preserve">
-    <value>圖片檔 (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|所有檔案 (*.*)|*.*</value>
+    <value>Image files (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|All files (*.*)|*.*</value>
   </data>
   <data name="Open_Failed" xml:space="preserve">
-    <value>無法開啟「{0}」。
+    <value>Could not open "{0}".
 
 {1}</value>
   </data>
   <data name="UnsavedChanges_Message" xml:space="preserve">
-    <value>圖片有尚未複製或儲存的變更，繼續之前要怎麼處理？</value>
+    <value>This image has changes that have not been copied or saved. What would you like to do before continuing?</value>
   </data>
   <data name="UnsavedChanges_Save" xml:space="preserve">
-    <value>另存 PNG 後繼續(_S)…</value>
+    <value>Save PNG and continue (_S)…</value>
   </data>
   <data name="UnsavedChanges_SaveToolTip" xml:space="preserve">
-    <value>將完成的圖片另存為 PNG 檔，儲存成功後繼續</value>
+    <value>Save the finished image as PNG, then continue if saving succeeds</value>
   </data>
   <data name="UnsavedChanges_Copy" xml:space="preserve">
-    <value>複製後繼續(_C)</value>
+    <value>Copy and continue (_C)</value>
   </data>
   <data name="UnsavedChanges_CopyToolTip" xml:space="preserve">
-    <value>將完成的圖片複製到剪貼簿，複製成功後繼續</value>
+    <value>Copy the finished image to the clipboard, then continue if copying succeeds</value>
   </data>
   <data name="UnsavedChanges_Discard" xml:space="preserve">
-    <value>捨棄變更(_D)</value>
+    <value>Discard changes (_D)</value>
   </data>
   <data name="UnsavedChanges_DiscardToolTip" xml:space="preserve">
-    <value>不保留這些變更，直接繼續</value>
+    <value>Continue without keeping these changes</value>
   </data>
   <data name="UnsavedChanges_Cancel" xml:space="preserve">
-    <value>取消</value>
+    <value>Cancel</value>
   </data>
   <data name="UnsavedChanges_CancelToolTip" xml:space="preserve">
-    <value>回到編輯器，不做任何變更（Esc）</value>
+    <value>Return to the editor without changing anything (Esc)</value>
   </data>
   <data name="Editor_BringToFront" xml:space="preserve">
-    <value>移到最上層(_T)</value>
+    <value>Bring to front (_T)</value>
   </data>
   <data name="Editor_BringToFrontGesture" xml:space="preserve">
     <value>Ctrl+Shift+]</value>
   </data>
   <data name="Editor_BringForward" xml:space="preserve">
-    <value>上移一層(_F)</value>
+    <value>Bring forward (_F)</value>
   </data>
   <data name="Editor_BringForwardGesture" xml:space="preserve">
     <value>Ctrl+]</value>
   </data>
   <data name="Editor_SendBackward" xml:space="preserve">
-    <value>下移一層(_B)</value>
+    <value>Send backward (_B)</value>
   </data>
   <data name="Editor_SendBackwardGesture" xml:space="preserve">
     <value>Ctrl+[</value>
   </data>
   <data name="Editor_SendToBack" xml:space="preserve">
-    <value>移到最下層(_K)</value>
+    <value>Send to back (_K)</value>
   </data>
   <data name="Editor_SendToBackGesture" xml:space="preserve">
     <value>Ctrl+Shift+[</value>
   </data>
   <data name="Editor_Delete" xml:space="preserve">
-    <value>刪除(_D)</value>
+    <value>Delete (_D)</value>
   </data>
   <data name="Editor_DeleteGesture" xml:space="preserve">
     <value>Delete</value>
   </data>
   <data name="Editor_MenuEditText" xml:space="preserve">
-    <value>編輯文字(_E)…</value>
+    <value>Edit text (_E)…</value>
   </data>
   <data name="Editor_MenuEditStepNumber" xml:space="preserve">
-    <value>修改編號(_N)…</value>
+    <value>Edit step number (_N)…</value>
   </data>
   <data name="Editor_MenuDuplicate" xml:space="preserve">
-    <value>再製(_P)</value>
+    <value>Duplicate (_P)</value>
   </data>
   <data name="Editor_DuplicateGesture" xml:space="preserve">
     <value>Ctrl+D</value>
   </data>
   <data name="Editor_MenuReverseArrow" xml:space="preserve">
-    <value>反轉箭頭方向(_V)</value>
+    <value>Reverse arrow (_V)</value>
   </data>
   <data name="Editor_MenuRenumberSteps" xml:space="preserve">
-    <value>重新編號所有步驟(_R)</value>
+    <value>Renumber all steps (_R)</value>
   </data>
   <data name="Editor_UndoGesture" xml:space="preserve">
     <value>Ctrl+Z</value>
@@ -473,10 +473,10 @@
     <value>Ctrl+S</value>
   </data>
   <data name="Editor_MenuZoom" xml:space="preserve">
-    <value>縮放(_M)</value>
+    <value>Zoom (_M)</value>
   </data>
   <data name="Editor_MenuZoomFit" xml:space="preserve">
-    <value>符合視窗(_F)</value>
+    <value>Fit to window (_F)</value>
   </data>
   <data name="Editor_ZoomFitGesture" xml:space="preserve">
     <value>Ctrl+0</value>
@@ -485,44 +485,44 @@
     <value>100%(_1)</value>
   </data>
   <data name="Editor_MenuZoomIn" xml:space="preserve">
-    <value>放大(_I)</value>
+    <value>Zoom in (_I)</value>
   </data>
   <data name="Editor_ZoomInGesture" xml:space="preserve">
     <value>Ctrl+=</value>
   </data>
   <data name="Editor_MenuZoomOut" xml:space="preserve">
-    <value>縮小(_O)</value>
+    <value>Zoom out (_O)</value>
   </data>
   <data name="Editor_ZoomOutGesture" xml:space="preserve">
     <value>Ctrl+-</value>
   </data>
   <data name="Editor_MenuResetCrop" xml:space="preserve">
-    <value>還原完整圖片(_E)</value>
+    <value>Restore full image (_E)</value>
   </data>
   <data name="Editor_MenuClearAnnotations" xml:space="preserve">
-    <value>清除所有標註(_L)</value>
+    <value>Clear all annotations (_L)</value>
   </data>
   <data name="Editor_MenuApplyCrop" xml:space="preserve">
-    <value>套用裁切(_A)</value>
+    <value>Apply crop (_A)</value>
   </data>
   <data name="Editor_ApplyCropGesture" xml:space="preserve">
     <value>Enter</value>
   </data>
   <data name="Editor_MenuCancelCrop" xml:space="preserve">
-    <value>取消裁切(_C)</value>
+    <value>Cancel crop (_C)</value>
   </data>
   <data name="Editor_CancelCropGesture" xml:space="preserve">
     <value>Esc</value>
   </data>
 
   <data name="Font_MicrosoftJhengHei" xml:space="preserve">
-    <value>微軟正黑體</value>
+    <value>Microsoft JhengHei</value>
   </data>
   <data name="Font_PMingLiU" xml:space="preserve">
-    <value>新細明體</value>
+    <value>PMingLiU</value>
   </data>
   <data name="Font_DFKaiSB" xml:space="preserve">
-    <value>標楷體</value>
+    <value>DFKai-SB</value>
   </data>
   <data name="Font_SegoeUI" xml:space="preserve">
     <value>Segoe UI</value>
@@ -532,343 +532,358 @@
   </data>
 
   <data name="Color_Red" xml:space="preserve">
-    <value>紅色</value>
+    <value>Red</value>
   </data>
   <data name="Color_Orange" xml:space="preserve">
-    <value>橙色</value>
+    <value>Orange</value>
   </data>
   <data name="Color_Yellow" xml:space="preserve">
-    <value>黃色</value>
+    <value>Yellow</value>
   </data>
   <data name="Color_Green" xml:space="preserve">
-    <value>綠色</value>
+    <value>Green</value>
   </data>
   <data name="Color_Blue" xml:space="preserve">
-    <value>藍色</value>
+    <value>Blue</value>
   </data>
   <data name="Color_Purple" xml:space="preserve">
-    <value>紫色</value>
+    <value>Purple</value>
   </data>
   <data name="Color_Black" xml:space="preserve">
-    <value>黑色</value>
+    <value>Black</value>
   </data>
   <data name="Color_White" xml:space="preserve">
-    <value>白色</value>
+    <value>White</value>
   </data>
   <data name="Color_Custom" xml:space="preserve">
-    <value>自訂 {0}</value>
+    <value>Custom {0}</value>
   </data>
 
   <data name="Error_Title" xml:space="preserve">
-    <value>ScreenshotApp 發生錯誤</value>
+    <value>ScreenshotApp error</value>
   </data>
   <data name="Error_Unexpected" xml:space="preserve">
-    <value>發生未預期的錯誤，程式會繼續執行。
+    <value>An unexpected error occurred. The application will continue running.
 
 {0}
 
-錯誤細節已記錄於：
+Details were logged to:
 {1}</value>
   </data>
   <data name="Error_StartupFailed" xml:space="preserve">
-    <value>ScreenshotApp 無法啟動。
+    <value>ScreenshotApp could not start.
 
 {0}
 
-錯誤細節已記錄於：
+Details were logged to:
 {1}</value>
   </data>
   <data name="Error_AccessDenied" xml:space="preserve">
-    <value>沒有存取權限。</value>
+    <value>Access denied.</value>
   </data>
   <data name="Error_PathNotFound" xml:space="preserve">
-    <value>找不到指定的檔案或資料夾。</value>
+    <value>The specified file or folder could not be found.</value>
   </data>
   <data name="Error_PathTooLong" xml:space="preserve">
-    <value>路徑太長。</value>
+    <value>The path is too long.</value>
   </data>
   <data name="Error_FileInUse" xml:space="preserve">
-    <value>檔案正被其他程式使用。</value>
+    <value>The file is in use by another application.</value>
   </data>
   <data name="Error_DiskFull" xml:space="preserve">
-    <value>磁碟空間不足。</value>
+    <value>The disk is full.</value>
   </data>
 
   <data name="ImageLoad_FileNotFound" xml:space="preserve">
-    <value>找不到這個檔案，檔案可能已被移動或刪除。</value>
+    <value>This file could not be found. It may have been moved or deleted.</value>
   </data>
   <data name="ImageLoad_AccessDenied" xml:space="preserve">
-    <value>沒有讀取這個檔案的權限。</value>
+    <value>You do not have permission to read this file.</value>
   </data>
   <data name="ImageLoad_ReadFailed" xml:space="preserve">
-    <value>無法讀取檔案：{0}</value>
+    <value>Could not read the file: {0}</value>
   </data>
   <data name="ImageLoad_UnsupportedFormat" xml:space="preserve">
-    <value>不支援這種圖片格式，只能開啟 PNG、JPEG 或 BMP 圖片。</value>
+    <value>Unsupported image format. Only PNG, JPEG and BMP images can be opened.</value>
   </data>
   <data name="ImageLoad_Corrupt" xml:space="preserve">
-    <value>圖片檔案已損壞或格式不正確。</value>
+    <value>The image file is corrupt or invalid.</value>
   </data>
   <data name="ImageLoad_SizeOutOfRange" xml:space="preserve">
-    <value>圖片尺寸 {0} × {1} 無效或超過上限：寬與高至少須為 1 像素，寬 × 高最多 {2:N0} 像素。</value>
+    <value>Image size {0} × {1} is invalid or too large: width and height must be at least 1 pixel and the total must not exceed {2:N0} pixels.</value>
   </data>
   <data name="ImageLoad_OutOfMemory" xml:space="preserve">
-    <value>記憶體不足，無法開啟這張圖片。</value>
+    <value>Not enough memory to open this image.</value>
   </data>
   <data name="Selection_Help" xml:space="preserve">
-    <value>拖曳選取 · 按住 Ctrl 放大 · C 複製色碼 · Esc／右鍵取消；R 切換量測</value>
+    <value>Drag to select · Hold Ctrl to magnify · C to copy color · Esc/right-click to cancel; R to measure</value>
   </data>
   <data name="Selection_Pixel" xml:space="preserve">
     <value>({0}, {1}) px
 {2}</value>
   </data>
   <data name="Notify_ColorCopied" xml:space="preserve">
-    <value>已複製色碼 {0}</value>
+    <value>Copied color {0}</value>
   </data>
   <data name="Notify_ColorCopyFailed" xml:space="preserve">
-    <value>無法複製色碼：{0}</value>
+    <value>Could not copy color: {0}</value>
   </data>
   <data name="Editor_ToolMosaic" xml:space="preserve">
-    <value>馬賽克(_J)</value>
+    <value>Mosaic (_J)</value>
   </data>
   <data name="Editor_ToolBlur" xml:space="preserve">
-    <value>模糊(_H)</value>
+    <value>Blur (_H)</value>
   </data>
   <data name="Editor_ToolMosaicToolTip" xml:space="preserve">
-    <value>拖曳建立馬賽克，強度為區塊大小（2～64px）</value>
+    <value>Drag to create mosaic; strength is the block size (2–64 px)</value>
   </data>
   <data name="Editor_ToolBlurToolTip" xml:space="preserve">
-    <value>拖曳建立模糊，強度為半徑（1～32px）；內容仍可能被辨識或還原</value>
+    <value>Drag to create blur; strength is the radius (1–32 px); content may still be recognizable or recoverable</value>
   </data>
   <data name="Editor_EffectStrengthLabel" xml:space="preserve">
-    <value>強度(_U)</value>
+    <value>Strength (_U)</value>
   </data>
   <data name="Editor_EffectStrengthToolTip" xml:space="preserve">
-    <value>馬賽克為區塊邊長，模糊為半徑；選取效果時修改可復原，不儲存到設定</value>
+    <value>Mosaic block size or blur radius; changes to selected effects can be undone and are not saved to settings</value>
   </data>
   <data name="Editor_EffectHint" xml:space="preserve">
-    <value>效果只取樣原圖；原圖仍保留。模糊可能被還原，降低可辨識度時優先使用馬賽克並檢查匯出。</value>
+    <value>Effects sample only the original image, which is retained. Blur may be recoverable; prefer mosaic to reduce detail and check the export.</value>
   </data>
   <data name="Ruler_Length" xml:space="preserve">
     <value>{0} px</value>
   </data>
   <data name="Ruler_Details" xml:space="preserve">
-    <value>長度 {0} px　Δx {1}　Δy {2}</value>
+    <value>Length {0} px  Δx {1}  Δy {2}</value>
   </data>
   <data name="Selection_Measurement" xml:space="preserve">
-    <value>長度 {0} px　Δx {1}　Δy {2}　{3} × {4} px</value>
+    <value>Length {0} px  Δx {1}  Δy {2}  {3} × {4} px</value>
   </data>
   <data name="Selection_MeasureHelp" xml:space="preserve">
-    <value>量測模式：拖曳量測；R 回到區域選取；Ctrl 放大鏡；C 取色；Esc／右鍵取消</value>
+    <value>Measure: drag to measure; R to select a region; Ctrl to magnify; C to pick color; Esc/right-click to cancel</value>
   </data>
   <data name="Editor_ToolRuler" xml:space="preserve">
-    <value>尺規(_Q)</value>
+    <value>Ruler (_Q)</value>
   </data>
   <data name="Editor_ToolRulerToolTip" xml:space="preserve">
-    <value>拖曳建立可輸出的尺寸標註；長度為兩端像素中心距離</value>
+    <value>Drag to create an exportable dimension annotation; length is measured between pixel centers</value>
   </data>
   <data name="Editor_ToolEyedropper" xml:space="preserve">
-    <value>取色(_D)</value>
+    <value>Pick color (_D)</value>
   </data>
   <data name="Editor_ToolEyedropperToolTip" xml:space="preserve">
-    <value>點擊原圖取色，完成後回到原工具；Esc 取消</value>
+    <value>Click to sample the original image, then return to the previous tool; Esc to cancel</value>
   </data>
   <data name="Editor_EyedropperHint" xml:space="preserve">
-    <value>點擊原圖取色；Esc 返回原工具</value>
+    <value>Click the original image to pick a color; Esc returns to the previous tool</value>
   </data>
   <data name="Editor_PickedColor" xml:space="preserve">
-    <value>已取色：{0}</value>
+    <value>Picked color: {0}</value>
   </data>
   <data name="Tray_History" xml:space="preserve">
-    <value>截圖歷史(&amp;H)</value>
+    <value>Capture history (&amp;H)</value>
   </data>
   <data name="Editor_History" xml:space="preserve">
-    <value>歷史(_X)</value>
+    <value>History (_X)</value>
   </data>
   <data name="History_Title" xml:space="preserve">
-    <value>截圖歷史</value>
+    <value>Capture history</value>
   </data>
   <data name="History_Entry" xml:space="preserve">
-    <value>{0:yyyy/MM/dd HH:mm:ss}  ·  {1} × {2} 像素</value>
+    <value>{0:yyyy/MM/dd HH:mm:ss}  ·  {1} × {2} pixels</value>
   </data>
   <data name="History_Missing" xml:space="preserve">
-    <value>此歷史條目已刪除或尚未完整儲存。</value>
+    <value>This history entry was deleted or has not finished saving.</value>
   </data>
   <data name="History_OriginalOnly" xml:space="preserve">
-    <value>標註資料損毀或版本不受支援，僅還原原圖。原歷史條目不會被自動覆寫。</value>
+    <value>Annotation data is corrupt or unsupported. Only the original image was restored. The original history entry will not be overwritten automatically.</value>
   </data>
   <data name="History_Failed" xml:space="preserve">
-    <value>歷史作業失敗：{0}</value>
+    <value>History operation failed: {0}</value>
   </data>
   <data name="History_FirstUse" xml:space="preserve">
-    <value>已開啟本機截圖歷史，原圖與標註將保存於磁碟且未加密。可在設定關閉「保留截圖歷史」或清除全部歷史。</value>
+    <value>Local capture history is enabled. Original images and annotations are saved unencrypted on disk. Turn off Keep capture history or clear all history in Settings.</value>
   </data>
   <data name="History_Privacy" xml:space="preserve">
-    <value>歷史會保存未加密的原圖與標註，包含裁切或遮蔽前的內容。可在設定關閉；關閉後既有條目仍會保留。</value>
+    <value>History saves unencrypted originals and annotations, including content before cropping or masking. You can disable it in Settings; existing entries are retained.</value>
   </data>
   <data name="History_Timeout" xml:space="preserve">
-    <value>歷史寫入尚未完成，等待已超過 3 秒。本次最新修改可能無法保存至歷史。</value>
+    <value>History is still saving after 3 seconds. The latest changes may not be saved to history.</value>
   </data>
   <data name="SettingsField_HistoryEnabled" xml:space="preserve">
-    <value>保留截圖歷史</value>
+    <value>Keep capture history</value>
   </data>
   <data name="SettingsField_HistoryLimit" xml:space="preserve">
-    <value>歷史保留筆數</value>
+    <value>History retention count</value>
   </data>
   <data name="Settings_HistoryEnabled" xml:space="preserve">
-    <value>保留截圖歷史(_E)</value>
+    <value>Keep capture history (_E)</value>
   </data>
   <data name="Settings_HistoryLimit" xml:space="preserve">
-    <value>保留筆數(_N)：</value>
+    <value>Keep _entries:</value>
   </data>
   <data name="Settings_HistoryLimitHint" xml:space="preserve">
-    <value>請輸入 1～500 的整數；預設保留 50 筆。</value>
+    <value>Enter an integer from 1 to 500; the default is 50 entries.</value>
   </data>
   <data name="History_PathHint" xml:space="preserve">
-    <value>歷史資料夾位置（固定，無法在此變更）</value>
+    <value>History folder (fixed location, cannot be changed here)</value>
   </data>
   <data name="History_Open" xml:space="preserve">
-    <value>開啟(_O)</value>
+    <value>Open (_O)</value>
   </data>
   <data name="History_OpenHint" xml:space="preserve">
-    <value>重新開啟並繼續編輯（Enter）</value>
+    <value>Reopen and continue editing (Enter)</value>
   </data>
   <data name="History_Copy" xml:space="preserve">
-    <value>複製(_C)</value>
+    <value>Copy (_C)</value>
   </data>
   <data name="History_CopyHint" xml:space="preserve">
-    <value>複製包含標註與裁切的合成圖片</value>
+    <value>Copy the composed image with annotations and crop applied</value>
   </data>
   <data name="History_Delete" xml:space="preserve">
-    <value>刪除(_D)</value>
+    <value>Delete (_D)</value>
   </data>
   <data name="History_DeleteHint" xml:space="preserve">
-    <value>刪除選取的歷史條目（Delete）</value>
+    <value>Delete the selected history entry (Delete)</value>
   </data>
   <data name="History_Clear" xml:space="preserve">
-    <value>全部清除(_X)</value>
+    <value>Clear all (_X)</value>
   </data>
   <data name="History_ClearHint" xml:space="preserve">
-    <value>確認後刪除全部歷史原圖與標註</value>
+    <value>Confirm deletion of all original images and annotations in history</value>
   </data>
   <data name="History_ClearConfirm" xml:space="preserve">
-    <value>確定清除全部截圖歷史？已保存的原圖與標註將從歷史資料夾刪除，無法復原。正在編輯的文件會保留。</value>
+    <value>Clear all capture history? Saved originals and annotations will be deleted from the history folder and cannot be undone. The document being edited will be kept.</value>
   </data>
   <data name="History_Refresh" xml:space="preserve">
-    <value>重新整理(_R)</value>
+    <value>Refresh (_R)</value>
   </data>
   <data name="History_RefreshHint" xml:space="preserve">
-    <value>重新讀取磁碟上的歷史清單</value>
+    <value>Reload the history list from disk</value>
   </data>
   <data name="History_Empty" xml:space="preserve">
-    <value>目前沒有截圖歷史。</value>
+    <value>No capture history yet.</value>
   </data>
   <data name="History_Copied" xml:space="preserve">
-    <value>已複製歷史圖片。</value>
+    <value>History image copied.</value>
   </data>
   <data name="History_AlreadyExists" xml:space="preserve">
-    <value>歷史條目已存在。</value>
+    <value>The history entry already exists.</value>
   </data>
   <data name="History_InvalidId" xml:space="preserve">
-    <value>歷史識別碼無效。</value>
+    <value>Invalid history ID.</value>
   </data>
   <data name="History_InvalidPath" xml:space="preserve">
-    <value>歷史路徑無效。</value>
+    <value>Invalid history path.</value>
   </data>
   <data name="History_LinkRejected" xml:space="preserve">
-    <value>歷史位置不可使用連結或重新解析點。</value>
+    <value>Links and reparse points are not allowed in history locations.</value>
   </data>
   <data name="History_UnexpectedDirectory" xml:space="preserve">
-    <value>歷史條目包含非預期的子目錄。</value>
+    <value>The history entry contains an unexpected subdirectory.</value>
   </data>
   <data name="Tray_ScrollCapture" xml:space="preserve">
-    <value>長截圖(&amp;L)</value>
+    <value>Scrolling capture (&amp;L)</value>
   </data>
   <data name="SettingsField_ScrollHotkey" xml:space="preserve">
-    <value>長截圖快捷鍵</value>
+    <value>Scrolling capture hotkey</value>
   </data>
   <data name="Settings_ScrollHotkeyLabel" xml:space="preserve">
-    <value>長截圖快捷鍵(_G)：</value>
+    <value>Scrollin_g capture hotkey:</value>
   </data>
   <data name="Settings_ClearScrollHotkey" xml:space="preserve">
-    <value>清除快捷鍵(_R)</value>
+    <value>Clea_r hotkey</value>
   </data>
   <data name="Settings_ScrollHotkeyNone" xml:space="preserve">
-    <value>未設定（可從系統匣啟動）</value>
+    <value>Not set (start from the tray)</value>
   </data>
   <data name="Settings_HotkeyDuplicate" xml:space="preserve">
-    <value>長截圖與一般截圖不可使用相同的快捷鍵。</value>
+    <value>Scrolling capture and regular capture cannot use the same hotkey.</value>
   </data>
   <data name="Settings_ScrollHotkeyRejected" xml:space="preserve">
-    <value>長截圖快捷鍵無法註冊：{0}。保留原本的設定。</value>
+    <value>Could not register the scrolling capture hotkey: {0}. Keeping the previous setting.</value>
   </data>
   <data name="Scroll_Title" xml:space="preserve">
-    <value>長截圖</value>
+    <value>Scrolling capture</value>
   </data>
   <data name="Scroll_FrameTitle" xml:space="preserve">
-    <value>長截圖範圍</value>
+    <value>Scrolling capture region</value>
   </data>
   <data name="Scroll_SelectionHelp" xml:space="preserve">
-    <value>拖曳選取長截圖範圍；Ctrl 放大；Esc 或右鍵取消</value>
+    <value>Drag to select a scrolling capture region; Ctrl to magnify; Esc or right-click to cancel</value>
   </data>
   <data name="Scroll_Help" xml:space="preserve">
-    <value>在藍框內向下捲動，保留部分重疊內容；完成後可繼續標註。</value>
+    <value>Scroll down inside the blue frame, keeping some overlap. You can annotate the result when finished.</value>
   </data>
   <data name="Scroll_Manual" xml:space="preserve">
-    <value>手動模式：請緩慢向下捲動，等預覽更新後再繼續。</value>
+    <value>Manual mode: scroll down slowly and wait for the preview to update before continuing.</value>
   </data>
   <data name="Scroll_Preview" xml:space="preserve">
-    <value>已拼接的長截圖預覽</value>
+    <value>Stitched capture preview</value>
   </data>
   <data name="Scroll_Size" xml:space="preserve">
-    <value>{0} × {1} 像素</value>
+    <value>{0} × {1} pixels</value>
   </data>
   <data name="Scroll_Automatic" xml:space="preserve">
-    <value>自動捲動(_A)</value>
+    <value>_Auto scroll</value>
   </data>
   <data name="Scroll_Stop" xml:space="preserve">
-    <value>停止自動捲動(_A)</value>
+    <value>Stop _auto scroll</value>
   </data>
   <data name="Scroll_Finish" xml:space="preserve">
-    <value>完成(_F)</value>
+    <value>_Finish</value>
   </data>
   <data name="Scroll_Cancel" xml:space="preserve">
-    <value>取消(_C)</value>
+    <value>_Cancel</value>
   </data>
   <data name="Scroll_Running" xml:space="preserve">
-    <value>自動捲動中；移動滑鼠或按鍵會回到手動模式。</value>
+    <value>Auto scrolling; moving the mouse or pressing a key returns to manual mode.</value>
   </data>
   <data name="Scroll_Interrupted" xml:space="preserve">
-    <value>已偵測到輸入，停止自動捲動並保留內容。可繼續手動捲動。</value>
+    <value>Input detected. Auto scrolling stopped and captured content was kept. You can continue scrolling manually.</value>
   </data>
   <data name="Scroll_SendFailed" xml:space="preserve">
-    <value>無法對原目標送出捲動。請回到原視窗並改用手動捲動。</value>
+    <value>Could not send scrolling to the original target. Return to that window and scroll manually.</value>
   </data>
   <data name="Scroll_ReleaseKeys" xml:space="preserve">
-    <value>請放開按鍵後，再以滑鼠按下「自動捲動」。</value>
+    <value>Release all keys, then click Auto scroll with the mouse.</value>
   </data>
   <data name="Scroll_NoResponse" xml:space="preserve">
-    <value>未觀察到捲動；可能已到底或程式不支援自動捲動。可改用手動，或按「完成」。</value>
+    <value>No scrolling detected. The bottom may have been reached or auto scroll may not be supported. Try manual scrolling or click Finish.</value>
   </data>
   <data name="Scroll_CannotAlign" xml:space="preserve">
-    <value>無法可靠對齊。已保留前段；請往回捲到仍有重疊的位置，再緩慢向下捲動。</value>
+    <value>Could not align reliably. Previous content was kept. Scroll back until there is overlap, then scroll down slowly.</value>
   </data>
   <data name="Scroll_Backward" xml:space="preserve">
-    <value>已忽略往回捲動；請捲過先前擷取的位置後再繼續。</value>
+    <value>Backward scrolling was ignored. Scroll past the previously captured position to continue.</value>
   </data>
   <data name="Scroll_Unstable" xml:space="preserve">
-    <value>畫面持續變動，已停止自動捲動。請等畫面穩定，或完成目前結果。</value>
+    <value>Content keeps changing. Auto scrolling stopped. Wait for the screen to settle or finish the current result.</value>
   </data>
   <data name="Scroll_Limit" xml:space="preserve">
-    <value>已達高度或總像素上限，停止擷取。請按「完成」保留目前結果。</value>
+    <value>The height or pixel limit was reached. Capture stopped. Click Finish to keep the result.</value>
   </data>
   <data name="Scroll_TooLarge" xml:space="preserve">
-    <value>選取範圍超過長截圖上限（高度 32,768 像素、總計 100,000,000 像素），請縮小範圍。</value>
+    <value>The selected region exceeds the scrolling capture limit (32,768 pixels high, 100,000,000 pixels total). Select a smaller region.</value>
   </data>
   <data name="Scroll_MemoryFailed" xml:space="preserve">
-    <value>記憶體不足，已取消長截圖。請縮小選取範圍或分段擷取。</value>
+    <value>Not enough memory. Scrolling capture was canceled. Select a smaller region or capture in sections.</value>
   </data>
   <data name="Scroll_TargetChanged" xml:space="preserve">
-    <value>原擷取視窗已關閉或被其他視窗遮住，已取消長截圖。</value>
+    <value>The original capture window was closed or covered by another window. Scrolling capture was canceled.</value>
+  </data>
+  <data name="SettingsField_Language" xml:space="preserve">
+    <value>Interface language</value>
+  </data>
+  <data name="Settings_LanguageLabel" xml:space="preserve">
+    <value>Interface language:</value>
+  </data>
+  <data name="Settings_LanguageRestartHint" xml:space="preserve">
+    <value>Click Apply or OK to save. Exit from the tray, then start ScreenshotApp again to change language.</value>
+  </data>
+  <data name="Language_English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Language_TraditionalChinese" xml:space="preserve">
+    <value>繁體中文</value>
   </data>
 </root>

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-ScreenshotApp 是 Windows 11 常駐系統匣的截圖與圖片標註工具：.NET 10 WPF＋Win32，應用程式專案 `ScreenshotApp/`、xunit 測試專案 `ScreenshotApp.Tests/`。介面文字、文件與回覆一律使用台灣繁體中文。
+ScreenshotApp 是 Windows 11 常駐系統匣的截圖與圖片標註工具：.NET 10 WPF＋Win32，應用程式專案 `ScreenshotApp/`、xunit 測試專案 `ScreenshotApp.Tests/`。介面提供英文（預設）與台灣繁體中文，公開文件以英文為主並連結 `_zh_TW.md` 參考版本；對使用者的回覆一律使用台灣繁體中文。
 
 ## 依據
 
@@ -24,14 +24,14 @@ pwsh -NoProfile -File tools/Publish-Release.ps1
 
 ## 程式碼慣例
 
-- 介面文字只放在 `ScreenshotApp/Resources/Strings.resx`：程式碼用 `Strings.Get`／`Strings.Format`，XAML 用 `{res:Str Key}`。`StringsResourceTests` 檢查鍵都存在、沒有閒置的鍵、XAML 沒有寫死的文字。
+- 介面文字放在 `ScreenshotApp/Resources/Strings.resx`（英文）及 `Strings.zh-TW.resx`（台灣繁體中文）：程式碼用 `Strings.Get`／`Strings.Format`，XAML 用 `{res:Str Key}`。測試檢查鍵與格式參數一致、沒有閒置的鍵、XAML 沒有寫死的文字。語言偏好儲存後重新啟動生效，建立服務與視窗前套用。
 - 註解用自己的話寫出設計意圖與限制；FR／AT／MT／ADR 編號與文件路徑只出現在 `docs/` 與測試名稱中。
 - 座標：實體像素是唯一真值，座標空間之間的換算只經過 `CoordinateMapper`；畫布 100% 代表一個圖片像素對應一個實體像素。
 - 文件模型：標註是不可變的 record，文件只經由 `IEditCommand` 進入 `UndoRedoStack` 修改；拖曳期間只更新預覽，放開時才產生一筆命令。
 - 輸出：`AnnotationPainter` 是畫面與輸出共用的唯一繪製碼；`ImageRenderer` 先合成整張原圖再取出裁切範圍（平移到裁切原點再繪製，平滑像素會改變）。
 - 執行緒：合成在 UI 執行緒；交給背景執行緒的點陣圖先 `Freeze()`；PNG 編碼與寫檔在背景執行緒。
 - GDI 與 USER 物件以 SafeHandle 持有；剪貼簿以 DIB 與 PNG 位元組提供（`Clipboard.SetImage` 每次會在處理程序留下一個 GDI 物件）。
-- 檔案與登錄錯誤顯示給使用者時，原因經 `ErrorText.Describe` 轉成繁體中文。
+- 檔案與登錄錯誤顯示給使用者時，原因經 `ErrorText.Describe` 依介面語言取得。
 - XAML 資源（例如 `Window.Resources` 中的右鍵選單）裡的 `x:Name` 不會產生欄位；以 `LogicalTreeHelper.FindLogicalNode` 依名稱查找，並以測試確認每個名稱在執行期都找得到。
 - 文字檔為 UTF-8、LF；以 Python 修改檔案時用位元組讀寫（Windows 的文字模式會寫成 CRLF）。
 

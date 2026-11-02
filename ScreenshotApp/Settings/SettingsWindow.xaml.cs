@@ -28,6 +28,7 @@ internal partial class SettingsWindow : Window
 
     private void ShowSettings(AppSettings settings)
     {
+        LanguageBox.SelectedValue = settings.Language;
         _pendingHotkey = settings.Hotkey;
         _pendingScrollHotkey = settings.ScrollHotkey;
         ScrollHotkeyBox.Text = PendingHotkeyText(ScrollHotkeyBox);
@@ -184,6 +185,7 @@ internal partial class SettingsWindow : Window
         var current = _controller.Settings;
         var proposed = current with
         {
+            Language = LanguageBox.SelectedValue as string ?? current.Language,
             HistoryEnabled = HistoryEnabledBox.IsChecked == true,
             HistoryLimit = limit,
             Hotkey = _pendingHotkey,

@@ -42,3 +42,7 @@ v1.0 的交付物是 Windows 11 x64 自包含式發佈目錄及 ZIP，以 `dotne
 - 未簽章的執行檔從網路下載後，Windows SmartScreen 可能顯示警告，需要使用者選擇「仍要執行」；列入已知限制。
 - 單檔版第一次啟動會把原生程式庫寫入暫存資料夾（不含任何使用者資料）；若暫存資料夾不可寫入，請改用資料夾版。
 - 乾淨機器上的執行（沒有 .NET Runtime）需要使用者以另一台電腦確認，未確認前標示「尚未驗證」。
+
+## Revision (2026-11-02): bilingual public release
+
+English is now the neutral application resource; retain zh-TW application and zh-Hant framework satellites. Packaging includes English/Traditional Chinese user guides and limitations, a download README and SHA-256 checksums. Validate paths before replacing previous output. Upload only the folder ZIP until the version-specific single-file interactive smoke gate passes. GitHub release metadata must disclose unrun desktop/clean-machine checks.

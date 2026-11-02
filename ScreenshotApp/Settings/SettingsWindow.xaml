@@ -58,6 +58,13 @@
 
         <GroupBox Header="{res:Str Settings_GeneralGroup}">
             <StackPanel>
+                <Label Padding="0" Margin="0,0,0,4" Content="{res:Str Settings_LanguageLabel}"
+                       Target="{Binding ElementName=LanguageBox}" />
+                <ComboBox x:Name="LanguageBox" SelectedValuePath="Tag">
+                    <ComboBoxItem Tag="en" Content="{res:Str Language_English}" />
+                    <ComboBoxItem Tag="zh-TW" Content="{res:Str Language_TraditionalChinese}" />
+                </ComboBox>
+                <TextBlock Style="{StaticResource HintText}" Margin="0,6,0,10" Text="{res:Str Settings_LanguageRestartHint}" />
                 <CheckBox x:Name="StartWithWindowsBox"
                           Content="{res:Str Settings_StartWithWindows}"
                           ToolTip="{res:Str Settings_StartWithWindowsToolTip}" />

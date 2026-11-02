@@ -38,6 +38,7 @@ internal sealed record SettingsSaveResult(bool Succeeded, string? ErrorMessage);
 /// </summary>
 internal sealed class SettingsStore
 {
+    public const string LanguageField = "Language";
     public const string HistoryEnabledField = "HistoryEnabled";
     public const string HistoryLimitField = "HistoryLimit";
     public const string HotkeyField = "Hotkey";
@@ -72,6 +73,7 @@ internal sealed class SettingsStore
 
     public static string DescribeField(string field) => field switch
     {
+        LanguageField => Strings.Get("SettingsField_Language"),
         HistoryEnabledField => Strings.Get("SettingsField_HistoryEnabled"),
         HistoryLimitField => Strings.Get("SettingsField_HistoryLimit"),
         HotkeyField => Strings.Get("SettingsField_Hotkey"),
@@ -122,6 +124,7 @@ internal sealed class SettingsStore
     {
         var root = new JsonObject
         {
+            [LanguageField] = settings.Language,
             [HistoryEnabledField] = settings.HistoryEnabled,
             [HistoryLimitField] = settings.HistoryLimit,
             [HotkeyField] = settings.Hotkey.ToString(),
@@ -160,6 +163,7 @@ internal sealed class SettingsStore
         }
         return new AppSettings
         {
+            Language = ReadField(root, LanguageField, defaults.Language, invalidFields, TryReadLanguage),
             HistoryEnabled = ReadField<bool>(root, HistoryEnabledField, defaults.HistoryEnabled, invalidFields, TryReadBoolean),
             HistoryLimit = ReadField(root, HistoryLimitField, defaults.HistoryLimit, invalidFields,
                 (JsonNode? node, out int value) => TryReadInt(node, 1, 500, out value)),
@@ -191,6 +195,9 @@ internal sealed class SettingsStore
         invalidFields.Add(field);
         return fallback;
     }
+
+    private static bool TryReadLanguage(JsonNode? node, out string value) =>
+        TryReadString(node, out value) && value is "en" or "zh-TW";
 
     private static bool TryReadOptionalHotkey(JsonNode? node, out HotkeyGesture? value)
     {

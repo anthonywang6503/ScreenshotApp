@@ -22,9 +22,7 @@ public partial class App : Application
             return;
         }
 
-        // 讓 WPF 為中文字元選用繁體中文字型，避免字型後援選到簡體字形。
-        FrameworkElement.LanguageProperty.OverrideMetadata(
-            typeof(FrameworkElement), new FrameworkPropertyMetadata(XmlLanguage.GetLanguage("zh-TW")));
+        Strings.InitializeLanguage("en");
 
         var log = new ErrorLog(ErrorLog.DefaultDirectory);
         log.DeleteExpiredFiles();
@@ -42,9 +40,14 @@ public partial class App : Application
         {
             var executablePath = Environment.ProcessPath ?? throw new InvalidOperationException("無法取得執行檔路徑。");
             var store = new SettingsStore(SettingsStore.DefaultFilePath);
+            var loaded = store.Load();
+            Strings.InitializeLanguage(loaded.Settings.Language);
+            // 在建立視窗前設定字型後援語言，繁體中文介面因此選用繁體字形。
+            FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
+                new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(loaded.Settings.Language)));
             var controller = new AppController(store, new StartupService(executablePath), log);
             _controller = controller;
-            controller.Start(store.Load());
+            controller.Start(loaded);
 
             // 使用 BeginInvoke 而非 InvokeAsync：前者的例外會交給全域例外處理，後者會把例外存進工作而被忽略。
             _instanceGuard.StartListening(() => Dispatcher.BeginInvoke(new Action(controller.ActivateFromSecondInstance)));

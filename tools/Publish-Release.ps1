@@ -50,6 +50,10 @@ $variants = @(
 foreach ($variant in $variants) {
     $output = Join-Path $publishRoot $variant.Name
     $zip = "$output.zip"
+    $resolvedOutput = [IO.Path]::GetFullPath($output)
+    if (-not $resolvedOutput.StartsWith([IO.Path]::GetFullPath($publishRoot) + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Publish output must remain inside the repository publish directory.'
+    }
     if (Test-Path -LiteralPath $output) { Remove-Item -LiteralPath $output -Recurse -Force }
     if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
 
@@ -63,7 +67,29 @@ foreach ($variant in $variants) {
     }
     # 加上副檔名，沒有安裝開發工具的使用者也能直接以記事本開啟。
     Copy-Item -LiteralPath (Join-Path $root 'LICENSE') -Destination (Join-Path $output 'LICENSE.txt')
-    Copy-Item -LiteralPath (Join-Path $root 'THIRD-PARTY-NOTICES.md'), (Join-Path $root 'docs/USER_GUIDE.md'), (Join-Path $root 'docs/KNOWN_LIMITATIONS.md') -Destination $output
+    Copy-Item -LiteralPath (Join-Path $root 'THIRD-PARTY-NOTICES.md'), (Join-Path $root 'THIRD-PARTY-NOTICES_zh_TW.md'),
+        (Join-Path $root 'docs/USER_GUIDE.md'), (Join-Path $root 'docs/USER_GUIDE_zh_TW.md'),
+        (Join-Path $root 'docs/KNOWN_LIMITATIONS.md'), (Join-Path $root 'docs/KNOWN_LIMITATIONS_zh_TW.md') -Destination $output
+
+    $downloadReadme = @"
+# ScreenshotApp $version
+
+Run ScreenshotApp.exe. Keep all files and subfolders together.
+The application starts in the Windows notification area. Press Ctrl+Shift+2 to capture.
+
+English is the default. In Settings, choose English or 繁體中文, save, exit from the tray and restart.
+History is enabled by default and stores unencrypted originals before cropping or masking.
+Disable it and clear existing entries in Settings if needed.
+
+See USER_GUIDE.md / USER_GUIDE_zh_TW.md and KNOWN_LIMITATIONS.md / KNOWN_LIMITATIONS_zh_TW.md.
+Project, documentation and release acceptance: https://github.com/anthonywang6503/ScreenshotApp
+Licensed under Apache-2.0; see LICENSE.txt and licenses/ for runtime notices.
+"@
+    Set-Content -LiteralPath (Join-Path $output 'README.md') -Value $downloadReadme -Encoding utf8NoBOM
+
+    if ($variant.Properties.Count -eq 0 -and -not (Test-Path -LiteralPath (Join-Path $output 'zh-TW/ScreenshotApp.resources.dll'))) {
+        throw 'The Traditional Chinese resource assembly is missing from the folder distribution.'
+    }
 
     Compress-Archive -LiteralPath $output -DestinationPath $zip
     $files = @(Get-ChildItem -LiteralPath $output -Recurse -File)
@@ -75,3 +101,10 @@ foreach ($variant in $variants) {
         ZipMB = [math]::Round((Get-Item -LiteralPath $zip).Length / 1MB, 1)
     }
 }
+
+$checksums = foreach ($variant in $variants | Where-Object { $_.Properties.Count -eq 0 }) {
+    $zipName = "$($variant.Name).zip"
+    $hash = Get-FileHash -LiteralPath (Join-Path $publishRoot $zipName) -Algorithm SHA256
+    "$($hash.Hash.ToLowerInvariant())  $zipName"
+}
+Set-Content -LiteralPath (Join-Path $publishRoot 'SHA256SUMS.txt') -Value $checksums -Encoding utf8NoBOM

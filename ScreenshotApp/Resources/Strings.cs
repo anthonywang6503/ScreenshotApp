@@ -11,6 +11,13 @@ internal static class Strings
     private static readonly ResourceManager Manager =
         new("ScreenshotApp.Resources.Strings", typeof(Strings).Assembly);
 
+    public static void InitializeLanguage(string language)
+    {
+        var culture = CultureInfo.GetCultureInfo(language is "zh-TW" ? "zh-TW" : "en");
+        CultureInfo.CurrentUICulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+    }
+
     public static string Get(string key) =>
         Manager.GetString(key, CultureInfo.CurrentUICulture) ?? $"!{key}!";
 

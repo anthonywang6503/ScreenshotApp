@@ -1,0 +1,24 @@
+name: Bug report
+description: Report reproducible behavior using synthetic, non-sensitive data.
+body:
+  - type: input
+    id: version
+    attributes:
+      label: ScreenshotApp version
+      description: Include the version and commit shown in file properties, if available.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Windows and display configuration
+      description: Windows version, display count and scaling percentages.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, expected result and actual result
+      description: Use synthetic images. Remove personal captures, history, credentials and private paths before attaching logs.
+    validations:
+      required: true

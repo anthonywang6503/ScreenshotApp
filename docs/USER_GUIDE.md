@@ -1,231 +1,103 @@
-# ScreenshotApp 使用說明
+# User guide
 
-ScreenshotApp 是 Windows 11 的截圖與圖片標註工具：常駐系統匣，按下快捷鍵選取畫面後，在編輯器加上方框、箭頭、文字或步驟編號，再複製到剪貼簿或另存 PNG。完全在本機離線運作，不需要帳號、網路或系統管理員權限。
+[繁體中文](USER_GUIDE_zh_TW.md) · [README](../README.md)
 
-本說明適用於 v1.2.0 本機封裝；桌面煙霧與 MT-12～MT-15 尚未驗證。**截圖歷史預設開啟，舊版升級亦同**，會保存未加密原圖（含裁切或遮蔽之前的內容）。不希望自動記錄時，請先在設定關閉「保留截圖歷史」；關閉不會刪除舊資料，需另外「全部清除」。
+Applies to ScreenshotApp 1.3.0. All image processing is local. **Capture history is enabled by default**, including upgrades: it saves unencrypted originals before cropping or masking. Turn it off in Settings if you do not want captures saved; disabling it does not remove existing entries.
 
-## 安裝與啟動
+## Install, update and choose a language
 
-1. 解壓縮 `ScreenshotApp-1.2.0-win-x64.zip` 到固定的位置（例如「文件」或 `%LocalAppData%\Programs` 下的資料夾）。不需要另外安裝 .NET。從舊版更新時，結束舊版後以新版資料夾取代即可，設定會保留；舊設定沒有歷史欄位時，歷史預設開啟。
-   - `ScreenshotApp-1.2.0-win-x64-singlefile.zip` 是待驗證封裝，目前尚未提供為已驗收的版本。單檔第一次執行會把 WPF 原生程式庫解壓到使用者暫存資料夾；暫存資料夾受限制時請改用資料夾版。
-2. 執行 `ScreenshotApp.exe`。執行檔沒有數位簽章，從網路下載後 Windows 可能顯示「Windows 已保護您的電腦」，請選擇「其他資訊」→「仍要執行」。
-3. 程式不顯示主視窗，只在工作列右側的通知區域出現圖示（可能收在「顯示隱藏的圖示」內）。滑鼠停在圖示上會顯示目前的截圖快捷鍵。
-4. 再次執行程式不會產生第二個執行個體：編輯器開著時把編輯器帶到前面，否則開啟設定視窗。
+Extract the release ZIP to a stable location and run `ScreenshotApp.exe`. Keep all files and subfolders. No separate .NET installation or administrator permission is needed. The unsigned application may trigger Windows SmartScreen; review the release source before allowing it. The app starts in the notification area without a main window.
 
-要在登入 Windows 時自動常駐，請在設定視窗勾選「登入 Windows 時啟動」。移動程式資料夾後，從新位置執行一次程式即會更新啟動位置。
+The initial interface is **English**. Double-click the tray icon, choose **Interface language → 繁體中文** or **English**, then click **Apply** or **OK**. Choose **Exit** from the tray and start the app again. Closing the editor or settings alone does not exit the app. Language changes apply after restarting; existing images, annotations and history are preserved. Framework dialogs and unexpected system errors may use the Windows language.
 
-## 系統匣選單
+To update, exit the old app and replace its program folder with the new extracted folder. Preferences and history remain in `%LocalAppData%\ScreenshotApp`. If an older settings file has no language preference, the new interface defaults to English.
 
-在系統匣圖示上按滑鼠右鍵：
+## Tray menu
 
-| 項目 | 功能 |
-|------|------|
-| 開始截圖 | 與按下截圖快捷鍵相同 |
-| 長截圖 | 選取範圍後手動或自動向下捲動 |
-| 開啟圖片… | 在編輯器開啟 PNG、JPEG 或 BMP 圖片 |
-| 截圖歷史 | 瀏覽、重新編輯、複製、刪除或全部清除已保存的截圖 |
-| 設定 | 開啟設定視窗（雙擊系統匣圖示也可以） |
-| 結束 | 解除快捷鍵、移除系統匣圖示並結束程式 |
+**Start capture** starts a normal region capture. **Scrolling capture** starts vertical capture. **Open image** loads a file; **Capture history** reopens stored work. **Settings** changes preferences; **Exit** stops the app and unregisters hotkeys. Double-click the icon to open settings. Starting the app again activates its existing editor or settings instead of opening a second instance.
 
-## 截圖
+## Capture a region
 
-預設快捷鍵為 `Ctrl+Shift+2`（可在設定中變更）。
+Press **Ctrl+Shift+2** (configurable), then drag a rectangle on one monitor. Releasing completes the capture and opens the editor. The desktop is a frozen snapshot; its displayed width and height are physical pixels, independent of Windows scaling. Selection cannot span monitors. Clicking without dragging does not capture. **Esc** or right-click cancels and keeps the previous document. Changing display configuration cancels selection.
 
-1. 按下快捷鍵後，所有顯示器的畫面同時凍結並變暗。
-2. 按住滑鼠左鍵拖曳選取範圍，選取框旁顯示實際的像素寬高。選取限於開始拖曳的顯示器之內。
-3. 放開滑鼠即完成，截圖在編輯器中開啟。
-4. 按 `Esc` 或滑鼠右鍵取消。在原地點一下（沒有拖曳）不會產生截圖，可以重新拖曳。
+Hold **Ctrl** to show the fixed 15×15 pixel magnifier. Release Ctrl, then press **C** to copy the pointer pixel's uppercase RGB hex code without replacing the current editing document. Pixels outside the display use a gray fill in the magnifier.
 
-截圖的尺寸以螢幕實體像素為準：在 175% 縮放的螢幕上選取 100 × 50 像素的範圍，得到的圖片就是 100 × 50 像素。
+Press **R** to measure instead of capturing. Drag between pixel centers; the result stays visible after release. The display shows length, horizontal/vertical differences and the inclusive bounding size. For example, (10,20) to (13,24) is 5 px long with a 4×5 px bounding box. Press R again to return to capture; Esc/right-click cancels. These measurements are pixels, not physical units.
 
-### 馬賽克與模糊
+## Edit images
 
-選擇「馬賽克」（Alt+J）或「模糊」（Alt+H），拖曳框出要處理的區域；只點一下不會新增。效果只使用原圖像素，會以不透明結果蓋住下方的標註，上方的文字或箭頭仍會顯示。
+Select a tool, then drag or click on the image. Use selection to move or resize one annotation at a time. Annotations are separate from the original until export. Rectangle and ellipse interiors do not intercept selection; click their outlines. Double-click text or a step to edit its content/value.
 
-| 工具 | 強度（Alt+U） | 適用方式 |
-|---|---|---|
-| 馬賽克 | 區塊邊長 2～64px，預設 12px | 用平均色方塊降低細節；數值越大，區塊越大 |
-| 模糊 | 半徑 1～32px，預設 6px | 平滑區域細節；內容仍可能被辨識或部分還原 |
+| Tool | Action |
+| --- | --- |
+| Select (Alt+V) | Select, move and resize annotations |
+| Crop (Alt+C) | Drag a crop; Enter/double-click inside applies; Esc cancels |
+| Rectangle / Ellipse (Alt+R / Alt+E) | Draw outlines |
+| Line / Arrow (Alt+L / Alt+A) | Drag endpoints; arrows point toward release |
+| Text (Alt+T) | Click and type; Enter adds a line, Ctrl+Enter or click elsewhere commits, Esc cancels |
+| Step (Alt+N) | Click to place an incrementing numbered marker; values 1–999 |
+| Mosaic / Blur (Alt+J / Alt+H) | Drag a region; strength is block size 2–64 px or blur radius 1–32 px |
+| Ruler (Alt+Q) | Drag to add an exportable pixel-distance annotation |
+| Pick color (Alt+D) | Sample the original image, then return to the previous tool; Esc cancels |
 
-切換「選取」後，點效果內部可移動，拖曳八個控制點可調整大小，越過對邊時會翻轉。選取效果後改「強度」可復原；顏色、線寬與字型欄位停用。右鍵可再製、調整前後層或刪除；每次拖曳或強度選擇只算一筆復原。未選取標註時改強度會成為該工具在目前文件的預設值，不寫入設定。
+The style bar controls color, line width, font, font size, step value and effect strength. Width and font size use output pixels, not zoomed display units. Color, width and size changes without a selected annotation become defaults. Font choice lasts for the editor session; Microsoft JhengHei is the initial font. Effect strength is not persisted to preferences.
 
-**請檢查匯出結果**：需要降低可辨識度時優先使用馬賽克；兩種效果都不保證保密。編輯中的原圖仍在記憶體，可經復原恢復；預設開啟的截圖歷史也會保留原圖。複製或另存 PNG 只輸出合成像素，不包含可編輯標註或復原資料。大範圍模糊在移動、調整大小時可能短暫停頓；實機拖曳及 PowerPoint 貼上仍待驗證，詳見 [驗收紀錄](ACCEPTANCE.md)。
+The editor color picker reads the original, not composed annotations or effects. With an annotation selected it changes that annotation's color and can be undone; during text entry it changes text style without committing. With no selection it updates the default color. Effect annotations do not use a color.
 
-## 精準選取與螢幕取色
+Mosaic and blur sample only the original and cover underlying annotations opaquely; annotations above them remain visible. **Neither guarantees secrecy**. Blur may be recognizable or partially recoverable. Originals remain in the document and enabled disk history. Check the exported result before sharing.
 
-- 進入選取畫面後，先放開截圖快捷鍵，再重新按住 `Ctrl` 顯示放大鏡。放開 Ctrl 即隱藏；未拖曳或拖曳中都可使用。
-- 放大鏡顯示游標周圍 15×15 格，每格為 12 個實體像素；黑白框標示中心像素，下方顯示從該顯示器左上角 `(0,0)` 起算的像素座標及大寫色碼。
-- 靠近顯示器邊緣會翻轉位置；超出顯示器的取樣格填灰色，中心不會移到別的像素。
-- 放開所有修飾鍵後按 `C`，將游標所在像素的 `#RRGGBB` 純文字複製到剪貼簿並結束截圖。系統匣通知會顯示色碼；失敗則提示原因。原本的編輯文件與視窗會恢復，不產生新圖片。
-- 取樣來自進入選取畫面時的凍結快照，不會隨底下程式後續更新。編輯器的取色工具則讀取目前文件原圖，操作方式見下方。
+## Keyboard, context menus and zoom
 
-## 尺規、量測與編輯器取色
+| Shortcut | Action |
+| --- | --- |
+| Ctrl+Z / Ctrl+Y | Undo / redo (up to 100 actions) |
+| Delete | Delete the selected annotation |
+| Ctrl+D | Duplicate the selected annotation with a small offset |
+| Ctrl+] / Ctrl+[ | Move one layer forward / backward |
+| Ctrl+Shift+] / Ctrl+Shift+[ | Move to front / back |
+| Ctrl+C / Ctrl+S / Ctrl+O | Copy image / save PNG / open image |
+| Ctrl+wheel | Zoom around the pointer |
+| Ctrl+0 | Fit to window |
+| Space+drag / middle-button drag | Pan |
 
-- **截圖時量測**：選取畫面按 `R` 切換量測模式，拖曳顯示長度、Δx、Δy 與外接寬高；放開後保留，不開啟編輯器。下一次拖曳取代舊線。再按 R 回到區域選取，切換會清除預覽；Esc 或右鍵結束截圖。限起始顯示器，Ctrl 放大鏡與 C 取色仍可用。
-- **尺寸標註**：編輯器選「尺規」（Alt+Q），拖曳建立帶兩端界線及中央長度的線段，會一起複製或匯出。可移動、調整端點、顏色與線寬、再製、層序與復原；只點一下不新增。拖曳及選取時狀態列顯示長度與 Δ。
-- **長度定義**：兩端像素中心距離，顯示至一位小數；外接寬高包含端點。例如 (10,20)→(13,24) 為 5px，外接範圍為 4×5px。這不是公分或實體螢幕尺寸。
-- **編輯器取色**：選「取色」（Alt+D）後點擊圖片，讀取原圖 RGB，狀態列顯示色碼，再返回原工具。選取標註時改它的顏色並可復原；文字輸入中只改輸入文字樣式，不提交文字；未選取時改預設顏色並記住到下次啟動。效果標註不改色。圖片外點擊無效，Esc 取消並回原工具。
+Text-entry controls retain their normal text-editing shortcuts. Right-click an annotation for edit, duplicate, reverse arrow, renumber steps, layering or delete. Right-click empty canvas for undo/redo, export, zoom, restore full image or clear annotations. During crop, the menu offers apply/cancel/restore. Commands are enabled only where applicable.
 
-尺寸標籤是白底黑字、字級隨線寬增加，在原圖邊緣會移入圖片，極小圖片會縮小標籤；裁切不重新移動標籤。取色不讀已合成的標註、馬賽克或模糊。真實鍵鼠與混合 DPI 操作尚未驗證，見 [驗收紀錄](ACCEPTANCE.md)。
+100% maps one image pixel to one physical display pixel. Full-image fit is capped at 100%; after applying a crop, fit can enlarge the crop up to 400%. Undoing the crop or restoring the full image fits the full image again. Entering/leaving crop mode without applying keeps the current view. Zoom does not change output pixels. The status bar reports image/crop dimensions, pointer coordinates, zoom and operation results.
 
-## 長截圖
+## Copy, save and open
 
-1. 在系統匣選「長截圖」，拖曳框出單一顯示器上的內容。建議避開垂直捲軸、影片、閃爍游標及浮動工具列；選取時可按住 Ctrl 放大，C／R 在這個模式不切換工具。
-2. 藍框內仍可操作原程式。緩慢向下捲動，保留部分重疊，等面板高度與預覽更新後再捲動。
-3. 按「自動捲動」可試用自動模式；啟動後放開滑鼠。移動滑鼠、按鍵或按「停止」會回到手動並保留內容。不支援自動捲動的程式可改用手動。這些應用程式的相容性尚未完成實機驗證。
-4. 按「完成」開啟編輯器，並依設定加入截圖歷史。沒有捲動就完成會保留初始影格；按「取消」或關閉面板不建立文件，恢復原本的視窗。面板有焦點時 Esc 也可取消。
+**Copy** supplies both PNG and bitmap formats to the clipboard. **Save PNG** exports the same composed pixels with annotations and crop. A busy clipboard is retried briefly; if copying or saving fails, the document stays open. PNG files flatten annotations; use history to reopen editable captures.
 
-自動模式在曾成功擷取新內容後，連續三次沒有變化會自動完成。若完全沒有觀察到捲動，會提示可能到底或不支援，讓你改用手動或按完成。畫面持續變動、對齊不明或往回捲動時停止自動；對齊失敗可捲回最後成功的位置再試，已拼接部分不會被覆寫。
+Open PNG, JPEG or BMP via the tray or Ctrl+O. Format is checked by content. Images are limited to 100,000,000 pixels. Transparent pixels are composed over white; EXIF orientation and ICC color conversions are not applied. Opening a file does not overwrite it; Save PNG proposes a new filename. Editing during background loading cancels replacement if new unexported changes appeared.
 
-上限為高度 32,768 像素或總計 100,000,000 像素，先達到者為準；達限停止擷取，按完成保留結果。控制面板盡量放在框外；空間不足或面板移入框內時，取樣前會短暫隱藏，可能看見閃爍。原視窗關閉、範圍中心被其他視窗遮住或顯示設定改變會取消。
+## Scrolling capture
 
-設定中的「長截圖快捷鍵」預設未設定，可自行指定或清除，不能與一般截圖相同。從系統匣啟動不需要設定快捷鍵。完整限制見[已知限制](KNOWN_LIMITATIONS.md)。
+Choose **Scrolling capture** from the tray or configure its separate optional hotkey. Select a region on one monitor, excluding scrollbars, animation and floating UI where possible. Scroll down slowly inside the blue frame, leaving some overlap, and wait for the preview to update.
 
-## 編輯器
+Click **Auto scroll** to try targeted scrolling. Release all keys before starting and avoid input while it runs. Moving the mouse or pressing a key stops automatic mode and keeps the captured content; manual scrolling can continue. Unsupported applications may ignore scrolling messages; use manual mode. There is no fallback to global input or moving the pointer.
 
-截圖完成後開啟編輯器，以「符合視窗」顯示（最大 100%，小圖維持原尺寸）。100% 代表一個圖片像素對應一個螢幕實體像素；縮放、平移或調整視窗都不會改變輸出的圖片。同一時間只有一個編輯視窗，新截圖或開啟的圖片會取代目前的圖片。
+Click **Finish** to edit the stitched result (or initial frame if nothing scrolled). **Cancel**, closing the panel, or Esc while it has focus discards the scrolling session and restores previous windows. Finishing adds the result to history if enabled; cancel/failure does not.
 
-套用裁切後畫布只顯示裁切範圍，並放大到填滿畫布（最大 400%），方便繼續標註。之後選「符合視窗」（`Ctrl+0`）也會填滿裁切範圍。復原裁切（`Ctrl+Z`）或「還原完整圖片」會回到整張圖片並重新符合視窗。只進出裁切工具而沒有改變範圍時，保持原本的縮放。
+After successfully capturing new content, three unchanged observations can finish automatic capture. No initial movement prompts you to use manual mode or finish. Unstable content, ambiguous overlap or backward scrolling stops automatic mode without replacing already stitched content. Scroll back to reliable overlap before continuing. The limit is 32,768 pixels high or 100,000,000 pixels total. At the limit, click Finish to retain the result. Target-window closure, covering the region center or display changes cancel capture. The control panel may briefly hide during sampling. Cross-application compatibility remains unverified; see [acceptance](ACCEPTANCE.md).
 
-### 工具
+## Capture history
 
-工具列按鈕旁的字母是存取鍵，按 `Alt`＋字母即可切換。
+Open history from the tray or editor. Reopen to continue editing, copy the composed result, delete selected entries, refresh, or confirm **Clear all**. The default retention is 50 entries, configurable from 1 to 500. Thumbnails show original captures; reopen/copy applies saved annotations and crop. History does not preserve the undo stack, pending drags or uncommitted text. Opened external files are not automatically added. Reopening malformed or unsupported annotation data restores only the original and warns without automatically overwriting the entry.
 
-| 工具 | 操作 |
-|------|------|
-| 選取（V） | 點選標註後拖曳移動；拖曳控制點調整大小或線段端點；雙擊文字重新編輯，雙擊步驟編號修改數值 |
-| 裁切（C） | 拖曳框選新的裁切範圍，或拖曳控制點調整；`Enter` 或在範圍內雙擊套用，`Esc` 取消。套用後畫布以裁切範圍填滿。裁切不會刪除原圖，之後可以重新調整，或從右鍵選單「還原完整圖片」 |
-| 矩形（R）、橢圓（E）、直線（L）、箭頭（A） | 拖曳繪製；箭頭指向放開滑鼠的位置 |
-| 馬賽克（J）、模糊（H） | 拖曳建立矩形效果，以「強度」（Alt+U）調整區塊大小或模糊半徑 |
-| 尺規（Q） | 拖曳建立可輸出的尺寸線；端點間中心距離以像素顯示 |
-| 取色（D） | 點擊原圖套用顏色，完成或 Esc 後回原工具 |
-| 文字（T） | 點一下開始輸入（可使用微軟注音，`Enter` 換行），`Ctrl+Enter` 或點擊其他位置完成，`Esc` 取消；點擊既有文字可重新編輯 |
-| 編號（N） | 點一下放置自動遞增的步驟編號；刪除編號不會重新排列其他編號，需要時可從右鍵選單「重新編號所有步驟」 |
+Disabling history stops automatic writes; existing entries remain until deleted. Clear all deletes originals and annotations in the history folder but keeps the document currently being edited. It is not secure erasure. Closing waits at most three seconds for pending history writes; forced termination or timeout may lose the latest updates.
 
-### 右鍵選單
+## Unexported changes
 
-在畫布上按滑鼠右鍵，依位置與工具開啟不同的選單。沒有可復原或重做的操作、沒有裁切、沒有標註，或步驟編號已經依序時，對應的項目會變灰。
+Before replacing/closing a modified document or exiting, choose Save PNG and continue, Copy and continue, Discard changes, or Cancel. Unmodified images close without prompting. If you keep editing during background export, new changes are retained and the original close/replace action stops. On sign-out/shutdown, handle the prompt and request sign-out again; forcing Windows to continue can lose changes.
 
-| 位置 | 項目 |
-|------|------|
-| 標註上（先選取該標註） | 編輯文字（文字）、修改編號（步驟編號）、再製（`Ctrl+D`）、反轉箭頭方向（箭頭）、重新編號所有步驟（步驟編號）、移到最上層／上移一層／下移一層／移到最下層、刪除 |
-| 畫布空白處（取消選取） | 復原、重做、複製、另存 PNG、縮放（符合視窗、100%、放大、縮小）、還原完整圖片（有裁切時）、清除所有標註（有標註時） |
-| 裁切工具中 | 套用裁切（`Enter`）、取消裁切（`Esc`）、還原完整圖片（有裁切時，同時離開裁切工具） |
+## Settings, local data and removal
 
-- **再製**：複本與原標註樣式相同，放在最上層並成為選取，位置往右下偏移 10 像素；靠近裁切範圍邊緣時改往反方向，複本才看得到。步驟編號的複本取下一個編號。
-- **反轉箭頭方向**：箭頭的起點與終點對調。
-- **重新編號所有步驟**：依目前的編號由小到大重排為 1、2、3…，補上刪除留下的空缺；編號相同時，較早放置（較底層）的在前。
-- **清除所有標註**、**還原完整圖片**：都可以用 `Ctrl+Z` 一次復原。
-- **編輯文字、修改編號**：與雙擊該標註相同。
+Settings includes language, normal/scrolling hotkeys, Start with Windows (off by default), style defaults, the last save folder, history retention and clearing. Hotkeys require Ctrl, Alt or Win and cannot use Windows-reserved capture combinations. Occupied hotkeys retain the previous working registration. The two capture hotkeys must differ. Corrupt settings are backed up; invalid individual fields fall back without resetting other preferences.
 
-### 屬性列
+Local data is under `%LocalAppData%\ScreenshotApp`: `settings.json`, optional `settings.corrupt.json`, error logs and `history/`. Error logs contain messages/stack traces and can include file paths. Start with Windows uses the current user's `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` entry. No data is uploaded.
 
-| 項目 | 選項 |
-|------|------|
-| 顏色 | 紅、橙、黃、綠、藍、紫、黑、白，以及「自訂…」（Windows 色彩對話框） |
-| 線寬 | 1～20 px |
-| 字型 | 微軟正黑體、新細明體、標楷體、Segoe UI、Consolas |
-| 字級 | 10～72 px |
-| 編號值 | 選取步驟編號時可輸入 1～999 |
-| 強度（Alt+U） | 馬賽克區塊邊長 2～64px；模糊半徑 1～32px；只適用於效果工具或標註 |
+To remove the app, disable Start with Windows, exit from the tray, delete the program folder and optionally delete its local data folder. Deleting the app folder alone does not remove saved captures.
 
-線寬與字級都以最終圖片的像素為單位，不受畫布縮放影響。有選取標註時變更的是該標註；沒有選取時變更的是之後新增標註的預設值，其中顏色、線寬與字級會記住到下次啟動。
+## Troubleshooting
 
-### 快捷鍵
-
-| 快捷鍵 | 功能 |
-|--------|------|
-| `Ctrl+Z`／`Ctrl+Y`（或 `Ctrl+Shift+Z`） | 復原／重做（最多 100 筆；一次拖曳、清除所有標註、重新編號所有步驟各算一筆） |
-| `Ctrl+C` | 將完成的圖片複製到剪貼簿 |
-| `Ctrl+S` | 另存 PNG |
-| `Ctrl+O` | 開啟圖片 |
-| `Delete` | 刪除選取的標註 |
-| `Ctrl+D` | 再製選取的標註 |
-| `Esc` | 取消取色並回原工具，或取消目前的拖曳、裁切或選取 |
-| `Ctrl+]`／`Ctrl+[` | 上移一層／下移一層 |
-| `Ctrl+Shift+]`／`Ctrl+Shift+[` | 移到最上層／最下層 |
-| `Ctrl+滾輪` | 以游標位置為中心縮放 |
-| `Ctrl+=`／`Ctrl+-`、`Ctrl+0` | 放大／縮小（25%、33%、50%、67%、100%、150%、200%、300%、400%）、符合視窗（整張圖片最大 100%，裁切後最大 400%） |
-| 按住空白鍵或滑鼠中鍵拖曳 | 平移畫布 |
-
-輸入文字時，`Ctrl+C`、`Ctrl+Z` 等按鍵作用在文字上，不會複製整張圖片或復原其他操作。
-
-### 狀態列
-
-由左到右顯示圖片尺寸、裁切範圍尺寸、游標所在的圖片像素座標、操作結果訊息，以及縮放比例。
-
-## 複製與另存
-
-- **複製**（`Ctrl+C` 或「複製」按鈕）：剪貼簿同時提供 PNG 與點陣圖兩種格式，PowerPoint、Word、Teams、小畫家等程式都可以直接貼上。
-- **另存 PNG**（`Ctrl+S` 或「另存 PNG」按鈕）：預設檔名為 `Screenshot_年月日_時分秒_毫秒.png`；預設資料夾為上次成功儲存的資料夾，第一次為「圖片」資料夾。同名檔案會先詢問是否覆寫。
-- 複製與另存的圖片尺寸等於裁切範圍，兩者的像素完全相同；完成後仍留在編輯器中，可以繼續修改。
-- 剪貼簿正被其他程式使用時，約 1 秒後顯示原因；存檔失敗時顯示原因。兩種情況圖片與標註都會保留，可以再試一次或改存到其他位置。
-
-## 開啟圖片
-
-從系統匣「開啟圖片…」或編輯器的「開啟」按鈕（`Ctrl+O`）開啟 PNG、JPEG 或 BMP。格式依檔案內容判斷；寬 × 高超過 1 億像素的圖片會拒絕開啟。含透明度的圖片以白色背景顯示與輸出。另存時的預設檔名一律是新的檔名，不會直接覆寫原檔。
-
-## 截圖歷史
-
-歷史預設開啟。每次完成截圖會保存原圖、原圖縮圖及標註／裁切，預設保留最新 50 筆。從系統匣「截圖歷史」或編輯器「歷史」（Alt+X）開啟，依建立時間由新到舊排列。選取條目後可按「開啟」（Enter）繼續編輯、「複製」取得合成結果、「刪除」（Delete），或確認後「全部清除」。重新開啟不會新增重複條目，復原／重做紀錄不會保留，還原的初始狀態視為未修改。
-
-標註及裁切在成功複製、另存、文件取代、關閉及結束時更新。歷史儲存不等於匯出，未匯出變更的提醒仍會出現；選擇捨棄而關閉時，已啟用的歷史仍會保存當時狀態。開啟既有圖片、取消截圖、取色或量測不會加入歷史。
-
-在設定取消「保留截圖歷史」後，停止新增及更新；目前文件解除歷史關聯，重新啟用不會補存，需之後的新截圖或重新開啟既有歷史才會建立關聯。既有條目可繼續瀏覽，直到刪除或清除。保留筆數可設 1～500，啟用時會淘汰最舊條目；修改舊條目不改變排序。已刪除或淘汰的條目不會因編輯器繼續操作而復活。
-
-資料未加密，包含裁切掉及馬賽克／模糊遮蔽之前的原圖。初次建立資料夾會以系統通知告知開關與清除方式。寫入失敗仍可截圖與編輯，並顯示一次原因；正常結束最多等待 3 秒，逾時或失敗會提示。原圖可讀但標註損毀時只開啟原圖並提示，原條目不自動覆寫；原圖損毀則無法開啟。首次通知、長時間常駐與實際重啟操作仍待實機驗證。
-
-## 未儲存變更的提醒
-
-圖片有修改（加入標註、裁切等）且尚未複製或另存時，下列操作前會先詢問：新截圖、開啟其他圖片、關閉編輯器、系統匣「結束」、登出或關閉 Windows。
-
-| 選項 | 結果 |
-|------|------|
-| 另存 PNG 後繼續 | 開啟存檔對話框，儲存成功後繼續原本的操作 |
-| 複製後繼續 | 複製到剪貼簿，成功後繼續原本的操作 |
-| 捨棄變更 | 不另行匯出，直接繼續；已啟用的截圖歷史仍會保存目前狀態 |
-| 取消（`Esc`） | 什麼都不變，回到編輯器 |
-
-複製或另存失敗、或取消存檔對話框時，不會繼續原本的操作。剛截取或剛開啟、沒有任何修改的圖片不會詢問。修改後復原回原本的狀態，也視為沒有修改。
-
-## 設定
-
-雙擊系統匣圖示或選擇「設定」開啟。
-
-| 項目 | 說明 |
-|------|------|
-| 快捷鍵 | 點選欄位後按下新的按鍵組合，必須包含 `Ctrl`、`Alt` 或 `Win`；不接受 `PrintScreen` 與 Windows 保留的 `Win+Shift+S`。按「套用」或「確定」後生效；組合已被其他程式使用時保留原本的快捷鍵並顯示原因 |
-| 長截圖快捷鍵 | 預設未設定，可指定或清除，不能與一般截圖快捷鍵相同；未設定時仍可從系統匣啟動 |
-| 登入 Windows 時啟動 | 目前使用者登入時自動常駐，不需要系統管理員權限 |
-| 保留截圖歷史、保留筆數 | 預設開啟及 50 筆，可設定 1～500；顯示固定資料夾，提供確認後清除全部 |
-| 上次儲存位置 | 唯讀，顯示上次成功另存的資料夾 |
-| 預設顏色、線寬、字級 | 新增標註時使用的樣式 |
-
-## 本機資料與移除
-
-| 項目 | 位置 |
-|------|------|
-| 截圖歷史（未加密的原圖、縮圖與標註資料） | `%LocalAppData%\ScreenshotApp\history\` |
-| 設定 | `%LocalAppData%\ScreenshotApp\settings.json` |
-| 故障日誌（只有錯誤訊息與堆疊，不含圖像或輸入的文字；單檔 256 KB、保留 2 份，30 天未更新即刪除） | `%LocalAppData%\ScreenshotApp\logs\error.log` |
-| 登入時啟動 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 的 `ScreenshotApp` 值（只在啟用時存在） |
-
-預設將已完成的一般／長截圖及標註存於上述歷史資料夾；另存 PNG 會寫入你選擇的檔案。關閉歷史不會自動刪除舊資料，請使用「全部清除」。程式不連線網路、不上傳任何資料。
-
-移除方式：
-
-1. 在設定視窗取消勾選「登入 Windows 時啟動」並按「確定」。
-2. 從系統匣選擇「結束」。
-3. 刪除程式資料夾。
-4. 若不再需要設定、日誌與截圖歷史，刪除 `%LocalAppData%\ScreenshotApp` 資料夾。使用單檔版時，也可以刪除暫存資料夾（`%TEMP%`）中 `.net\ScreenshotApp` 子資料夾。
-
-## 疑難排解
-
-| 狀況 | 處理方式 |
-|------|----------|
-| 按快捷鍵沒有反應 | 滑鼠停在系統匣圖示上，若顯示「快捷鍵未啟用」，代表組合被其他程式占用；到設定視窗改用其他組合 |
-| 截圖中某些視窗是黑色的 | 受保護的影片或設定為不允許擷取的視窗無法截取，見已知限制 |
-| 複製時顯示「剪貼簿正被其他程式使用」 | 稍候再按一次複製；圖片仍在編輯器中 |
-| 出現「發生未預期的錯誤」 | 訊息中會列出故障日誌的位置，回報問題時可以附上該檔案 |
-
-已知的功能限制與不支援的情境見 [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md)。
+If no window appears, check hidden tray icons. If the hotkey is occupied, open Settings and change it. If capture is black, check protected-content or GPU restrictions. If copying fails, retry after another application releases the clipboard. For unexpected errors, review the indicated log and remove personal data before attaching it to a report. See [known limitations](KNOWN_LIMITATIONS.md) and [security reporting](../SECURITY.md).

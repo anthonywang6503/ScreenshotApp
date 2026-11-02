@@ -29,3 +29,7 @@ v1.0 介面使用台灣繁體中文，規格要求文字資源集中管理，保
 
 - 鍵以字串表示，拼字錯誤無法在編譯期發現，由自動化掃描測試補足。
 - 文字與程式碼分離，日後翻譯不需修改程式。
+
+## Revision (2026-11-02): English-first bilingual UI
+
+Neutral Strings.resx is English (NeutralLanguage=en); Strings.zh-TW.resx preserves Traditional Chinese. Settings persists Language as en or zh-TW, default en including upgrades without the field. Startup sets CurrentUICulture and DefaultThreadCurrentUICulture before constructing any services/windows; numeric formatting keeps the system culture. WPF Language follows the selected UI culture. Selection is saved with other settings and takes effect after a normal exit and restart to avoid mixed static XAML, tray and style-cache text. Keep zh-TW application and zh-Hant framework satellites in portable packages and single-file bundles. Tests verify complete keys, placeholders, both cultures, migration and window selection.

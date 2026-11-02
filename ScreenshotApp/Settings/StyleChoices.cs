@@ -2,7 +2,7 @@ using ScreenshotApp.Resources;
 
 namespace ScreenshotApp.Settings;
 
-/// <summary>字型名稱與顯示名稱；顯示名稱為台灣慣用的中文名稱。</summary>
+/// <summary>字型名稱與依介面語言取得的顯示名稱。</summary>
 internal sealed record NamedFont(string FamilyName, string DisplayName)
 {
     public override string ToString() => DisplayName;

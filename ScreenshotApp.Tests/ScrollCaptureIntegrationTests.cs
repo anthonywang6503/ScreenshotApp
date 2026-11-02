@@ -7,6 +7,7 @@ using ScreenshotApp.Capture;
 using ScreenshotApp.Editor.Model;
 using ScreenshotApp.History;
 using ScreenshotApp.Platform;
+using ScreenshotApp.Resources;
 using ScreenshotApp.Settings;
 using ScreenshotApp.Tests.TestSupport;
 
@@ -91,12 +92,12 @@ public class ScrollCaptureIntegrationTests : IDisposable
     {
         using var controller = Controller();
         var settings = new SettingsWindow(controller);
-        Assert.Contains("未設定", settings.ScrollHotkeyBox.Text);
+        Assert.Equal(Strings.Get("Settings_ScrollHotkeyNone"), settings.ScrollHotkeyBox.Text);
         var session = new ScrollCaptureSession(ScrollStitcherTests.Frame(0));
         var panel = new ScrollCaptureWindow(new PixelRect(0, 0, 7, 96), session);
         foreach (var name in new[] { "HeightText", "PreviewImage", "AutomaticButton", "FinishButton", "CancelCaptureButton", "StatusText" })
             Assert.NotNull(panel.FindName(name));
-        Assert.Equal("7 × 96 像素", panel.HeightText.Text);
+        Assert.Equal(Strings.Format("Scroll_Size", 7, 96), panel.HeightText.Text);
         Assert.NotNull(panel.PreviewImage.Source);
         panel.Close(); settings.Close();
     });

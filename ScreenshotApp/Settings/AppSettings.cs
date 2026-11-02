@@ -10,6 +10,8 @@ internal sealed record AppSettings
     public const int MinFontSize = 8;
     public const int MaxFontSize = 200;
 
+    public string Language { get; init; } = "en";
+
     public HotkeyGesture Hotkey { get; init; } = HotkeyGesture.Default;
 
     public HotkeyGesture? ScrollHotkey { get; init; }

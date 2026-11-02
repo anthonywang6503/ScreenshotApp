@@ -4,8 +4,8 @@ using System.Security;
 namespace ScreenshotApp.Resources;
 
 /// <summary>
-/// 檔案與登錄操作失敗時給使用者看的原因。.NET 對拒絕存取、找不到路徑、路徑太長、檔案被占用等情況的例外訊息是英文，
-/// 這些常見情況改用繁體中文說明；其他情況沿用例外訊息（其餘 Win32 錯誤的說明由 Windows 依系統語言提供）。
+/// 檔案與登錄操作的常見失敗依介面語言說明；其他情況沿用例外訊息。
+/// 未列出的 Win32 錯誤由 Windows 依系統語言提供說明。
 /// </summary>
 internal static class ErrorText
 {

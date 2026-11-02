@@ -337,7 +337,7 @@
 | <a id="e21"></a>E21 | [App.xaml.cs](../ScreenshotApp/App.xaml.cs)，L14–58；[SingleInstanceGuard.cs](../ScreenshotApp/Platform/SingleInstanceGuard.cs)，L22–56；[ScreenshotApp.csproj](../ScreenshotApp/ScreenshotApp.csproj)，L3–40；[架構](ARCHITECTURE.md)，L7–25 | 啟動不處理檔案參數、具名事件只喚醒、WPF／Win32 與版本；結合規格確認沒有公開雲端 API 契約 |
 | <a id="e22"></a>E22 | [v1.1.0 編輯器圖](evidence/phase-07/release-phase3-cropped-fill.png)、[設定圖](evidence/phase-01/phase1-settings.png)、[未匯出確認圖](evidence/phase-04/phase4-unsaved-dialog.png) | 本次實際檢視的既有圖像；不同階段、非本次執行截圖，測試底圖不代表產品配色 |
 | <a id="e23"></a>E23 | [HandleLayer.cs](../ScreenshotApp/Editor/HandleLayer.cs)，L12–20、L30–90；[AnnotationLayer.cs](../ScreenshotApp/Editor/AnnotationLayer.cs)，L12–45；[EditorWindow.xaml.cs](../ScreenshotApp/Editor/EditorWindow.xaml.cs)，L27–28、L1034–1046；[座標與縮放 ADR](adr/0012-canvas-zoom-model.md)，L12–20 | 自繪控制點、固定強調色、命中容差與平移按鍵；像素精確不等於完整可存取性 |
-| <a id="e24"></a>E24 | [規劃發現](../.planning/2026-10-18-screenshotapp-v1/findings.md)，L161–168；[EditorSession.cs](../ScreenshotApp/Editor/EditorSession.cs)，L154–164、L178–200、L726；[EditorWindow.xaml](../ScreenshotApp/Editor/EditorWindow.xaml)，L273–287 | 裁切視覺範圍與原圖命中範圍落差；有原始碼佐證，但本次未實機重現 |
+| <a id="e24"></a>E24 | [規劃發現](../.planning/archive/2026-10-18-screenshotapp-v1/findings.md)，L161–168；[EditorSession.cs](../ScreenshotApp/Editor/EditorSession.cs)，L154–164、L178–200、L726；[EditorWindow.xaml](../ScreenshotApp/Editor/EditorWindow.xaml)，L273–287 | 裁切視覺範圍與原圖命中範圍落差；有原始碼佐證，但本次未實機重現 |
 
 ## 9. 資訊不足與會改變排序的證據
 

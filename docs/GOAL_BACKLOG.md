@@ -21,7 +21,7 @@
 | Open Issues | 連線工具查詢公開儲存庫 `anthonywang6503/ScreenshotApp` 的 open issues 為空；`wanghy6503/ScreenshotApp` 的直接 API 為 404，該遠端狀態無法確認。 |
 | TODO / FIXME | 排除 bin/obj 後搜尋產品、測試與工具，沒有 TODO、FIXME、HACK 或 NotImplementedException 命中。缺少標記不代表沒有缺陷。 |
 | Dependency Health | 產品沒有直接 NuGet 相依套件；含間接套件的 NuGet 漏洞查詢無命中。xunit `2.9.3` 及其四項間接套件被標示 Legacy，建議替代為 v3；不把淘汰標記等同已知漏洞。 |
-| Recent Failures | [驗收紀錄](ACCEPTANCE.md) 與 [實測紀錄](../.planning/2026-10-18-screenshotapp-v1/findings.md) 的 Delete、裁切像素與 GDI 趨勢問題已記載原因與修正；歷史失敗不直接列為未修缺陷。 |
+| Recent Failures | [驗收紀錄](ACCEPTANCE.md) 與 [實測紀錄](../.planning/archive/2026-10-18-screenshotapp-v1/findings.md) 的 Delete、裁切像素與 GDI 趨勢問題已記載原因與修正；歷史失敗不直接列為未修缺陷。 |
 | Developer Documentation | README、架構、規格、ADR 與驗收文件俱全；本輪結果集中於本文件。既有未追蹤分析僅作線索，以目前原始碼與實測重新核對。 |
 | Recent Git Changes | 最近功能 commit `6c7c103` 增加右鍵選單與裁切填滿；其後以驗收、授權及下載連結等文件調整為主。優先保護現有編輯及輸出流程。 |
 

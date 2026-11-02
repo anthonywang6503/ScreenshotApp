@@ -6,6 +6,7 @@ using System.Windows.Shapes;
 using ScreenshotApp.Capture;
 using ScreenshotApp.Editor.Model;
 using ScreenshotApp.Platform;
+using ScreenshotApp.Resources;
 using ScreenshotApp.Tests.TestSupport;
 
 namespace ScreenshotApp.Tests;
@@ -24,14 +25,14 @@ public class MeasurementOverlayTests
             controller.BeginDrag(first, new(-390, 20));
             controller.UpdateDrag(new(-387, 24));
             controller.EndDrag(new(-387, 24));
-            Assert.Equal("長度 5 px　Δx 3　Δy 4　4 × 5 px", Text(first));
+            Assert.Equal(Strings.Format("Selection_Measurement", "5", 3, 4, 4, 5), Text(first));
             Assert.Equal(Visibility.Visible, Line(first).Visibility);
             Assert.False(controller.Completion.IsCompleted);
             var second = controller.Overlays[1];
             controller.BeginDrag(second, new(30, 40));
             Assert.Equal(Visibility.Collapsed, Line(first).Visibility);
             controller.EndDrag(new(30, 40));
-            Assert.Equal("長度 0 px　Δx 0　Δy 0　1 × 1 px", Text(second));
+            Assert.Equal(Strings.Format("Selection_Measurement", "0", 0, 0, 1, 1), Text(second));
             Assert.Equal(Visibility.Visible, Line(second).Visibility);
             second.ShowMagnifier(new(30, 40));
             Assert.Equal(Visibility.Visible, ((Canvas)second.FindName("MagnifierPanel")).Visibility);
@@ -52,7 +53,7 @@ public class MeasurementOverlayTests
             var overlay = controller.Overlays[0];
             controller.BeginDrag(overlay, new(-2, 100));
             controller.UpdateDrag(new(50, 100));
-            Assert.Equal("長度 1 px　Δx 1　Δy 0　2 × 1 px", Text(overlay));
+            Assert.Equal(Strings.Format("Selection_Measurement", "1", 1, 0, 2, 1), Text(overlay));
             controller.AbortDrag();
             Assert.Equal(Visibility.Collapsed, Line(overlay).Visibility);
             controller.EndDrag(new(50, 100));
@@ -78,7 +79,7 @@ public class MeasurementOverlayTests
             controller.EndDrag(new(30, 40));
             Assert.False(controller.Completion.IsCompleted);
             Assert.Equal(Visibility.Collapsed, ((Border)overlay.FindName("SizeLabel")).Visibility);
-            Assert.Contains("量測模式", ((TextBlock)overlay.FindName("HelpText")).Text);
+            Assert.Equal(Strings.Get("Selection_MeasureHelp"), ((TextBlock)overlay.FindName("HelpText")).Text);
             controller.BeginDrag(overlay, new(10, 20));
             controller.UpdateDrag(new(30, 40));
             controller.ToggleMeasurement();

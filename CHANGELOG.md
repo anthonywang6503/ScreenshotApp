@@ -1,111 +1,36 @@
 # Changelog
 
-本專案所有重要變更記錄於此。格式依循 Keep a Changelog，版本號依循語意化版本。
+[繁體中文 and detailed historical entries](CHANGELOG_zh_TW.md). Versions use semantic versioning. Unrun interactive acceptance is never inferred from automated tests.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-02
+
+### Added
+
+- English and Traditional Chinese interface selection in Settings. English is the default for fresh installs and settings without a language preference; saved changes take effect after a tray exit and restart.
+- Complete English neutral/zh-TW resources and tests for resource parity, format parameters, legacy/invalid settings, culture propagation and settings-window persistence.
+- English-first README, user guide, limitations, architecture/specification entry points, quality/acceptance records and third-party notices with preserved Chinese references.
+- Contribution and security reporting guidance, issue templates, release procedure and SHA-256 download checksums.
+
 ### Changed
-- 封存 [v1.2 計畫](.planning/archive/2026-11-01-screenshotapp-v1-2/task_plan.md)，納入七項功能的完成度核對與證據，更新驗收紀錄的交接入口；P13-00、桌面煙霧與 MT-12～MT-15 保留未驗證狀態。
+
+- Version/manifest updated to 1.3.0/1.3.0.0. Portable packaging includes both languages and bilingual user documentation. Folder ZIP is the public download; single-file output remains withheld until its required interactive smoke checks pass.
+- Archived 1.2 planning/evidence remains available; desktop and MT-12–MT-15 checks are still unverified.
 
 ## [1.2.0] - 2026-11-02
 
-### Fixed
-- 未匯出變更提示中選擇複製或儲存時，若背景匯出期間繼續編輯，完成後會重新提交文字輸入並檢查文件，保留新增修改並中止原本的關閉或替換操作。
-- 開啟圖片的背景解碼期間新增標註或輸入文字時，保留新的未匯出修改並中止替換；原先已確認捨棄但沒有再修改的內容仍照常替換。
-
-### Added
-- Phase 13：手動／自動垂直長截圖、獨立系統匣入口與選用快捷鍵、範圍外框及預覽面板。穩定影格逐像素對齊、固定標頭／頁尾去重、歧義與往回捲動不附加、使用者介入停止自動，並限制高度與總像素。完成後可編輯並依設定加入歷史；新增測試、可捲動圖樣與煙霧／滾輪探測腳本，實機與跨應用程式相容性尚未驗證。
-- Phase 12：預設開啟本機磁碟截圖歷史，保存原圖、縮圖及九種標註／裁切，可重新開啟、複製、刪除與確認後清除；設定提供關閉及 1～500 筆保留。序列背景寫入、損毀原圖回退、刪除不復活及有限結束等待；同步隱私文件與煙霧隔離，自動化涵蓋磁碟與生命週期，實機尚未驗證。
-- Phase 11：編輯器尺寸標註（Alt+Q）、覆蓋層 R 量測模式與編輯器取色（Alt+D）。兩種尺規共用像素中心距離；標註支援端點調整、樣式與復原，量測放開保留且不建立文件。取色讀原圖、保留文字輸入、沿用既有顏色與設定路徑，完成或 Esc 回原工具；新增自動化與煙霧腳本，實機尚未驗證。
-- Phase 10：編輯器新增馬賽克與模糊效果，支援強度、整塊選取、移動、八點調整、再製、層序及復原；只取樣原圖、不透明覆蓋，畫面／PNG／剪貼簿共用繪製與受限快取。新增獨立像素與互動測試、煙霧腳本及 4K 量測；實機與 PowerPoint 尚未驗證，大範圍模糊重算可能停頓。
-- Phase 9：區域選取時重新按住 Ctrl 顯示像素放大鏡（15×15 格、每格 12 實體像素、邊界灰格與中心框），放開後按 C 複製游標像素的大寫色碼；取色保留原編輯文件，剪貼簿失敗顯示原因。
-- 工程改善待辦 `docs/GOAL_BACKLOG.md`：依影響、可信度與可驗證性排序，記錄基準與逐項驗證。
-- 固定 .NET SDK 與 NuGet 相依版本；新增本機／Windows CI 共用的品質檢查、獨立副本負向驗證，以及開發者操作說明。品質檢查要求零建置警告、測試全部通過且不得跳過，不包含發佈或部署。
-- 編輯文件的長序列回歸測試：固定種子混合新增、刪除、替換、層序、裁切、複合命令、復原／重做與延後匯出，逐步對照獨立快照，涵蓋 100 筆容量與復原後分支。
-- 以 Apache License 2.0 授權：儲存庫根目錄加入 `LICENSE`；執行檔的著作權資訊為 `Copyright 2026 Anthony Wang`；`tools/Publish-Release.ps1` 把授權條款以 `LICENSE.txt` 放進資料夾版與單檔版的發佈目錄。ADR-0017 第 5 點加入修訂。
-- README：特點、畫面截圖（取自實機煙霧驗證的證據）、從 GitHub Releases 下載，以及授權段落。
-
-### Changed
-- Phase 14：版本與 manifest 同步為 1.2.0／1.2.0.0；完整品質檢查 1176／1176、Release 0 警告。更新使用／隱私／架構／驗收文件，補齊功能入口、ADR 索引及 MT-12～MT-15 步驟；在版本提交及本機標籤後建立兩種自包含 ZIP。桌面與長截圖相容性尚未驗證，單檔封裝未提供為已驗收版本；本次未上傳 Releases 或推送。
-- Phase 8 規格：將 v1.2.0 的放大鏡、取色器、馬賽克、模糊、尺規、磁碟截圖歷史與手動／自動長截圖納入 FR-37～FR-43，補齊 AT-11～AT-16、MT-12～MT-15 與追蹤矩陣；同步隱私例外及相關 ADR。Phase 9～13 已依此完成實作；實機驗收範圍以驗收紀錄為準。
-- `THIRD-PARTY-NOTICES.md` 註明本專案的授權；`AGENTS.md` 的規格檔路徑改為實際位置 `docs/ScreenshotApp.Spec.md`。
-- 驗收紀錄：記錄 v1.1.0 發佈版的實機煙霧驗證（資料夾版 Phase 3 43／43，含裁切後填滿與右鍵還原完整圖片；單檔版 Phase 1 31／31、Phase 2 38／38），依 ADR-0017 提供單檔版；證據放在 `docs/evidence/phase-07/`。
+- Added selection magnifier and color copying, mosaic/blur, pixel measurement/rulers, editor color picking, local editable history and manual/automatic vertical scrolling capture.
+- Protected new edits made during asynchronous export/loading from earlier close/replace requests.
+- Added pinned SDK/NuGet locks, shared local/Windows CI quality gate, isolated gate failure probes and long editing-sequence regression tests.
+- Added Apache-2.0 licensing and packaged license files. Local integration passed 1176 tests; desktop smoke and new manual acceptance remained unrun. ZIPs were generated locally without a GitHub release.
 
 ## [1.1.0] - 2026-10-19
 
-### Added
-- `AGENTS.md`：給 AI 程式代理的工作指引——依據文件、建置與發佈、程式碼慣例、測試、實機煙霧驗證與 Git 規則，只收錄從程式碼與設定看不出來的慣例與陷阱。
-- Phase 7（右鍵選單）：
-  - 畫布依位置與工具開啟三種右鍵選單：標註上（編輯文字、修改編號、再製、反轉箭頭方向、重新編號所有步驟、調整層序、刪除；只適用於特定種類的項目只在該種類上顯示）、畫布空白處（復原、重做、複製、另存 PNG、縮放、還原完整圖片、清除所有標註）、裁切工具中（套用裁切、取消裁切、還原完整圖片）；沒有可復原的操作、沒有裁切、沒有標註或編號已依序時，對應的項目停用。
-  - 再製（`Ctrl+D`）：複本往右下偏移 10 像素，靠近裁切範圍邊緣時改往反方向；步驟編號的複本取下一個編號。
-  - 反轉箭頭方向、重新編號所有步驟（依目前編號重排為 1、2、3…）、清除所有標註、還原完整圖片；清除與重新編號各只算一筆復原（新增複合命令）。
-
-### Changed
-- 套用裁切後畫布以裁切範圍填滿：只顯示裁切範圍時「符合視窗」可放大到 400%（整張圖片仍最大 100%）；裁切範圍改變（套用、復原、重做、還原完整圖片）時回到符合視窗，只進出裁切工具時維持原本的縮放。
-- 規格新增 FR-36 並修訂 FR-14、FR-16、FR-18、FR-20、FR-21、FR-22、FR-25；ADR-0010（複合命令）與 ADR-0012（裁切後的符合視窗）加入修訂。
-- Phase 3 煙霧腳本的裁切步驟加入填滿畫布的縮放檢查，以及以右鍵畫布選單「還原完整圖片」的實機檢查。
-- 版本 1.1.0：專案檔與應用程式 manifest 的版本，發佈檔名為 `ScreenshotApp-1.1.0-win-x64.zip` 與 `ScreenshotApp-1.1.0-win-x64-singlefile.zip`；README、使用說明、已知限制、驗收紀錄與 `AGENTS.md` 對齊目前的版本與狀態。
+- Added contextual editor menus, duplication, arrow reversal, step renumbering, layer actions, clear annotations and restore full image.
+- Cropped fit can enlarge up to 400%. Updated user guides and acceptance evidence. Version-specific release smoke results are recorded in the historical acceptance record.
 
 ## [1.0.0] - 2026-10-18
 
-### Added
-- Phase 0（規劃）：建立 `.planning/2026-10-18-screenshotapp-v1/` 規劃檔案、Phase 0～5 完整 Checklist、FR 追蹤矩陣、ADR 清單與 handoff 規範。
-- 建立 git 儲存庫、`.gitignore`、專案層級 `nuget.config`（nuget.org 來源）。
-- Phase 1（Windows 平台基礎）：
-  - 啟動後只常駐系統匣（選單「設定」「結束」，雙擊開啟設定，工具提示顯示快捷鍵狀態）；同一登入工作階段只有一個執行個體，再次啟動會顯示既有執行個體的設定視窗。
-  - 全域截圖快捷鍵：預設 `Ctrl+Shift+2`、`MOD_NOREPEAT`；拒絕 PrintScreen 與 Win+Shift+S 等 Windows 保留組合；被占用時程式仍可使用並顯示原因；變更時先註冊新組合，成功後才解除舊組合。按下快捷鍵的截圖動作於 Phase 2 接上。
-  - 設定視窗與 `%LocalAppData%\ScreenshotApp\settings.json`：原子寫入；損毀時備份原檔並回復預設值，個別無效欄位只重設該欄位，皆會提示。
-  - 「登入 Windows 時啟動」（`HKCU\...\Run`，預設關閉）、系統匣「結束」時解除快捷鍵並移除圖示。
-  - 故障日誌：只記錄錯誤訊息與堆疊，256 KB 輪替保留兩份，超過 30 天刪除；UI 執行緒的未處理例外會記錄並提示，程式繼續執行。
-  - Per-Monitor V2 DPI、台灣繁體中文介面文字集中於 `Strings.resx`、多尺寸應用程式圖示。
-  - ADR-0001～0006、114 個自動化測試、實機煙霧驗證腳本 `tools/smoke/Invoke-Phase1Smoke.ps1` 與 `docs/ACCEPTANCE.md`。
-- Phase 2（截圖與區域選取）：
-  - 快捷鍵與系統匣新增的「開始截圖」：先隱藏自家視窗（關閉淡出動畫並等待桌面合成器），再以 GDI `BitBlt` 逐顯示器擷取靜態快照。
-  - 每個顯示器一個選取覆蓋層，直接以該顯示器的實體像素邊界建立；暗化遮罩、選取框、實體像素尺寸標籤、十字游標；選取限於起始顯示器，可選到最後一行與最後一列。
-  - `Esc` 或滑鼠右鍵取消；原地點一下不產生截圖並維持選取；截圖或選取中再按快捷鍵不重入；選取期間顯示設定變更時安全取消並提示。
-  - 選取完成後暫時直接複製到剪貼簿（24 位元 DIB）並以通知顯示尺寸，編輯器於 Phase 3 接上。
-  - 座標模型 `PixelRect`／`PixelPoint` 與集中換算的 `CoordinateMapper`；三種 GDI `SafeHandle`；應用程式狀態機與可測試的截圖流程。
-  - ADR-0007～0009、`docs/KNOWN_LIMITATIONS.md` 初稿、實機煙霧驗證腳本 `tools/smoke/Invoke-Phase2Smoke.ps1`（以已知圖樣逐像素比對）。
-- Phase 3（圖片編輯核心）：
-  - 選取完成後開啟編輯器（同一時間只有一個編輯視窗，新截圖取代目前的圖片；取消新截圖時回到原本的圖片），關閉編輯器回到系統匣常駐；編輯中再次啟動程式會帶出編輯視窗。
-  - 八種工具：選取／移動、裁切、矩形、橢圓、直線、箭頭、文字、步驟編號；標註可移動、以控制點調整大小或端點、修改樣式、刪除與調整前後層順序（右鍵選單、`Ctrl+]`／`Ctrl+[` 等）。
-  - 非破壞性裁切：拖曳框選或拖曳控制點調整，`Enter` 或雙擊套用，可隨時重新調整，原圖不會被刪除。
-  - 文字以畫布上的輸入框原地輸入（支援輸入法與換行），可雙擊重新編輯；步驟編號自動遞增，刪除時不重排，可修改數值與大小。
-  - 屬性列：8 種常用色與自訂顏色、線寬、字型、字級、步驟編號值，尺寸以圖片像素為單位；沒有選取時的顏色、線寬與字級會記住為預設值。
-  - 縮放：符合視窗、25%～400%（Ctrl+滾輪以游標為中心）、空白鍵或滑鼠中鍵平移；100% 為一個圖片像素對應一個螢幕實體像素。
-  - 復原／重做（最多 100 筆，一次拖曳算一筆）；編輯器快捷鍵 `Ctrl+Z`、`Ctrl+Y`、`Ctrl+C`、`Ctrl+S`、`Delete`、`Esc`，輸入文字時這些按鍵作用在文字上。
-  - 複製到剪貼簿與另存 PNG 共用同一個圖片合成器，輸出尺寸等於裁切範圍，不受畫布縮放影響；另存先寫入暫存檔再取代目標檔案。
-  - ADR-0010～0013、編輯器煙霧驗證腳本 `tools/smoke/Invoke-Phase3Smoke.ps1`（偵測到使用者操作或其他視窗位於前景即停止模擬輸入，編輯視窗以 PrintWindow 擷取）。
-
-- Phase 4（圖片輸入輸出）：
-  - 剪貼簿同時提供 PNG 與 24 位元點陣圖兩種格式，PNG 與另存的檔案逐位元組相同；剪貼簿被占用時沿用 .NET 內建的短暫重試，仍失敗時說明原因並保留圖片。
-  - 複製與另存的 PNG 編碼、寫檔在背景執行緒進行，期間可以繼續編輯；另存的預設位置為上次成功儲存的資料夾。
-  - 未匯出變更保護：圖片修改後尚未複製或儲存時，新截圖、開啟圖片、關閉編輯器、系統匣「結束」與登出或關機前會詢問複製、另存、捨棄或取消；修改後復原回匯出時的狀態不會詢問。
-  - 開啟既有圖片：系統匣「開啟圖片」、編輯器「開啟」按鈕與 `Ctrl+O`；支援 PNG、JPEG、BMP，超過 1 億像素拒絕開啟，透明度以白色背景合成。
-  - 編輯器的存檔、色彩或錯誤訊息對話框開啟時，忽略新的截圖、開啟圖片與結束要求。
-  - ADR-0014～0016、煙霧驗證腳本 `tools/smoke/Invoke-Phase4Smoke.ps1`（按鈕以 UI Automation 按下、檔案對話框以視窗訊息操作，不送出模擬按鍵）；Phase 2 腳本改為從編輯器的「複製」按鈕取得截圖結果。
-
-- Phase 5（完整驗證與發佈）：
-  - Windows 11 x64 自包含發佈：資料夾版與單一執行檔版 ZIP，以 `tools/Publish-Release.ps1` 產生；附 .NET Runtime 與 Windows Desktop Runtime 的授權檔、第三方聲明、使用說明與已知限制；版本 1.0.0；框架的附屬組件只保留繁體中文。ADR-0017。
-  - 文件：`docs/USER_GUIDE.md`（使用說明）、`docs/ARCHITECTURE.md`（模組關係、資料模型、座標系統、狀態機）、`THIRD-PARTY-NOTICES.md`；`docs/ACCEPTANCE.md` 加入錯誤恢復總檢、發佈版煙霧驗證與資源、延遲量測。
-  - 煙霧腳本：Phase 4 加入 `-Cycles` 次完整循環（取消、截圖、畫矩形、複製、另存、關閉）的資源量測，以及截圖、開啟大圖片、複製與另存的延遲量測；Phase 3 加入 Tab 鍵盤巡覽檢查。
-
-### Changed
-- Phase 3：選取完成後改為開啟編輯器，不再直接複製到剪貼簿並顯示系統通知。
-- Phase 5：另存、開啟圖片、設定檔讀寫與「登入 Windows 時啟動」失敗時，常見的原因（沒有存取權限、找不到檔案或資料夾、路徑太長、檔案正被其他程式使用、磁碟空間不足）改以繁體中文說明，不再直接附上 .NET 的英文訊息。
-- Phase 5：README 改為概述、建置、發佈與文件索引，操作說明移到使用說明。
-
-### Fixed
-- Phase 2 煙霧驗證發現並修正：
-  - `Clipboard.SetImage` 每次複製都會留下一個 GDI 物件，改以 DIB 位元組提供剪貼簿圖片。
-  - 隱藏設定視窗時的淡出殘影會被截入，改為隱藏前關閉該視窗的轉場動畫。
-  - 覆蓋層剛顯示就開始拖曳時，選取起點可能落在游標稍後的位置；改取滑鼠事件本身的位置。
-  - 175% 縮放下選取框會蓋住選取範圍最後一列像素；改為以實體像素計算的外框。
-- Phase 3 開發過程中發現並修正：
-  - 進入裁切工具時範圍是整張圖片，原本在範圍內拖曳會被當成平移而無法框選；改為拖曳控制點以外的位置一律框選新的範圍。
-  - 裁切範圍的右、下控制點拖到圖片邊緣時會差一個像素；控制點的位移改以指標移動量四捨五入計算。
-  - 橙色步驟編號原本配白色數字、對比偏低，改配黑色數字。
-- Phase 4 煙霧驗證發現並修正：裁切後，小字級文字與斜線的平滑像素和未裁切時不同（範圍內差幾十到上百個像素）；合成器改為先合成整張圖片再取出裁切範圍，裁切只去掉範圍外的像素。
-- 使用者實機驗證回報並修正：擷取全白的畫面時，選取覆蓋層的十字游標看不清。系統十字游標以反相像素繪製，白色畫面暗化後是 50% 灰，反相結果與底色只差一個色階；改為程式繪製的黑芯白邊十字，在白、灰、黑底上都看得見，尺寸依各顯示器的 DPI 採用 Windows 標準游標尺寸，熱點位於十字中心像素。
-- Phase 5 查明並修正：煙霧腳本以「偏紅」像素判斷箭頭與文字，但已知圖樣在該範圍本來就有符合條件的像素，導致「選取後按 Delete 刪除」被誤判為失敗（以診斷版的輸入紀錄確認 Delete 一直正常），文字檢查也可能在文字沒有出現時誤判通過；改為比較與原圖不同的像素。
-- Phase 5 文件審閱：程式註解與已知限制原寫「選擇的字型在本次執行期間沿用」，實際只在編輯視窗開著時沿用，依實際行為更正；ADR-0002、0009、0010、0016 補上與目前程式碼不同之處的修訂說明。
+- Initial native Windows tray capture/editor, configurable global hotkey, single instance, physical-pixel region selection, basic annotations/crop, undo/redo, PNG/clipboard export, image loading, settings, per-user startup and bounded error logs.
+- Self-contained folder/single-file packaging, automated tests, guarded desktop smoke scripts and initial user/developer documentation.

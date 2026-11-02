@@ -19,16 +19,24 @@ public partial class StringsResourceTests
         Assert.Equal("!NoSuchKey!", Strings.Get("NoSuchKey"));
     }
 
-    [Fact]
-    public void Get_ExistingKey_ReturnsTraditionalChineseText()
+    [Theory]
+    [InlineData("en", "Exit (&X)")]
+    [InlineData("zh-TW", "結束(&X)")]
+    public void Get_ExistingKey_ReturnsSelectedLanguage(string language, string expected)
     {
-        Assert.Equal("結束(&X)", Strings.Get("Tray_Exit"));
+        var previous = System.Globalization.CultureInfo.CurrentUICulture;
+        try
+        {
+            System.Globalization.CultureInfo.CurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo(language);
+            Assert.Equal(expected, Strings.Get("Tray_Exit"));
+        }
+        finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
     }
 
     [Fact]
     public void Format_InsertsArguments()
     {
-        Assert.Equal("目前已啟用：Ctrl+Shift+2", Strings.Format("Settings_HotkeyActive", "Ctrl+Shift+2"));
+        Assert.Equal(string.Format(Strings.Get("Settings_HotkeyActive"), "Ctrl+Shift+2"), Strings.Format("Settings_HotkeyActive", "Ctrl+Shift+2"));
     }
 
     [Fact]

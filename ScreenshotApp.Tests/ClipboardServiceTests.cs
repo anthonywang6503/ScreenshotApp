@@ -131,7 +131,6 @@ public sealed partial class ClipboardServiceTests : IDisposable
         var message = ClipboardService.DescribeError(ClipboardService.CLIPBRD_E_CANT_OPEN);
 
         Assert.Equal(Strings.Get("Editor_CopyFailedBusy"), message);
-        Assert.Contains("其他程式", message);
     }
 
     [Fact]

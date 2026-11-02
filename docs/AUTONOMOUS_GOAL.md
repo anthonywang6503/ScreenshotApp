@@ -34,7 +34,7 @@
 - **已驗證**：[AGENTS.md](../AGENTS.md) 存在，儲存庫內沒有 `CLAUDE.md`，也沒有下層另行覆寫的代理規則。沒有必要為補齊檔名而建立重複規則。
 - [README.md](../README.md) 的建置與測試命令可執行，版本與專案檔一致；下載連結指向公開 GitHub 儲存庫。
 - 產品行為由 [ScreenshotApp.Spec.md](ScreenshotApp.Spec.md) 與已接受的 ADR 約束；[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) 另列裁切、輸入格式、單檔啟動與驗證限制。
-- [task_plan.md](../.planning/2026-10-18-screenshotapp-v1/task_plan.md) 受 attestation 保護。候選工作使用自己的進度紀錄，不修改該檔或重啟歷史 Phase。
+- [task_plan.md](../.planning/archive/2026-10-18-screenshotapp-v1/task_plan.md) 受 attestation 保護。候選工作使用自己的進度紀錄，不修改該檔或重啟歷史 Phase。
 - 本次對話明訂「要求時才 commit」，因此以下五份任務書都以**未提交的可審查變更**為交付，不自動 commit、合併、推送或建立 PR。
 - 歷史計畫包含早期階段的類別／路徑名稱；不能把那些名稱直接當成現存測試。現在的檔案與可執行測試才是驗證入口。
 
@@ -87,7 +87,7 @@ dotnet test ScreenshotApp.sln -c Release --no-build --nologo --collect "Code Cov
 
 | 紀錄 | 現況與工程意義 |
 |---|---|
-| Delete 誤判失敗 | [ACCEPTANCE.md](ACCEPTANCE.md) 第 170–172 行與 [findings.md](../.planning/2026-10-18-screenshotapp-v1/findings.md) 第 157 行已結案：圖樣本來就有 560 個符合「偏紅」條件的像素，產品刪除有執行；不是現在仍待修的 Delete bug |
+| Delete 誤判失敗 | [ACCEPTANCE.md](ACCEPTANCE.md) 第 170–172 行與 [findings.md](../.planning/archive/2026-10-18-screenshotapp-v1/findings.md) 第 157 行已結案：圖樣本來就有 560 個符合「偏紅」條件的像素，產品刪除有執行；不是現在仍待修的 Delete bug |
 | 自動化誤報通過／干擾桌面 | findings 第 125、131–157 行及計畫錯誤表記錄輸入未生效仍通過、前景被終端機搶走、剪貼簿序號漏更新；說明測試工具也需要負向測試 |
 | GDI 趨勢誤判 | [ACCEPTANCE.md](ACCEPTANCE.md) 第 242 行：單次尖峰不等於持續洩漏；改比較前後中位數後通過，原始 CSV 仍保留 |
 | 真實產品修正 | DIB 取代會累積 GDI 物件的圖片寫法、整張合成後裁切以維持像素一致；不能為了簡化而復原舊做法 |

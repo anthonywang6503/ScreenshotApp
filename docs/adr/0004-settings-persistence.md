@@ -37,3 +37,7 @@
 ## 修訂（2026-11-02）：長截圖快捷鍵
 
 新增 ScrollHotkey，可為有效快捷鍵字串或 null，預設 null。無效或與一般截圖相同時只重設此欄；第二個註冊實例獨立套用、失敗保留舊組合，清除則解除。見 [ADR-0023](0023-scrolling-capture.md)。
+
+## Revision (2026-11-02): language preference
+
+Language accepts en or zh-TW, default en, including older files without this field. Invalid values reset only Language and are reported. The selection is persisted atomically with other preferences; a normal tray exit and restart applies it before services/windows are created.
