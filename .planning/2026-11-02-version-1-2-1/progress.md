@@ -31,3 +31,6 @@
 - Full format check found pre-existing whitespace in unrelated files; modified C# files pass focused format verification. PowerShell release script parses without errors.
 - Public link check found five old pre-archive planning links; corrected their paths in four historical proposal files. Recognizable credential pattern scan found no matches (not a security audit).
 - origin p76871024 resolves through SSH configuration to github.com and matches verified GitHub main 7d75d338; existing origin is the correct publication target.
+
+- fa94d83 committed source. Post-commit packaging PASS: folder 281 files, ZIP approx 67.4 MiB; both resource cultures load from published assembly; embedded version/commit match. ZIP contents/CRC/licenses/bilingual docs/checksum PASS. Runtime resolves 10.0.14 (updated old 10.0.13 notices). Single-file local output withheld from upload.
+- Evidence docs/evidence/phase-15/validation.md; final tagged rebuild will have its own digest checked against GitHub after upload. No ScreenshotApp process started or user data modified.

@@ -10,8 +10,8 @@ ScreenshotApp 的原始碼不包含第三方程式碼，也沒有複製 ShareX�
 
 | 元件 | 版本 | 授權 | 發佈目錄中的授權檔 |
 |------|------|------|------------------|
-| .NET Runtime（Microsoft.NETCore.App） | 10.0.13 | MIT | `licenses/Microsoft.NETCore.App.LICENSE.txt`、`licenses/Microsoft.NETCore.App.THIRD-PARTY-NOTICES.txt` |
-| Windows Desktop Runtime（Microsoft.WindowsDesktop.App：WPF、Windows Forms） | 10.0.13 | MIT | `licenses/Microsoft.WindowsDesktop.App.LICENSE.txt` |
+| .NET Runtime（Microsoft.NETCore.App） | 10.0.14 | MIT | `licenses/Microsoft.NETCore.App.LICENSE.txt`、`licenses/Microsoft.NETCore.App.THIRD-PARTY-NOTICES.txt` |
+| Windows Desktop Runtime（Microsoft.WindowsDesktop.App：WPF、Windows Forms） | 10.0.14 | MIT | `licenses/Microsoft.WindowsDesktop.App.LICENSE.txt` |
 
 .NET Runtime 內含的其他第三方元件及其授權列於 `Microsoft.NETCore.App.THIRD-PARTY-NOTICES.txt`。
 

@@ -10,13 +10,15 @@ This release adds English-default English/Traditional Chinese UI selection and E
 | --- | --- |
 | Locked restore, zero-warning Release build, complete automated suite | PASS: 1189/1189 tests, 0 skipped, 0 warnings/errors |
 | Both resource sets, format arguments, migration, invalid-language fallback and settings UI | PASS: language/resource tests included in the complete 1189-test run |
-| Published folder package with zh-TW satellite, licenses, bilingual guides and SHA-256 | Pending packaging verification |
+| Published folder package with zh-TW satellite, licenses, bilingual guides and SHA-256 | PASS: ZIP integrity/required files; 281 files; actual English/zh-TW resource loading and embedded version checked |
 | Interactive tray/capture/export/language restart smoke | NOT_RUN |
 | Clean Windows 11 x64 without .NET installed | NOT_RUN |
 | Mixed-DPI, IME, third-party clipboard and scrolling-target compatibility | NOT_RUN for this release |
 | Single-file download | Withheld pending version-specific interactive smoke |
 
 No previous desktop result is claimed as a 1.3.0 desktop pass. Automated tests create isolated data and hidden windows; they do not show the application or drive the user's desktop.
+
+Packaging verification resolved .NET and Windows Desktop Runtime 10.0.14. The final tagged rebuild and downloadable asset digest are verified during GitHub publication; see [release evidence](evidence/phase-15/validation.md) and [the release](https://github.com/anthonywang6503/ScreenshotApp/releases/tag/v1.3.0). Packaging checks load resources without starting the application or writing user settings.
 
 ## Previous baseline
 

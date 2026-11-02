@@ -4,10 +4,10 @@
 Ship English-default English/zh-TW UI, English-first public documentation, tested tagged GitHub release with downloadable portable ZIP.
 
 ## Next Step
-Commit tested implementation, verify self-contained packages, record evidence, then tag/rebuild and publish to GitHub.
+Commit verified package evidence, tag v1.3.0, rebuild exact tagged source and publish after GitHub CI.
 
 ## Current Phase
-Phase 4
+Phase 5
 
 ## Phases
 
@@ -32,14 +32,17 @@ Phase 4
 ### Phase 4: Testing & Verification
 - [x] Full gate and changed-file format checks
 - [x] Public docs links and PowerShell syntax
-- [ ] Post-commit packaging/resources/ZIP/version verification
-- [ ] Record final release evidence
-- **Status:** in_progress
+- [x] Post-commit packaging/resources/ZIP/version verification
+- [x] Record package and source evidence
+- **Status:** complete
 
 ### Phase 5: Delivery
-- [ ] Review outputs
-- [ ] Deliver to user
-- **Status:** pending
+- [x] Review source, docs and preflight packages
+- [ ] Commit evidence, tag and rebuild exact final package
+- [ ] Fast-forward main, push main/tag, inspect Windows CI
+- [ ] Publish release and compare GitHub asset digest
+- [ ] Deliver release link to user
+- **Status:** in_progress
 
 ## Decisions Made
 | Decision | Rationale |
