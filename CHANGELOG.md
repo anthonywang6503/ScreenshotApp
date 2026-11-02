@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Refresh the English and Traditional Chinese README screenshots with a public webpage and current editor annotations.
+
 ## [1.3.2] - 2026-11-02
 
 ### Fixed

@@ -34,11 +34,15 @@ The downloadable package uses a folder layout. Single-file builds are withheld u
 
 ## Screenshots
 
-These images show earlier Traditional Chinese builds (v1.0/v1.1), not the current English toolbar or settings.
+A public [Firefox homepage](https://www.firefox.com/) opened in the ScreenshotApp 1.3.2 editor, with a rectangle, arrow, text and numbered steps. The browser viewport was captured separately and opened in an isolated editor session; no private tabs or desktop content are shown.
 
-![Region selection with physical-pixel dimensions](docs/evidence/phase-02/phase2-overlay-selecting.png)
+![ScreenshotApp editor showing an annotated public webpage](docs/images/readme-editor.jpg)
 
-![Editor with annotations and cropped canvas](docs/evidence/phase-07/release-phase3-cropped-fill.png)
+**Exported image:** the same annotations and crop, saved as PNG from the editor.
+
+![Annotated public webpage exported from ScreenshotApp](docs/images/readme-annotated.png)
+
+Firefox and its logo are Mozilla trademarks; the webpage is shown only as an example.
 
 ## Build and test
 

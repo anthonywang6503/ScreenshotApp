@@ -23,19 +23,15 @@ Windows 原生的輕量截圖與圖片標註工具：常駐系統匣，以快捷
 
 ## 畫面
 
-以下畫面取自 v1.0.0／v1.1.0 的實機煙霧驗證，漸層色塊是測試圖樣；尚未更新為 v1.3.2 的工具列及設定畫面。
+以下使用公開的 [Firefox 網頁](https://www.firefox.com/)展示 ScreenshotApp 1.3.2：先擷取瀏覽器網頁畫面，再於隔離的編輯器工作階段中加入矩形、箭頭、文字與步驟編號。圖片不含私人分頁或桌面資訊。
 
-**區域選取**：按下快捷鍵後所有顯示器的畫面凍結並變暗，拖曳選取時顯示實際的像素寬高。
+![ScreenshotApp 編輯器：在公開網頁加入矩形、箭頭、文字及步驟編號](docs/images/readme-editor.jpg)
 
-![區域選取覆蓋層：選取框旁顯示 400 × 300](docs/evidence/phase-02/phase2-overlay-selecting.png)
+**匯出成品**：從編輯器另存的 PNG，包含相同的標註與裁切。
 
-**編輯器**：上方是工具列與屬性列（顏色、線寬、字型、字級、編號值），下方狀態列顯示圖片與裁切尺寸、游標座標與縮放比例。圖中加上矩形、線條與文字標註後套用裁切，畫布以裁切範圍放大填滿。
+![ScreenshotApp 匯出的公開網頁標註成品](docs/images/readme-annotated.png)
 
-![編輯器：裁切後以裁切範圍填滿畫布，含矩形、線條與文字標註](docs/evidence/phase-07/release-phase3-cropped-fill.png)
-
-**設定**：截圖快捷鍵、登入 Windows 時啟動，以及新增標註的預設顏色、線寬與字級。
-
-![設定視窗](docs/evidence/phase-01/phase1-settings.png)
+Firefox 與其標誌為 Mozilla 的商標，此處僅以該網頁示範。
 
 ## 下載與執行
 
